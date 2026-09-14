@@ -356,8 +356,132 @@ set entity_type = excluded.entity_type,
 
 select app_private.rebuild_memory_documents('00000000-0000-4000-8000-000000000001');
 
+insert into public.golden_query_cases (
+  id, workspace_id, category, label, query_text, reference_time,
+  expectation_status, expected_person_ids, expected_evidence_ids, notes
+)
+values
+  (
+    '91000000-0000-4000-8000-000000000001',
+    '00000000-0000-4000-8000-000000000001',
+    'action',
+    '부산 파일럿 제안서 약속',
+    '부산 물류 실증을 논의했고 내가 제안서를 보내기로 한 사람',
+    '2026-09-15T12:00:00+09:00',
+    'resolved',
+    array['20000000-0000-4000-8000-000000000001'::uuid],
+    array[
+      '60000000-0000-4000-8000-000000000003'::uuid,
+      '70000000-0000-4000-8000-000000000008'::uuid
+    ],
+    '동명이인 중 사업개발 리드를 찾아야 한다.'
+  ),
+  (
+    '91000000-0000-4000-8000-000000000002',
+    '00000000-0000-4000-8000-000000000001',
+    'place',
+    '코엑스에서 만난 사람',
+    '코엑스에서 물류 실증을 이야기한 사람',
+    '2026-09-15T12:00:00+09:00',
+    'resolved',
+    array['20000000-0000-4000-8000-000000000001'::uuid],
+    array['40000000-0000-4000-8000-000000000001'::uuid],
+    null
+  ),
+  (
+    '91000000-0000-4000-8000-000000000003',
+    '00000000-0000-4000-8000-000000000001',
+    'topic',
+    '투자 검토 기준',
+    '투자 검토에서 반복 사용과 후속 행동을 핵심 지표로 보는 사람',
+    '2026-09-15T12:00:00+09:00',
+    'resolved',
+    array['20000000-0000-4000-8000-000000000003'::uuid],
+    array['60000000-0000-4000-8000-000000000006'::uuid],
+    null
+  ),
+  (
+    '91000000-0000-4000-8000-000000000004',
+    '00000000-0000-4000-8000-000000000001',
+    'organization',
+    '한울 모빌리티 랩 동명이인',
+    '한울 모빌리티 랩에서 경로 최적화 데이터를 연구하는 김민준',
+    '2026-09-15T12:00:00+09:00',
+    'resolved',
+    array['20000000-0000-4000-8000-000000000002'::uuid],
+    array['60000000-0000-4000-8000-000000000004'::uuid],
+    '한울 모빌리티 사업개발 리드와 구분해야 한다.'
+  ),
+  (
+    '91000000-0000-4000-8000-000000000005',
+    '00000000-0000-4000-8000-000000000001',
+    'identity_ambiguity',
+    '이름만으로 찾는 동명이인',
+    '김민준',
+    '2026-09-15T12:00:00+09:00',
+    'ambiguous',
+    array[
+      '20000000-0000-4000-8000-000000000001'::uuid,
+      '20000000-0000-4000-8000-000000000002'::uuid
+    ],
+    '{}'::uuid[],
+    '이름만으로 자동 병합하거나 한 명을 단정하면 안 된다.'
+  ),
+  (
+    '91000000-0000-4000-8000-000000000006',
+    '00000000-0000-4000-8000-000000000001',
+    'time',
+    '지난달 동남아 리서치',
+    '지난달 동남아 시장 리서치를 공유한 사람',
+    '2026-09-15T12:00:00+09:00',
+    'resolved',
+    array['20000000-0000-4000-8000-000000000014'::uuid],
+    array['60000000-0000-4000-8000-000000000017'::uuid],
+    'reference_time 기준 지난달은 2026년 8월이다.'
+  ),
+  (
+    '91000000-0000-4000-8000-000000000007',
+    '00000000-0000-4000-8000-000000000001',
+    'interaction',
+    '바이오 샌드박스 후속',
+    '바이오 데이터 샌드박스 보안 담당자 연결을 이야기한 사람',
+    '2026-09-15T12:00:00+09:00',
+    'resolved',
+    array['20000000-0000-4000-8000-000000000012'::uuid],
+    array[
+      '60000000-0000-4000-8000-000000000015'::uuid,
+      '70000000-0000-4000-8000-000000000005'::uuid
+    ],
+    null
+  ),
+  (
+    '91000000-0000-4000-8000-000000000008',
+    '00000000-0000-4000-8000-000000000001',
+    'event',
+    'SaaS Partnership Day 소개',
+    'SaaS Partnership Day에서 일본 진출 파트너를 소개할 수 있다고 한 사람',
+    '2026-09-15T12:00:00+09:00',
+    'resolved',
+    array['20000000-0000-4000-8000-000000000007'::uuid],
+    array['60000000-0000-4000-8000-000000000010'::uuid],
+    null
+  )
+on conflict (id) do update
+set category = excluded.category,
+    label = excluded.label,
+    query_text = excluded.query_text,
+    reference_time = excluded.reference_time,
+    expectation_status = excluded.expectation_status,
+    expected_person_ids = excluded.expected_person_ids,
+    expected_evidence_ids = excluded.expected_evidence_ids,
+    notes = excluded.notes,
+    is_active = true,
+    updated_at = now();
+
 insert into public.queries (
-  id, workspace_id, query_text, parsed_query, status, latency_ms, completed_at
+  id, workspace_id, query_text, parsed_query, status, latency_ms,
+  reference_time, parser_version, retrieval_version, evaluation_case_id,
+  answer_status, answer_text, response_payload, retrieval_trace, completed_at
 )
 values (
   'd0000000-0000-4000-8000-000000000001',
@@ -366,6 +490,14 @@ values (
   '{"intent":"find_person","concepts":["부산","물류 실증","제안서"]}'::jsonb,
   'completed',
   84,
+  '2026-09-15T12:00:00+09:00',
+  'structured-v1',
+  'hybrid-v1',
+  '91000000-0000-4000-8000-000000000001',
+  'resolved',
+  '김민준님이 가장 관련 있습니다. 부산 파일럿 범위와 제안서 전달 약속이 확인된 기록에 함께 있습니다.',
+  '{"mode":"seeded_example","person_ids":["20000000-0000-4000-8000-000000000001"]}'::jsonb,
+  '{"candidate_count":14,"confirmed_only":true}'::jsonb,
   '2026-09-04T10:00:00+09:00'
 )
 on conflict (id) do update
@@ -373,11 +505,20 @@ set query_text = excluded.query_text,
     parsed_query = excluded.parsed_query,
     status = excluded.status,
     latency_ms = excluded.latency_ms,
+    reference_time = excluded.reference_time,
+    parser_version = excluded.parser_version,
+    retrieval_version = excluded.retrieval_version,
+    evaluation_case_id = excluded.evaluation_case_id,
+    answer_status = excluded.answer_status,
+    answer_text = excluded.answer_text,
+    response_payload = excluded.response_payload,
+    retrieval_trace = excluded.retrieval_trace,
     completed_at = excluded.completed_at;
 
 insert into public.query_evidence (
   id, workspace_id, query_id, person_id, memory_statement_id,
-  memory_document_id, rank, score, reason
+  memory_document_id, rank, score, reason, source_entity_type,
+  source_entity_id, evidence_excerpt, source_occurred_at, verification_status
 )
 values (
   'e0000000-0000-4000-8000-000000000001',
@@ -388,14 +529,24 @@ values (
   md5('20000000-0000-4000-8000-000000000001:person_profile')::uuid,
   1,
   0.960,
-  '부산 파일럿 범위와 제안서 전달 약속이 같은 인물의 확인된 기록에 함께 존재한다.'
+  '부산 파일럿 범위와 제안서 전달 약속이 같은 인물의 확인된 기록에 함께 존재한다.',
+  'memory_statement',
+  '60000000-0000-4000-8000-000000000003',
+  '9월 파일럿은 부산 한 개 권역에서 시작하는 방향을 선호한다.',
+  '2026-09-03T18:10:00+09:00',
+  'confirmed'
 )
 on conflict (id) do update
 set memory_statement_id = excluded.memory_statement_id,
     memory_document_id = excluded.memory_document_id,
     rank = excluded.rank,
     score = excluded.score,
-    reason = excluded.reason;
+    reason = excluded.reason,
+    source_entity_type = excluded.source_entity_type,
+    source_entity_id = excluded.source_entity_id,
+    evidence_excerpt = excluded.evidence_excerpt,
+    source_occurred_at = excluded.source_occurred_at,
+    verification_status = excluded.verification_status;
 
 insert into public.feedback (id, workspace_id, query_id, kind, rating, comment)
 values (

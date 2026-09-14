@@ -85,3 +85,32 @@ Memory Foundation과 합성 Golden Dataset. PostgreSQL migration의 실제 실�
 ### 다음 단계
 
 Phase 3 Seeded Recall Vertical Slice. 합성 Query와 기대 Evidence를 기준으로 구조화 검색부터 구현하고 semantic retrieval과 AI answer generation은 adapter 경계를 따라 순차 연결한다.
+
+## 2026-09-15 — Phase 3 Seeded Recall 완료
+
+### 구축
+
+- 한국어 Query 정규화와 사람·행사·주제·장소·시간·소속·상호작용·행동 intent 파싱
+- 명시적인 reference time을 사용하는 상대 월 범위 파싱
+- 구조화 term matching과 96차원 deterministic local semantic feature hashing을 결합한 Recall ranking
+- 확정된 Memory·Interaction·Action만 사용하는 검색 corpus와 재생성 가능한 Person projection
+- Evidence로 제한된 응답, 결과 없음과 동명이인 ambiguity 상태
+- 저장된 Action과 자동 실행하지 않는 AI 제안의 분리
+- `POST /api/recall`, `/recall` 검색·결과·근거 UI
+- Golden Query case와 Query·AI Run·Evidence snapshot 저장 schema
+- action, event, identity ambiguity, interaction, organization, place, time, topic의 8개 Golden Query
+
+### 검증
+
+- `npm run eval:recall`: Golden Query 8/8 통과
+- `npm run db:verify`: public table 21개 RLS, Recall 결과 9건, Evidence snapshot 35건 확인
+- Draft Memory의 검색 projection 유출 0건
+- `npm run lint`, `npm run typecheck` 통과
+- Vitest 5개 파일, 단위 테스트 11개 통과
+- Next.js production build 통과
+- Chromium E2E 4개 통과: 기존 Profile 회귀, Context Recall, 근거·Action 구분, 동명이인 ambiguity
+- 설치 의존성 audit 취약점 0건
+
+### 다음 단계
+
+Phase 4 Text Capture to Memory. 텍스트 입력을 검토 가능한 Draft로 구조화하고, 사용자 확인 후 transaction으로 Memory를 확정하여 같은 Recall 경로에 즉시 반영한다. 실제 유료 AI Provider 연결은 해당 adapter 구현 시 credential과 공식 endpoint를 확인한 뒤 활성화한다.

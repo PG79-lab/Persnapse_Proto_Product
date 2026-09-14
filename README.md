@@ -21,6 +21,7 @@ npm run dev
 
 ```bash
 npm run verify
+npm run eval:recall
 ```
 
 Supabase 개발 프로젝트를 처음 구성할 때는 `.env.local`의 `DATABASE_URL`을 확인한 뒤 다음 명령을 실행합니다. Seed는 실제 개인정보가 없는 합성 데이터입니다.
@@ -66,4 +67,7 @@ npm run test:e2e
 - Foundation 구축 완료
 - Phase 2 Memory Foundation과 Golden Dataset 구축 완료
 - 인물 목록과 시간순 Context·Evidence Profile 실행 가능
-- 다음 단계: Seeded Recall Vertical Slice
+- Phase 3 Seeded Recall Vertical Slice 구축 완료
+- `/recall`에서 장소·행사·주제·시간·소속·약속 맥락으로 사람 검색 가능
+- 8개 Golden Query와 확인된 Evidence 기반 평가 8/8 통과
+- 다음 단계: Text Capture to Memory

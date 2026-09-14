@@ -141,6 +141,8 @@ Foundation
 
 ## 6. Phase 3 — Seeded Recall Vertical Slice
 
+**상태: 완료 (2026-09-15)**
+
 ### 목표
 
 가장 중요한 Recall + Evidence 가설을 Capture보다 먼저 검증한다.
@@ -176,6 +178,19 @@ Foundation
 - 동명이인을 이름만으로 합치지 않음
 - 결과 없음과 모호한 결과를 정상 응답으로 처리
 - Query별 retrieval 결과와 latency를 재현 가능하게 기록
+
+### 완료 근거
+
+- 한국어 Query 정규화, intent·entity term·상대 시간 파싱 구현
+- 구조화 일치와 deterministic local semantic retrieval을 결합한 `hybrid-v1` 기준선 구축
+- 확정된 Memory, Interaction, Action만 검색 corpus와 Evidence에 포함
+- 이름만 입력한 동명이인 2명을 병합하지 않고 `ambiguous` 결과로 반환
+- Answer, 선택 이유, 확인된 Evidence, 저장된 Action과 비실행형 AI 제안을 분리한 응답 계약 구축
+- `POST /api/recall`과 `/recall` 사용자 화면 연결
+- 8개 범주의 Golden Query와 기대 Person·Evidence·reference time 저장
+- Golden Query 8/8 통과, Recall UI Chromium E2E 2개 포함 전체 E2E 4개 통과
+- Query, AI Run, latency, retrieval trace와 Evidence snapshot을 PostgreSQL에 기록
+- Draft Memory의 Recall projection 포함 여부 0건 검증
 
 ## 7. Phase 4 — Text Capture to Memory
 

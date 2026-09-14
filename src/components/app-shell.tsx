@@ -26,6 +26,12 @@ export function AppShell({
             className="flex items-center gap-2 text-sm"
           >
             <Link
+              href="/recall"
+              className="rounded-full bg-[var(--foreground)] px-4 py-2 font-medium text-white transition hover:-translate-y-0.5"
+            >
+              기억 찾기
+            </Link>
+            <Link
               href="/people"
               className="rounded-full border border-[var(--border)] bg-white/80 px-4 py-2 font-medium transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
             >

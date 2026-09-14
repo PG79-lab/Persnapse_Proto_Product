@@ -21,3 +21,10 @@ export function getDatabase(): Sql {
 
   return globalThis.persnapseDatabaseClient;
 }
+
+export async function closeDatabase(): Promise<void> {
+  if (globalThis.persnapseDatabaseClient) {
+    await globalThis.persnapseDatabaseClient.end();
+    globalThis.persnapseDatabaseClient = undefined;
+  }
+}

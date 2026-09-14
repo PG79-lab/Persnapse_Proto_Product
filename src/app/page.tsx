@@ -22,16 +22,22 @@ export default function HomePage() {
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <Link
-                href="/people"
+                href="/recall"
                 className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5"
               >
-                관계 기억 살펴보기
+                관계 기억에서 찾기
                 <span className="ml-2" aria-hidden="true">
                   →
                 </span>
               </Link>
+              <Link
+                href="/people"
+                className="rounded-full border border-[var(--border-strong)] bg-white/70 px-6 py-3 text-sm font-semibold transition hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              >
+                사람 기억 보기
+              </Link>
               <span className="text-xs text-[var(--muted)]">
-                Phase 2 · 합성 데이터 14명
+                Phase 3 · 근거 기반 Recall
               </span>
             </div>
           </div>
@@ -51,9 +57,9 @@ export default function HomePage() {
                     0{index + 1}
                   </span>
                   <span className="text-sm font-semibold">{stage}</span>
-                  {stage === "Memory" ? (
+                  {stage === "Recall" ? (
                     <span className="ml-auto rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-semibold text-[var(--accent)] uppercase">
-                      Ready
+                      Live
                     </span>
                   ) : null}
                 </li>

@@ -1,6 +1,6 @@
 # Persnapse MVP Architecture v0.1
 
-- 상태: Phase 2 Memory Foundation 반영, 단계별 기술 검증 진행
+- 상태: Phase 3 Seeded Recall 반영, 단계별 기술 검증 진행
 - 작성일: 2026-09-13
 - 목적: 빠른 MVP와 이후 확장 사이의 최소 안정 경계를 정의
 - 비목적: 세부 DB migration, API 최종 계약, 특정 AI 모델 확정
@@ -237,15 +237,17 @@ verification_status:
 
 ```text
 Query
-→ intent / entity / time constraint parsing
-→ structured candidate retrieval
-→ semantic memory retrieval
-→ relation expansion within bounded depth
-→ evidence ranking and deduplication
-→ answer generation constrained by evidence
-→ response validation
+→ Korean normalization / intent / term / reference-time parsing
+→ confirmed-only corpus load
+→ structured term matching + deterministic local semantic retrieval
+→ evidence ranking and Person aggregation
+→ evidence-constrained deterministic answer
+→ response contract validation
 → result + evidence + action distinction
+→ Query / AI Run / Evidence snapshot persistence
 ```
+
+Phase 3 기준선의 semantic retrieval은 외부 모델 호출이나 영속 vector가 아닌 `local-hash-v1` feature hashing을 사용한다. 이는 Golden Dataset에서 retrieval 계약과 UX를 먼저 검증하기 위한 deterministic adapter이며 Canonical Memory가 아니다. 실제 Voyage embedding과 reranking은 동일한 응답 계약 뒤에 교체 가능하게 연결한다.
 
 ### Retrieval 우선순위
 
@@ -259,8 +261,19 @@ Query
 - Answer는 선택된 Evidence 밖의 사실을 단정하지 않는다.
 - 관련 Person마다 선택 이유와 Evidence ID를 제공한다.
 - 저장된 약속과 새 AI 제안을 다른 타입으로 반환한다.
+- 저장된 Action과 AI 제안은 모두 자동 실행하지 않는다.
 - 결과 없음, 모호함과 부분 일치를 표현할 수 있어야 한다.
 - 전체 응답에 하나의 confidence 숫자를 붙이는 대신 근거 상태를 표시한다.
+- 검색 시점의 Evidence 본문과 사건 시각을 snapshot으로 보존하여 projection 재생성 후에도 과거 답변을 설명할 수 있게 한다.
+
+### Phase 3 구현 경계
+
+- `memory_documents` Person projection에는 `confirmed` Affiliation, Memory, Interaction만 들어간다.
+- Query의 상대 시간 해석 기준인 `reference_time`과 parser·retrieval version을 함께 저장한다.
+- 동명이인은 정확한 이름 하나만으로 질의했을 때 별도 Person 후보를 유지하고 `ambiguous`로 반환한다.
+- `query_evidence`는 결과 Person마다 대표 Evidence를 저장하고 전체 선택 Evidence는 Query response payload에 보존한다.
+- API와 서버 화면은 동일한 Recall application service를 사용한다.
+- Provider 오류 UI 경계는 구축했으며 live AI adapter 오류 분류는 실제 Provider 연결 단계에서 추가한다.
 
 ## 9. Graph Projection
 

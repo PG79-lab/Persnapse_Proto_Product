@@ -7,6 +7,7 @@ const expectedTables = [
   "capture_sessions",
   "events",
   "feedback",
+  "golden_query_cases",
   "interaction_participants",
   "interaction_topics",
   "interactions",
@@ -64,7 +65,33 @@ try {
       (select count(*) from public.interactions where workspace_id = ${workspaceId}) as interactions,
       (select count(*) from public.memory_statements where workspace_id = ${workspaceId}) as memories,
       (select count(*) from public.action_items where workspace_id = ${workspaceId}) as actions,
-      (select count(*) from public.memory_documents where workspace_id = ${workspaceId}) as documents
+      (
+        select count(*)
+        from public.memory_documents
+        where workspace_id = ${workspaceId}
+          and document_kind = 'person_profile'
+      ) as documents,
+      (
+        select count(*)
+        from public.golden_query_cases
+        where workspace_id = ${workspaceId}
+          and is_active = true
+      ) as golden_queries,
+      (
+        select count(*)
+        from public.queries
+        where workspace_id = ${workspaceId}
+          and status = 'completed'
+          and answer_text is not null
+          and response_payload <> '{}'::jsonb
+      ) as completed_recall_queries,
+      (
+        select count(*)
+        from public.query_evidence
+        where workspace_id = ${workspaceId}
+          and verification_status = 'confirmed'
+          and evidence_excerpt is not null
+      ) as evidence_snapshots
   `;
   const [edgeCases] = await sql`
     select
@@ -124,6 +151,18 @@ try {
     toCount(edgeCases.draft_memories) >= 1,
     "Draft-memory case is missing.",
   );
+  assert(
+    toCount(counts.golden_queries) >= 8,
+    "Recall Golden Query suite needs at least 8 active cases.",
+  );
+  assert(
+    toCount(counts.completed_recall_queries) >= 8,
+    "Recall evaluation results were not persisted.",
+  );
+  assert(
+    toCount(counts.evidence_snapshots) >= 1,
+    "Recall evidence snapshots are missing.",
+  );
 
   await sql`select app_private.rebuild_memory_documents(${workspaceId}::uuid)`;
 
@@ -131,10 +170,27 @@ try {
     select count(*) as documents
     from public.memory_documents
     where workspace_id = ${workspaceId}
+      and document_kind = 'person_profile'
   `;
   assert(
     toCount(rebuilt.documents) === toCount(counts.people),
     "Derived memory documents were not rebuilt for every person.",
+  );
+
+  const [draftProjection] = await sql`
+    select count(*) as leaked_drafts
+    from public.memory_statements draft
+    join public.memory_documents document
+      on document.workspace_id = draft.workspace_id
+     and document.person_id = draft.person_id
+     and document.document_kind = 'person_profile'
+    where draft.workspace_id = ${workspaceId}
+      and draft.verification_status = 'draft'
+      and position(draft.body in document.content) > 0
+  `;
+  assert(
+    toCount(draftProjection.leaked_drafts) === 0,
+    "Draft memories leaked into a Recall projection.",
   );
 
   console.log(
@@ -148,6 +204,10 @@ try {
         memories: toCount(counts.memories),
         actions: toCount(counts.actions),
         derivedDocuments: toCount(rebuilt.documents),
+        goldenQueries: toCount(counts.golden_queries),
+        completedRecallQueries: toCount(counts.completed_recall_queries),
+        evidenceSnapshots: toCount(counts.evidence_snapshots),
+        draftProjectionLeaks: toCount(draftProjection.leaked_drafts),
         edgeCases: {
           duplicateNames: toCount(edgeCases.duplicate_names),
           repeatedContacts: toCount(edgeCases.repeated_contacts),
