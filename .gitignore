@@ -1,0 +1,40 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Raw source material (may contain private or sensitive information)
+docs/inputs/*
+!docs/inputs/README.md
+
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+.next/
+playwright-report/
+test-results/
+
+# Next.js generated TypeScript files
+next-env.d.ts
+*.tsbuildinfo
+
+# Local tools and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
