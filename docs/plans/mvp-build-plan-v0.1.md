@@ -105,6 +105,8 @@ Foundation
 
 ## 5. Phase 2 — Memory Foundation + Seed Dataset
 
+**상태: 완료 (2026-09-15)**
+
 ### 목표
 
 실제 Capture 없이도 Persnapse의 관계 기억을 표현하고 검증할 수 있게 한다.
@@ -126,6 +128,16 @@ Foundation
 - 동일 seed를 중복 없이 재현 가능
 - Person Profile에서 시간순 Context와 provenance 확인 가능
 - 검색 파생 데이터를 삭제 후 재생성 가능
+
+### 완료 근거
+
+- Supabase 원격 개발 DB에 migration 2건 적용
+- Workspace 격리 복합 외래키와 public table 20개의 RLS 활성화
+- 고정 UUID 기반 합성 데이터 14명, 조직 7개, Interaction 18건, Memory 20건, Action 10건 생성
+- 동명이인, 유사 조직, 반복 Interaction, 미완료 Action, Draft Memory 포함
+- `app_private.rebuild_memory_documents`로 Person별 검색 문서 삭제·재생성 검증
+- `/people` 목록과 `/people/[personId]` 시간순 Context·근거 화면 구축
+- `npm run db:verify`, `npm run verify` 통과
 
 ## 6. Phase 3 — Seeded Recall Vertical Slice
 

@@ -1,50 +1,67 @@
+import Link from "next/link";
+
+import { AppShell } from "../components/app-shell";
+
 const stages = ["Capture", "Context", "Memory", "Recall", "Action"];
 
 export default function HomePage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-6xl flex-col justify-between px-6 py-10 sm:px-10 sm:py-14">
-      <header className="flex items-center justify-between border-b border-[var(--border)] pb-5">
-        <p className="text-sm font-semibold tracking-[0.18em] text-[var(--accent)] uppercase">
-          Persnapse
-        </p>
-        <span className="rounded-full border border-[var(--border)] bg-white/75 px-3 py-1 text-xs text-[var(--muted)]">
-          Foundation
-        </span>
-      </header>
-
-      <section className="my-20 max-w-4xl">
-        <p className="mb-5 text-sm font-medium text-[var(--accent)]">
-          Business Relationship Memory
-        </p>
-        <h1 className="max-w-3xl text-4xl leading-tight font-semibold tracking-[-0.04em] sm:text-6xl">
-          사람보다 먼저 사라지는 관계의 맥락을 기억합니다.
-        </h1>
-        <p className="mt-7 max-w-2xl text-base leading-7 text-[var(--muted)] sm:text-lg">
-          명함과 만남의 맥락을 신뢰할 수 있는 관계 기억으로 만들고, 필요한 순간
-          정확한 근거와 함께 다시 찾습니다.
-        </p>
-
-        <ol
-          className="mt-12 grid gap-3 sm:grid-cols-5"
-          aria-label="Persnapse core loop"
-        >
-          {stages.map((stage, index) => (
-            <li
-              key={stage}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface)]/85 px-4 py-4 shadow-sm"
-            >
-              <span className="block text-xs text-[var(--muted)]">
-                0{index + 1}
+    <AppShell>
+      <main className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-20">
+        <section className="grid min-h-[34rem] items-center gap-14 lg:grid-cols-[1.15fr_0.85fr]">
+          <div>
+            <p className="mb-5 text-sm font-semibold text-[var(--accent)]">
+              Business Relationship Memory
+            </p>
+            <h1 className="max-w-4xl text-5xl leading-[1.08] font-semibold tracking-[-0.055em] sm:text-7xl">
+              사람보다 먼저 사라지는 관계의 맥락을 기억합니다.
+            </h1>
+            <p className="mt-7 max-w-2xl text-base leading-8 text-[var(--muted)] sm:text-lg">
+              명함과 만남의 맥락을 신뢰할 수 있는 관계 기억으로 만들고, 필요한
+              순간 정확한 근거와 함께 다시 찾습니다.
+            </p>
+            <div className="mt-9 flex flex-wrap items-center gap-4">
+              <Link
+                href="/people"
+                className="rounded-full bg-[var(--foreground)] px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5"
+              >
+                관계 기억 살펴보기
+                <span className="ml-2" aria-hidden="true">
+                  →
+                </span>
+              </Link>
+              <span className="text-xs text-[var(--muted)]">
+                Phase 2 · 합성 데이터 14명
               </span>
-              <span className="mt-2 block text-sm font-semibold">{stage}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+            </div>
+          </div>
 
-      <footer className="border-t border-[var(--border)] pt-5 text-xs text-[var(--muted)]">
-        Capture → Context → Memory → Recall → Action
-      </footer>
-    </main>
+          <div className="relative">
+            <div className="absolute -inset-8 -z-10 rounded-full bg-[var(--accent-soft)] blur-3xl" />
+            <ol
+              className="space-y-3 rounded-[2rem] border border-[var(--border)] bg-white/75 p-5 shadow-[0_30px_90px_rgba(24,45,32,0.1)] backdrop-blur sm:p-7"
+              aria-label="Persnapse core loop"
+            >
+              {stages.map((stage, index) => (
+                <li
+                  key={stage}
+                  className="flex items-center gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-4"
+                >
+                  <span className="flex size-9 items-center justify-center rounded-xl bg-[var(--background)] text-xs font-semibold text-[var(--muted)]">
+                    0{index + 1}
+                  </span>
+                  <span className="text-sm font-semibold">{stage}</span>
+                  {stage === "Memory" ? (
+                    <span className="ml-auto rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-semibold text-[var(--accent)] uppercase">
+                      Ready
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+      </main>
+    </AppShell>
   );
 }

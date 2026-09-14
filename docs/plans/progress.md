@@ -60,3 +60,28 @@ Memory Foundation과 합성 Golden Dataset. PostgreSQL migration의 실제 실�
 - 각 기능 phase에서 필요한 Provider SDK와 adapter 구현
 - 실제 API credential 연결과 계정별 모델 접근 확인
 - Golden Dataset 기반 Main·Quality Agent benchmark 및 escalation 기준 측정
+
+## 2026-09-15 — Phase 2 Memory Foundation 완료
+
+### 구축
+
+- Supabase CLI와 `postgres.js` 기반 migration, seed, 연결 및 무결성 검증 명령
+- Workspace, Person, Organization, Affiliation, Event, Interaction, Topic, Memory, Action 도메인 스키마
+- Capture, Source Asset, Provenance, Query, Evidence, Feedback, AI Run 경계
+- public table 20개 RLS와 Workspace 복합 외래키 격리
+- PostgreSQL vector 기반 `memory_documents` 파생 projection과 재생성 함수
+- 실제 개인정보가 없는 14명 규모 합성 Golden Dataset
+- 동명이인, 유사 회사명, 반복 Interaction, 미완료 약속, Draft 추론 케이스
+- DB를 직접 읽는 Person 목록과 시간순 Context·Evidence Profile
+
+### 검증
+
+- 원격 Supabase migration과 seed 적용 성공
+- `npm run db:verify` 통과: 인물 14, 조직 7, Interaction 18, Memory 20, Action 10, 파생 문서 14
+- 파생 문서 삭제·재생성 및 Workspace 보존 외래키 동작 확인
+- `npm run verify` 통과: unit test 7개 및 production build
+- `/people`와 동명이인 Person Profile Chromium E2E 2개 통과
+
+### 다음 단계
+
+Phase 3 Seeded Recall Vertical Slice. 합성 Query와 기대 Evidence를 기준으로 구조화 검색부터 구현하고 semantic retrieval과 AI answer generation은 adapter 경계를 따라 순차 연결한다.

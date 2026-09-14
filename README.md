@@ -23,6 +23,17 @@ npm run dev
 npm run verify
 ```
 
+Supabase 개발 프로젝트를 처음 구성할 때는 `.env.local`의 `DATABASE_URL`을 확인한 뒤 다음 명령을 실행합니다. Seed는 실제 개인정보가 없는 합성 데이터입니다.
+
+```bash
+npm run db:check
+npm run db:migrate:dry
+npm run db:setup
+npm run db:verify
+```
+
+Migration이 이미 최신인 상태에서 합성 데이터만 다시 맞추려면 `npm run db:seed`를 사용합니다.
+
 브라우저 E2E 테스트는 최초 한 번 Playwright 브라우저 설치가 필요합니다.
 
 ```bash
@@ -52,5 +63,7 @@ npm run test:e2e
 
 - 독립 Git 저장소 구성 완료
 - Canonical Context 및 MVP v0 분석 완료
-- Foundation 구축 진행 중
-- 다음 단계: Memory Foundation과 Golden Dataset
+- Foundation 구축 완료
+- Phase 2 Memory Foundation과 Golden Dataset 구축 완료
+- 인물 목록과 시간순 Context·Evidence Profile 실행 가능
+- 다음 단계: Seeded Recall Vertical Slice

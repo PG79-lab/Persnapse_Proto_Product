@@ -4,7 +4,8 @@ import { parseServerEnv } from "./env";
 
 const validEnvironment = {
   NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: "public-key",
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "public-key",
+  DATABASE_URL: "postgresql://postgres:password@example.com:5432/postgres",
   APP_DEFAULT_WORKSPACE_ID: "00000000-0000-4000-8000-000000000001",
 };
 

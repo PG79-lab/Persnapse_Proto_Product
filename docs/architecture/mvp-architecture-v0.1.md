@@ -1,6 +1,6 @@
 # Persnapse MVP Architecture v0.1
 
-- 상태: 구축을 위한 Working Baseline, 단계별 기술 검증 진행
+- 상태: Phase 2 Memory Foundation 반영, 단계별 기술 검증 진행
 - 작성일: 2026-09-13
 - 목적: 빠른 MVP와 이후 확장 사이의 최소 안정 경계를 정의
 - 비목적: 세부 DB migration, API 최종 계약, 특정 AI 모델 확정
@@ -201,20 +201,21 @@ awaiting_review → cancelled
 
 ```text
 source_kind:
-  user_explicit
-  source_asset
-  device_metadata
-  external_verified
-  ai_inferred
+  manual
+  business_card
+  note
+  voice
+  import
+  ai_inference
+  system
 
 verification_status:
-  unreviewed
-  user_confirmed
-  user_corrected
+  draft
+  confirmed
   rejected
 ```
 
-수치 confidence는 선택적 내부 메타데이터로 유지하며 verification을 대신하지 않는다.
+사용자 수정은 source와 provenance 이력으로 보존한다. 수치 confidence는 선택적 내부 메타데이터로 유지하며 verification을 대신하지 않는다.
 
 ## 7. Identity Resolution
 

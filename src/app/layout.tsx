@@ -3,8 +3,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Persnapse",
-  description: "Business relationship memory",
+  title: {
+    default: "Persnapse",
+    template: "%s · Persnapse",
+  },
+  description: "사람과 만남의 맥락을 기억하는 Business Relationship Memory",
 };
 
 export default function RootLayout({
