@@ -18,7 +18,7 @@ describe("server environment", () => {
     expect(environment.OPENAI_STRUCTURING_MODEL).toBe("gpt-5.6-luna");
     expect(environment.VOYAGE_EMBEDDING_MODEL).toBe("voyage-4");
     expect(environment.VOYAGE_RERANK_MODEL).toBe("rerank-3-lite");
-    expect(environment.GOOGLE_MAIN_AGENT_MODEL).toBe("gemini-3.8-flash");
+    expect(environment.OPENAI_MAIN_AGENT_MODEL).toBe("gpt-5.6-terra");
     expect(environment.ANTHROPIC_QUALITY_AGENT_MODEL).toBe("claude-sonnet-5");
     expect(environment.OPENAI_COMPLEX_REASONING_MODEL).toBe("gpt-5.6-sol");
   });

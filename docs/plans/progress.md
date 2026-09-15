@@ -182,3 +182,37 @@ Phase 4 Text Capture to Memory. API key 없이 mock 구조화를 사용해 Draft
 ### Phase 4 진입 게이트
 
 변경된 작업 순서에 따라 `gemini-3.8-flash` 구조화 출력 1회 성공을 확인한 뒤 Phase 4 구축을 시작한다. Google 503이 지속되는 동안 다른 Gemini 모델로 우회하지 않는다.
+
+## 2026-09-15 — Main Agent GPT-5.6 Terra 전환 및 Live 검증 완료
+
+### 결정과 구축
+
+- 반복 `HTTP 503 high demand`가 발생한 Google `gemini-3.8-flash`를 Main Agent 기본 경로에서 제거
+- `mainAgent.primary`를 OpenAI `gpt-5.6-terra`로 전환
+- 전용 `OPENAI_MAIN_AGENT_MODEL` override 추가
+- Main Agent의 중복 Terra benchmark route 제거
+- Quality Agent의 Terra benchmark와 Complex Reasoning의 `gpt-5.6-sol`은 기존 역할 유지
+- Main Agent live 검증을 Evidence 제한 strict schema와 `reasoning.effort=none`으로 교체
+- 단일 성공만 보지 않고 워밍업 1회와 동시 4회 burst의 지연·오류·재시도 측정
+
+### Live 검증
+
+| 지표                | 결과            |
+| ------------------- | --------------- |
+| 지정 모델           | `gpt-5.6-terra` |
+| 구조화 응답         | 5/5 통과        |
+| suite 재시도        | 0회             |
+| 429/5xx/timeout     | 0건             |
+| 평균 지연           | 2,038ms         |
+| p50                 | 1,798ms         |
+| p95·최대            | 3,223ms         |
+| 초기 최대 지연 기준 | 15,000ms        |
+| 총 token            | 1,775           |
+| service tier        | `default`       |
+
+### 판정
+
+- Main Agent의 모델 접근, Responses API, strict schema와 작은 동시 burst 계약 통과
+- OpenAI 구조화·embedding fallback, Voyage embedding·reranking을 포함한 현재 Phase 4 선행 live 경로 확인 완료
+- 앱 기본 `AI_ROUTING_MODE=mock`은 유지하며 Phase 4 adapter를 연결할 때만 live 실행
+- 변경된 API 검증 게이트를 충족했으므로 Phase 4 구축 진입 가능

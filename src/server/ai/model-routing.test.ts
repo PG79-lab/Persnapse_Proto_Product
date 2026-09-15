@@ -18,8 +18,12 @@ describe("AI task routing", () => {
     expect(aiTaskRouting.reranking.primary.target).toBe("rerank-3-lite");
   });
 
-  it("does not use the complex reasoner as the main agent", () => {
-    expect(aiTaskRouting.mainAgent.primary.target).toBe("gemini-3.8-flash");
+  it("uses GPT-5.6 Terra as the main agent without escalating to Sol", () => {
+    expect(aiTaskRouting.mainAgent.primary).toEqual({
+      provider: "openai",
+      target: "gpt-5.6-terra",
+    });
+    expect(aiTaskRouting.mainAgent).not.toHaveProperty("benchmark");
     expect(aiTaskRouting.complexReasoning.primary.target).toBe("gpt-5.6-sol");
     expect(aiTaskRouting.mainAgent.primary.target).not.toBe(
       aiTaskRouting.complexReasoning.primary.target,

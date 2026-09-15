@@ -5,7 +5,7 @@ export const aiModelDefaults = {
   embedding: "voyage-4",
   embeddingFallback: "text-embedding-3-small",
   reranking: "rerank-3-lite",
-  mainAgent: "gemini-3.8-flash",
+  mainAgent: "gpt-5.6-terra",
   qualityAgent: "claude-sonnet-5",
   qualityBenchmark: "gpt-5.6-terra",
   complexReasoning: "gpt-5.6-sol",
@@ -57,11 +57,7 @@ export const aiTaskRouting = {
     fallback: { provider: "voyage", target: "rerank-3" },
   },
   mainAgent: {
-    primary: { provider: "google", target: aiModelDefaults.mainAgent },
-    benchmark: {
-      provider: "openai",
-      target: aiModelDefaults.qualityBenchmark,
-    },
+    primary: { provider: "openai", target: aiModelDefaults.mainAgent },
   },
   qualityAgent: {
     primary: { provider: "anthropic", target: aiModelDefaults.qualityAgent },

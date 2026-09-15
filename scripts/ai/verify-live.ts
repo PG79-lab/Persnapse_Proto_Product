@@ -10,9 +10,15 @@ import type { AiTaskId } from "../../src/server/ai/model-routing";
 
 const confirmationFlag = "--confirm-live";
 const requestTimeoutMs = 45_000;
+const maxAcceptedMainAgentLatencyMs = 15_000;
 const syntheticContext = {
   personName: "김하늘",
   topic: "부산 물류 실증",
+} as const;
+
+const syntheticMainAgentResult = {
+  answer: "김하늘은 부산 물류 실증 후속 미팅과 관련되어 있습니다.",
+  evidenceId: "synthetic-evidence-1",
 } as const;
 
 const contextResultSchema = z
@@ -37,6 +43,38 @@ const contextJsonSchema = {
     },
   },
   required: ["personName", "topic"],
+  additionalProperties: false,
+} as const;
+
+const mainAgentResultSchema = z
+  .object({
+    answer: z.literal(syntheticMainAgentResult.answer),
+    evidenceIds: z
+      .array(z.literal(syntheticMainAgentResult.evidenceId))
+      .length(1),
+  })
+  .strict();
+
+const mainAgentJsonSchema = {
+  type: "object",
+  properties: {
+    answer: {
+      type: "string",
+      enum: [syntheticMainAgentResult.answer],
+      description: "제공된 합성 Evidence만 사용한 답변",
+    },
+    evidenceIds: {
+      type: "array",
+      items: {
+        type: "string",
+        enum: [syntheticMainAgentResult.evidenceId],
+      },
+      minItems: 1,
+      maxItems: 1,
+      description: "답변을 직접 뒷받침하는 Evidence ID",
+    },
+  },
+  required: ["answer", "evidenceIds"],
   additionalProperties: false,
 } as const;
 
@@ -215,6 +253,28 @@ function parseStructuredContext(rawText: string): void {
   }
 }
 
+function parseMainAgentResult(rawText: string): void {
+  let parsedJson: unknown;
+
+  try {
+    parsedJson = JSON.parse(rawText);
+  } catch {
+    throw new LiveVerificationError(
+      "MAIN_AGENT_OUTPUT_INVALID_JSON",
+      "Main Agent output was not valid JSON.",
+    );
+  }
+
+  const parsed = mainAgentResultSchema.safeParse(parsedJson);
+
+  if (!parsed.success) {
+    throw new LiveVerificationError(
+      "MAIN_AGENT_OUTPUT_SCHEMA_MISMATCH",
+      "Main Agent output did not match the evidence-constrained schema.",
+    );
+  }
+}
+
 function openAiOutputText(payload: unknown): string {
   if (!isRecord(payload) || !Array.isArray(payload.output)) {
     throw new LiveVerificationError(
@@ -247,45 +307,6 @@ function openAiOutputText(payload: unknown): string {
     throw new LiveVerificationError(
       "OPENAI_OUTPUT_TEXT_MISSING",
       "OpenAI response did not include structured output text.",
-    );
-  }
-
-  return outputText;
-}
-
-function googleOutputText(payload: unknown): string {
-  if (!isRecord(payload) || !Array.isArray(payload.candidates)) {
-    throw new LiveVerificationError(
-      "GOOGLE_RESPONSE_SHAPE_INVALID",
-      "Google response did not include candidates.",
-    );
-  }
-
-  const textParts: string[] = [];
-
-  for (const candidate of payload.candidates) {
-    if (!isRecord(candidate) || !isRecord(candidate.content)) {
-      continue;
-    }
-
-    const parts = candidate.content.parts;
-    if (!Array.isArray(parts)) {
-      continue;
-    }
-
-    for (const part of parts) {
-      if (isRecord(part) && typeof part.text === "string") {
-        textParts.push(part.text);
-      }
-    }
-  }
-
-  const outputText = textParts.join("");
-
-  if (!outputText) {
-    throw new LiveVerificationError(
-      "GOOGLE_OUTPUT_TEXT_MISSING",
-      "Google response did not include structured output text.",
     );
   }
 
@@ -359,12 +380,128 @@ function voyageUsage(payload: unknown): VerificationMetrics {
   };
 }
 
-function googleUsage(payload: unknown): VerificationMetrics {
-  const usage = isRecord(payload) ? payload.usageMetadata : undefined;
+interface MainAgentSample {
+  latencyMs: number;
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+  serviceTier: string;
+}
+
+async function runMainAgentSample(
+  route: ResolvedAiRoute,
+  apiKey: string,
+  secrets: readonly (string | undefined)[],
+  sampleNumber: number,
+): Promise<MainAgentSample> {
+  const startedAt = performance.now();
+  const payload = await requestJson(
+    "https://api.openai.com/v1/responses",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: route.target,
+        store: false,
+        reasoning: {
+          effort: "none",
+        },
+        instructions:
+          "Answer only from the supplied synthetic Evidence. Return the required JSON object without adding facts.",
+        input: [
+          `Synthetic request sequence: ${sampleNumber}`,
+          "Question: 부산 물류 실증 후속 미팅과 관련된 사람은 누구인가?",
+          `Evidence ${syntheticMainAgentResult.evidenceId}: 김하늘은 부산 물류 실증 후속 미팅과 관련되어 있습니다.`,
+        ].join("\n"),
+        text: {
+          format: {
+            type: "json_schema",
+            name: "persnapse_main_agent_smoke_v1",
+            strict: true,
+            schema: mainAgentJsonSchema,
+          },
+        },
+        max_output_tokens: 160,
+      }),
+    },
+    secrets,
+  );
+
+  parseMainAgentResult(openAiOutputText(payload));
+  const usage = isRecord(payload) ? payload.usage : undefined;
+
   return {
-    promptTokens: numericMetric(usage, "promptTokenCount"),
-    outputTokens: numericMetric(usage, "candidatesTokenCount"),
-    totalTokens: numericMetric(usage, "totalTokenCount"),
+    latencyMs: Math.max(0, Math.round(performance.now() - startedAt)),
+    inputTokens: numericMetric(usage, "input_tokens") ?? 0,
+    outputTokens: numericMetric(usage, "output_tokens") ?? 0,
+    totalTokens: numericMetric(usage, "total_tokens") ?? 0,
+    serviceTier:
+      isRecord(payload) && typeof payload.service_tier === "string"
+        ? payload.service_tier
+        : "unreported",
+  };
+}
+
+function percentile(values: readonly number[], ratio: number): number {
+  const ordered = [...values].sort((left, right) => left - right);
+  const index = Math.max(0, Math.ceil(ordered.length * ratio) - 1);
+  return ordered[index] ?? 0;
+}
+
+async function verifyMainAgentReliability(
+  route: ResolvedAiRoute,
+  apiKey: string,
+  secrets: readonly (string | undefined)[],
+): Promise<VerificationMetrics> {
+  const warmup = await runMainAgentSample(route, apiKey, secrets, 1);
+  const burst = await Promise.all(
+    [2, 3, 4, 5].map((sampleNumber) =>
+      runMainAgentSample(route, apiKey, secrets, sampleNumber),
+    ),
+  );
+  const samples = [warmup, ...burst];
+  const latencies = samples.map((sample) => sample.latencyMs);
+  const maximumLatencyMs = Math.max(...latencies);
+  const p95LatencyMs = percentile(latencies, 0.95);
+
+  if (maximumLatencyMs > maxAcceptedMainAgentLatencyMs) {
+    throw new LiveVerificationError(
+      "MAIN_AGENT_LATENCY_BOTTLENECK",
+      `Main Agent exceeded the ${maxAcceptedMainAgentLatencyMs}ms smoke threshold (p95 ${p95LatencyMs}ms, max ${maximumLatencyMs}ms).`,
+    );
+  }
+
+  return {
+    schema: "evidence-constrained-answer-v1",
+    samples: samples.length,
+    concurrentBurst: burst.length,
+    reasoningEffort: "none",
+    p50LatencyMs: percentile(latencies, 0.5),
+    p95LatencyMs,
+    maxLatencyMs: maximumLatencyMs,
+    averageLatencyMs: Math.round(
+      latencies.reduce((total, latency) => total + latency, 0) /
+        latencies.length,
+    ),
+    slowThresholdMs: maxAcceptedMainAgentLatencyMs,
+    totalInputTokens: samples.reduce(
+      (total, sample) => total + sample.inputTokens,
+      0,
+    ),
+    totalOutputTokens: samples.reduce(
+      (total, sample) => total + sample.outputTokens,
+      0,
+    ),
+    totalTokens: samples.reduce(
+      (total, sample) => total + sample.totalTokens,
+      0,
+    ),
+    serviceTiers: [
+      ...new Set(samples.map((sample) => sample.serviceTier)),
+    ].join(","),
   };
 }
 
@@ -417,7 +554,6 @@ const liveEnvironment: ServerEnv = {
 const secrets = [
   liveEnvironment.OPENAI_API_KEY,
   liveEnvironment.VOYAGE_API_KEY,
-  liveEnvironment.GOOGLE_GENERATIVE_AI_API_KEY,
 ] as const;
 
 const structuringRoute = requiredRoute(
@@ -440,9 +576,8 @@ const mainAgentRoute = requiredRoute("mainAgent", "primary", liveEnvironment);
 
 const openAiKey = liveEnvironment.OPENAI_API_KEY;
 const voyageKey = liveEnvironment.VOYAGE_API_KEY;
-const googleKey = liveEnvironment.GOOGLE_GENERATIVE_AI_API_KEY;
 
-if (!openAiKey || !voyageKey || !googleKey) {
+if (!openAiKey || !voyageKey) {
   throw new LiveVerificationError(
     "CREDENTIAL_MISSING",
     "One or more live verification credentials are missing.",
@@ -604,48 +739,9 @@ const verificationCases: VerificationCase[] = [
     },
   },
   {
-    name: "google-structured-output",
+    name: "openai-main-agent-primary",
     route: mainAgentRoute,
-    run: async () => {
-      const payload = await requestJson(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(mainAgentRoute.target)}:generateContent`,
-        {
-          method: "POST",
-          headers: {
-            "x-goog-api-key": googleKey,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  {
-                    text: "합성 테스트 데이터입니다. 다음 문장에서 명시된 인물 이름과 대화 주제를 그대로 추출하세요: 김하늘과 부산 물류 실증에 관해 대화했습니다.",
-                  },
-                ],
-              },
-            ],
-            generationConfig: {
-              maxOutputTokens: 160,
-              responseFormat: {
-                text: {
-                  mimeType: "APPLICATION_JSON",
-                  schema: contextJsonSchema,
-                },
-              },
-            },
-          }),
-        },
-        secrets,
-      );
-
-      parseStructuredContext(googleOutputText(payload));
-      return {
-        schema: "capture-context-smoke-v1",
-        ...googleUsage(payload),
-      };
-    },
+    run: () => verifyMainAgentReliability(mainAgentRoute, openAiKey, secrets),
   },
 ];
 

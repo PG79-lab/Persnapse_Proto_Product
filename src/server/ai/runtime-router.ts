@@ -62,7 +62,7 @@ function overriddenTarget(
       case "reranking":
         return environment.VOYAGE_RERANK_MODEL;
       case "mainAgent":
-        return environment.GOOGLE_MAIN_AGENT_MODEL;
+        return environment.OPENAI_MAIN_AGENT_MODEL;
       case "qualityAgent":
         return environment.ANTHROPIC_QUALITY_AGENT_MODEL;
       case "complexReasoning":
@@ -82,7 +82,7 @@ function overriddenTarget(
   }
 
   if (lane === "benchmark") {
-    if (task === "mainAgent" || task === "qualityAgent") {
+    if (task === "qualityAgent") {
       return environment.OPENAI_QUALITY_BENCHMARK_MODEL;
     }
   }

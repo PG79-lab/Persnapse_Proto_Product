@@ -11,6 +11,7 @@
 - 호출 비용이 발생할 수 있으므로 CI나 일반 `npm run verify`에는 포함하지 않는다.
 - HTTP 429, 5xx, timeout과 network error만 최대 1회 재시도한다.
 - 실패 시 지정 모델을 다른 모델로 자동 대체하지 않는다.
+- `openai-main-agent-primary`는 병목 확인을 위해 유료 API를 5회 호출한다.
 
 ## 실행
 
@@ -23,7 +24,7 @@ npm run ai:verify:live
 단일 케이스 재검증:
 
 ```bash
-npm run ai:verify:live -- --only=google-structured-output
+npm run ai:verify:live -- --only=openai-main-agent-primary
 ```
 
 지원하는 `--only` 값:
@@ -34,9 +35,11 @@ npm run ai:verify:live -- --only=google-structured-output
 | `openai-embedding-fallback` | embedding fallback의 1024차원 finite vector   |
 | `voyage-embedding-primary`  | embedding primary의 1024차원 finite vector    |
 | `voyage-rerank-primary`     | 관련 합성 문서가 1위가 되는지                 |
-| `google-structured-output`  | Main Agent primary의 JSON schema 출력         |
+| `openai-main-agent-primary` | Main Agent의 Evidence 제한 출력과 1+4 burst   |
 
 성공한 실행은 exit code 0, 하나라도 실패한 실행은 exit code 1을 반환한다.
+
+Main Agent 검증은 `reasoning.effort=none`으로 워밍업 1회와 동시 4회를 실행한다. strict Evidence 응답, 무재시도 성공과 개별 최대 15초 이하를 초기 smoke 기준으로 사용한다.
 
 ## 환경변수
 
@@ -44,12 +47,11 @@ npm run ai:verify:live -- --only=google-structured-output
 
 - `OPENAI_API_KEY`
 - `VOYAGE_API_KEY`
-- `GOOGLE_GENERATIVE_AI_API_KEY`
 - `OPENAI_STRUCTURING_MODEL`
 - `OPENAI_EMBEDDING_FALLBACK_MODEL`
 - `VOYAGE_EMBEDDING_MODEL`
 - `VOYAGE_RERANK_MODEL`
-- `GOOGLE_MAIN_AGENT_MODEL`
+- `OPENAI_MAIN_AGENT_MODEL`
 
 키를 바꾸거나 노출이 의심되면 Provider 콘솔에서 기존 키를 폐기하고 새 키를 발급한다.
 

@@ -42,7 +42,7 @@ export const serverEnvSchema = z.object({
     .min(1)
     .default(aiModelDefaults.embeddingFallback),
   VOYAGE_RERANK_MODEL: z.string().min(1).default(aiModelDefaults.reranking),
-  GOOGLE_MAIN_AGENT_MODEL: z.string().min(1).default(aiModelDefaults.mainAgent),
+  OPENAI_MAIN_AGENT_MODEL: z.string().min(1).default(aiModelDefaults.mainAgent),
   ANTHROPIC_QUALITY_AGENT_MODEL: z
     .string()
     .min(1)

@@ -46,7 +46,7 @@ AI task별 Provider와 모델은 `ADR 0001 — AI Task Model Routing`으로 확�
 | 정보 구조화·분류          | OpenAI `gpt-5.6-luna`       |
 | Context embedding         | Voyage `voyage-4`           |
 | 후보 재정렬               | Voyage `rerank-3-lite`      |
-| 일반 사용자 질의          | Google `gemini-3.8-flash`   |
+| 일반 사용자 질의          | OpenAI `gpt-5.6-terra`      |
 | 고품질 Business reasoning | Anthropic `claude-sonnet-5` |
 | 최고난도 선택 호출        | OpenAI `gpt-5.6-sol`        |
 

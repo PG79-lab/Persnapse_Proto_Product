@@ -1,6 +1,6 @@
 # ADR 0001 — AI Task Model Routing
 
-- 상태: Accepted
+- 상태: Accepted, Main Agent 결정은 ADR 0005로 대체
 - 결정일: 2026-09-14
 - 범위: Persnapse MVP의 외부 AI API 배정과 호출 경계
 - 원본: `docs/inputs/Task별_모델스택 및 비용_GPT.pdf`
@@ -55,3 +55,5 @@ OpenAI 확인 자료:
 ## 현재 구현 범위
 
 이 ADR은 모델 배정과 환경설정 계약을 확정한다. Provider SDK, 실제 adapter, API key와 유료 호출은 각 기능 phase에서 추가한다. API key는 저장소에 커밋하지 않는다.
+
+Main Agent의 Google `gemini-3.8-flash` 배정은 2026-09-15의 ADR 0005에서 OpenAI `gpt-5.6-terra`로 대체했다. 이 표는 최초 입력 문서에 따른 당시 결정을 보존한다.

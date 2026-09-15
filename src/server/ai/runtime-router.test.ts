@@ -43,6 +43,28 @@ describe("AI runtime router", () => {
     });
   });
 
+  it("routes the Main Agent to its dedicated OpenAI model setting", () => {
+    const route = resolveAiRoute(
+      "mainAgent",
+      "primary",
+      environment({
+        AI_ROUTING_MODE: "live",
+        OPENAI_API_KEY: "secret",
+        OPENAI_MAIN_AGENT_MODEL: "main-agent-override",
+      }),
+    );
+
+    expect(route).toMatchObject({
+      provider: "openai",
+      target: "main-agent-override",
+      available: true,
+      missingCredentials: [],
+    });
+    expect(
+      resolveAiRoute("mainAgent", "benchmark", environment()),
+    ).toBeUndefined();
+  });
+
   it("uses only the deterministic adapter in mock mode", async () => {
     const mockAdapter = {
       execute: vi.fn(async () => ({ value: "mocked" })),
