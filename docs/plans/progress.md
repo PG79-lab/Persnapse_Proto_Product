@@ -114,3 +114,39 @@ Phase 3 Seeded Recall Vertical Slice. 합성 Query와 기대 Evidence를 기준�
 ### 다음 단계
 
 Phase 4 Text Capture to Memory. 텍스트 입력을 검토 가능한 Draft로 구조화하고, 사용자 확인 후 transaction으로 Memory를 확정하여 같은 Recall 경로에 즉시 반영한다. 실제 유료 AI Provider 연결은 해당 adapter 구현 시 credential과 공식 endpoint를 확인한 뒤 활성화한다.
+
+## 2026-09-15 — Phase 3.5 Foundation Hardening 완료
+
+### 구축
+
+- `capture-draft-v1` Zod schema와 허용 상태 전이 domain contract
+- DB Capture 상태 전이 trigger, `commit_result`, committed entity 참조
+- `model_draft`와 사용자 수정 `structured_draft` 분리 기반
+- Capture별 AI Run attempt와 retry 연결
+- 환경 model override와 task별 credential을 실제로 해석하는 mock/live AI runtime
+- 공통 timeout, retry, fallback, schema validation과 attempt telemetry
+- Voyage/OpenAI fallback 공통 `vector(1024)` embedding 계약
+- `pending`, `processing`, `ready`, `failed` embedding 상태
+- content hash 기반 Person 단위 projection upsert와 projection v3
+- hash 충돌만으로 Recall 후보가 생기지 않는 보수적 의미 신호 조건
+- 기억에 없는 주제를 검증하는 `no_result` Golden Query
+
+### 검증
+
+- 단위 테스트 8개 파일, 23개 통과
+- Golden Query 9/9 통과
+- DB schema 21개 table RLS 유지
+- `vector(1024)`, Capture guard, commit result와 Person projection 함수 확인
+- Person projection 14개, Draft Memory 유출 0건
+- 변경 없는 projection rebuild가 row를 재작성하지 않음
+
+### 적용 과정 메모
+
+- 첫 migration 시 기존 합성 `committed` Capture가 단일 Person 참조를 갖지 않아 rollback됨
+- 기존 import Capture를 삭제하지 않고 typed `legacy_committed` 결과로 보존하도록 계약을 일반화
+- 기존 자동 생성 embedding constraint 이름 충돌도 transaction rollback 후 명시적인 제약 교체로 해결
+- 두 실패 모두 transaction 안에서 발생하여 부분 schema나 데이터 손상 없음
+
+### 다음 단계
+
+Phase 4 Text Capture to Memory. API key 없이 mock 구조화를 사용해 Draft → Review → Identity 선택 → atomic Commit → Profile/Recall 반영 수직 슬라이스를 완성한다.

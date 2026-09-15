@@ -23,8 +23,11 @@ export const serverEnvSchema = z.object({
   OPENAI_API_KEY: optionalSecret,
   VOYAGE_API_KEY: optionalSecret,
   GOOGLE_GENERATIVE_AI_API_KEY: optionalSecret,
+  GOOGLE_CLOUD_VISION_API_KEY: optionalSecret,
   ANTHROPIC_API_KEY: optionalSecret,
+  MISTRAL_API_KEY: optionalSecret,
   TOGETHER_API_KEY: optionalSecret,
+  FIREWORKS_API_KEY: optionalSecret,
   OPENAI_TRANSCRIPTION_MODEL: z
     .string()
     .min(1)

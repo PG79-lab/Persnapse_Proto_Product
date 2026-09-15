@@ -67,3 +67,15 @@ test("keeps duplicate names ambiguous until context is added", async ({
     page.locator('a[href^="/people/"]').filter({ hasText: "김민준" }),
   ).toHaveCount(2);
 });
+
+test("shows an explicit no-result state without invented evidence", async ({
+  page,
+}) => {
+  await page.goto(
+    "/recall?q=%EA%B3%A0%EB%8C%80%20%EC%95%85%EA%B8%B0%20%EB%B3%B5%EC%9B%90%20%EC%97%B0%EC%A3%BC%20%EC%A0%84%EB%AC%B8%EA%B0%80",
+  );
+
+  await expect(page.getByText("결과 없음")).toBeVisible();
+  await expect(page.getByText(/찾지 못했습니다/)).toBeVisible();
+  await expect(page.locator('a[href^="/people/"]')).toHaveCount(0);
+});

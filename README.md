@@ -69,5 +69,7 @@ npm run test:e2e
 - 인물 목록과 시간순 Context·Evidence Profile 실행 가능
 - Phase 3 Seeded Recall Vertical Slice 구축 완료
 - `/recall`에서 장소·행사·주제·시간·소속·약속 맥락으로 사람 검색 가능
-- 8개 Golden Query와 확인된 Evidence 기반 평가 8/8 통과
+- Phase 3.5 Capture·AI runtime·projection hardening 완료
+- 9개 Golden Query와 확인된 Evidence 기반 평가 9/9 통과
+- mock/live task router와 `vector(1024)` embedding 수명주기 준비
 - 다음 단계: Text Capture to Memory

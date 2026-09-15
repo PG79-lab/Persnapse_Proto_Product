@@ -58,6 +58,93 @@ try {
     assert(tableMap.get(tableName), `RLS is disabled: ${tableName}`);
   }
 
+  const [foundationContracts] = await sql`
+    select
+      (
+        select format_type(attribute.atttypid, attribute.atttypmod)
+        from pg_catalog.pg_attribute attribute
+        join pg_catalog.pg_class relation
+          on relation.oid = attribute.attrelid
+        join pg_catalog.pg_namespace namespace
+          on namespace.oid = relation.relnamespace
+        where namespace.nspname = 'public'
+          and relation.relname = 'memory_documents'
+          and attribute.attname = 'embedding'
+          and attribute.attnum > 0
+          and not attribute.attisdropped
+      ) as embedding_type,
+      exists (
+        select 1
+        from information_schema.columns
+        where table_schema = 'public'
+          and table_name = 'capture_sessions'
+          and column_name = 'commit_result'
+      ) as has_capture_commit_result,
+      exists (
+        select 1
+        from pg_catalog.pg_trigger trigger
+        join pg_catalog.pg_class relation
+          on relation.oid = trigger.tgrelid
+        join pg_catalog.pg_namespace namespace
+          on namespace.oid = relation.relnamespace
+        where namespace.nspname = 'public'
+          and relation.relname = 'capture_sessions'
+          and trigger.tgname = 'capture_sessions_enforce_state_transition'
+          and not trigger.tgisinternal
+      ) as has_capture_state_guard,
+      to_regprocedure(
+        'app_private.rebuild_person_memory_document(uuid,uuid)'
+      ) is not null as has_person_projection_function
+  `;
+
+  assert(
+    foundationContracts.embedding_type === "vector(1024)",
+    `Expected vector(1024), received ${foundationContracts.embedding_type}.`,
+  );
+  assert(
+    foundationContracts.has_capture_commit_result,
+    "Capture commit result contract is missing.",
+  );
+  assert(
+    foundationContracts.has_capture_state_guard,
+    "Capture state transition guard is missing.",
+  );
+  assert(
+    foundationContracts.has_person_projection_function,
+    "Person-scoped projection function is missing.",
+  );
+
+  await sql`
+    do $guard$
+    declare
+      committed_capture_id uuid;
+    begin
+      select id
+      into committed_capture_id
+      from public.capture_sessions
+      where state = 'committed'
+      order by created_at
+      limit 1;
+
+      if committed_capture_id is not null then
+        begin
+          update public.capture_sessions
+          set state = 'draft'
+          where id = committed_capture_id;
+
+          raise exception
+            using
+              errcode = 'P0001',
+              message = 'Capture state guard accepted an invalid transition.';
+        exception
+          when check_violation then
+            null;
+        end;
+      end if;
+    end
+    $guard$
+  `;
+
   const [counts] = await sql`
     select
       (select count(*) from public.persons where workspace_id = ${workspaceId}) as people,
@@ -152,8 +239,8 @@ try {
     "Draft-memory case is missing.",
   );
   assert(
-    toCount(counts.golden_queries) >= 8,
-    "Recall Golden Query suite needs at least 8 active cases.",
+    toCount(counts.golden_queries) >= 9,
+    "Recall Golden Query suite needs at least 9 active cases.",
   );
   assert(
     toCount(counts.completed_recall_queries) >= 8,
@@ -163,6 +250,14 @@ try {
     toCount(counts.evidence_snapshots) >= 1,
     "Recall evidence snapshots are missing.",
   );
+
+  const beforeRebuild = await sql`
+    select id, content_hash, embedding_status, updated_at
+    from public.memory_documents
+    where workspace_id = ${workspaceId}
+      and document_kind = 'person_profile'
+    order by id
+  `;
 
   await sql`select app_private.rebuild_memory_documents(${workspaceId}::uuid)`;
 
@@ -176,6 +271,42 @@ try {
     toCount(rebuilt.documents) === toCount(counts.people),
     "Derived memory documents were not rebuilt for every person.",
   );
+
+  const afterRebuild = await sql`
+    select id, content_hash, embedding_dimensions, embedding_status, updated_at
+    from public.memory_documents
+    where workspace_id = ${workspaceId}
+      and document_kind = 'person_profile'
+    order by id
+  `;
+  const beforeById = new Map(
+    beforeRebuild.map((document) => [document.id, document]),
+  );
+
+  for (const document of afterRebuild) {
+    const before = beforeById.get(document.id);
+
+    assert(before, `Projection identity changed: ${document.id}`);
+    assert(
+      before.content_hash === document.content_hash,
+      `Stable projection content changed: ${document.id}`,
+    );
+    assert(
+      new Date(before.updated_at).getTime() ===
+        new Date(document.updated_at).getTime(),
+      `Unchanged projection was rewritten: ${document.id}`,
+    );
+    assert(
+      toCount(document.embedding_dimensions) === 1024,
+      `Unexpected embedding dimension: ${document.id}`,
+    );
+    assert(
+      ["pending", "processing", "ready", "failed"].includes(
+        document.embedding_status,
+      ),
+      `Unexpected embedding status: ${document.id}`,
+    );
+  }
 
   const [draftProjection] = await sql`
     select count(*) as leaked_drafts
@@ -208,6 +339,13 @@ try {
         completedRecallQueries: toCount(counts.completed_recall_queries),
         evidenceSnapshots: toCount(counts.evidence_snapshots),
         draftProjectionLeaks: toCount(draftProjection.leaked_drafts),
+        foundationContracts: {
+          embeddingType: foundationContracts.embedding_type,
+          captureCommitResult: foundationContracts.has_capture_commit_result,
+          captureStateGuard: foundationContracts.has_capture_state_guard,
+          personScopedProjection:
+            foundationContracts.has_person_projection_function,
+        },
         edgeCases: {
           duplicateNames: toCount(edgeCases.duplicate_names),
           repeatedContacts: toCount(edgeCases.repeated_contacts),

@@ -29,7 +29,7 @@ set provider = excluded.provider,
 
 insert into public.capture_sessions (
   id, workspace_id, state, input_kind, raw_text, structured_draft,
-  idempotency_key, ai_run_id, committed_at
+  idempotency_key, ai_run_id, committed_at, commit_result
 )
 values (
   'b0000000-0000-4000-8000-000000000001',
@@ -40,13 +40,15 @@ values (
   '{"dataset":"phase2-golden","synthetic":true}'::jsonb,
   'phase2-golden-v1',
   'a0000000-0000-4000-8000-000000000001',
-  '2026-09-03T09:10:00+09:00'
+  '2026-09-03T09:10:00+09:00',
+  '{"kind":"seed_import","dataset":"phase2-golden"}'::jsonb
 )
 on conflict (id) do update
 set state = excluded.state,
     structured_draft = excluded.structured_draft,
     ai_run_id = excluded.ai_run_id,
     committed_at = excluded.committed_at,
+    commit_result = excluded.commit_result,
     updated_at = now();
 
 insert into public.source_assets (
@@ -465,6 +467,18 @@ values
     array['20000000-0000-4000-8000-000000000007'::uuid],
     array['60000000-0000-4000-8000-000000000010'::uuid],
     null
+  ),
+  (
+    '91000000-0000-4000-8000-000000000009',
+    '00000000-0000-4000-8000-000000000001',
+    'topic',
+    '기억에 없는 전문 분야',
+    '고대 악기 복원 연주 전문가',
+    '2026-09-15T12:00:00+09:00',
+    'no_result',
+    '{}'::uuid[],
+    '{}'::uuid[],
+    '확인된 관계 기억에 없는 조건은 근거를 만들어내지 않아야 한다.'
   )
 on conflict (id) do update
 set category = excluded.category,

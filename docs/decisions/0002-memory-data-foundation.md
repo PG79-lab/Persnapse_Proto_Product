@@ -32,3 +32,9 @@ Persnapse는 연락처 목록이 아니라 사람과 만남의 맥락을 근거�
 - Memory가 바뀌면 projection 재생성 또는 embedding 재처리가 필요하다.
 - 실제 Auth 공개 전 JWT claim 설정과 RLS 통합 테스트를 추가해야 한다.
 - Vector index와 고정 차원은 Phase 3 embedding adapter가 실제 provider 응답을 검증한 뒤 별도 migration으로 추가한다.
+
+## Phase 3.5 개정
+
+- ADR 0004에서 Voyage `voyage-4`와 OpenAI `text-embedding-3-small` fallback의 공통 차원을 1024로 확정했다.
+- `memory_documents.embedding`은 `vector(1024)`로 고정하고 content hash가 달라진 Person만 embedding을 다시 처리한다.
+- 전체 projection 삭제·재생성 방식은 Person 단위 upsert로 교체했다.

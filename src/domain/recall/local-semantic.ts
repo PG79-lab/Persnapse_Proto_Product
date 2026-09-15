@@ -46,6 +46,17 @@ function features(value: string): Set<string> {
   return result;
 }
 
+export function hasLocalSemanticSignal(left: string, right: string): boolean {
+  const leftFeatures = features(left);
+  const rightFeatures = features(right);
+
+  return [...leftFeatures].some(
+    (feature) =>
+      (feature.startsWith("token:") || feature.startsWith("concept:")) &&
+      rightFeatures.has(feature),
+  );
+}
+
 export function localSemanticVector(value: string): number[] {
   const vector = Array.from({ length: dimensions }, () => 0);
 

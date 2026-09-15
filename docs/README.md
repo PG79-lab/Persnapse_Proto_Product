@@ -18,3 +18,4 @@
 - `decisions/0001-ai-task-model-routing.md`: task별 AI Provider와 모델
 - `decisions/0002-memory-data-foundation.md`: Canonical 관계 데이터와 검색 projection
 - `decisions/0003-seeded-recall-contract.md`: Recall retrieval, Evidence와 Action 계약
+- `decisions/0004-phase35-runtime-and-projection-hardening.md`: Capture 상태, AI runtime과 embedding projection 계약

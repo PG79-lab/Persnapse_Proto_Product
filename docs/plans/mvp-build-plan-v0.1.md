@@ -187,10 +187,39 @@ Foundation
 - 이름만 입력한 동명이인 2명을 병합하지 않고 `ambiguous` 결과로 반환
 - Answer, 선택 이유, 확인된 Evidence, 저장된 Action과 비실행형 AI 제안을 분리한 응답 계약 구축
 - `POST /api/recall`과 `/recall` 사용자 화면 연결
-- 8개 범주의 Golden Query와 기대 Person·Evidence·reference time 저장
-- Golden Query 8/8 통과, Recall UI Chromium E2E 2개 포함 전체 E2E 4개 통과
+- 8개 범주와 `no_result` 사례를 포함한 Golden Query, 기대 Person·Evidence·reference time 저장
+- Golden Query 9/9 통과, Recall UI Chromium E2E 3개 포함 전체 E2E 5개 통과
 - Query, AI Run, latency, retrieval trace와 Evidence snapshot을 PostgreSQL에 기록
 - Draft Memory의 Recall projection 포함 여부 0건 검증
+
+## 6.5 Phase 3.5 — Foundation Hardening
+
+**상태: 완료 (2026-09-15)**
+
+### 목표
+
+Phase 4 Capture와 이후 live AI 연결 전에 상태, 실행 route, projection과 실패 회귀 계약을 단단하게 만든다.
+
+### 완료 내용
+
+- `capture-draft-v1` strict schema와 Capture 상태 전이 domain contract
+- PostgreSQL Capture 상태 전이 guard와 명시적인 `commit_result`
+- AI 최초 Draft와 사용자 수정 Draft의 분리 기반
+- Capture별 AI Run attempt와 retry 연결
+- 실제 환경 model override와 credential 상태를 반영하는 mock/live runtime router
+- timeout, retry, fallback, schema validation과 개인정보 없는 attempt telemetry
+- `memory_documents`의 `vector(1024)` 및 embedding 상태 수명주기
+- 전체 삭제 대신 content hash 기반 Person 단위 projection upsert
+- 확인된 Event, place, topic과 Action까지 포함한 projection v3
+- Recall hash 충돌 false positive 차단과 `no_result` Golden Query
+
+### 종료 근거
+
+- AI runtime, Capture schema·상태와 no-result를 포함한 단위 테스트 23개 통과
+- Golden Query 9/9 통과
+- DB에서 `vector(1024)`, Capture guard, commit result와 Person 단위 projection 확인
+- 변경 없는 projection rebuild가 기존 row를 갱신하지 않음을 검증
+- Draft Memory projection 유출 0건
 
 ## 7. Phase 4 — Text Capture to Memory
 

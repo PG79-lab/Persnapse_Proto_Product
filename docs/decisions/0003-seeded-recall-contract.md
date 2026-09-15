@@ -33,3 +33,9 @@ Persnapse의 핵심 가설은 이름을 몰라도 관계 맥락으로 사람을 
 - 실제 embedding 차원과 vector index는 Provider 응답을 검증한 뒤 migration으로 고정한다.
 - 전체 선택 Evidence는 Query response payload에, 결과 Person별 대표 Evidence는 `query_evidence`에 저장한다.
 - Recall은 읽기 경험이며 외부 메시지 발송이나 Action 실행 권한을 갖지 않는다.
+
+## Phase 3.5 보강
+
+- 기억에 없는 주제를 명시적으로 검증하는 `no_result` Golden Query를 추가했다.
+- 실제 token 또는 정의된 의미 concept이 공유되지 않으면 feature hash 유사도만으로 후보를 생성하지 않는다.
+- Golden Query 기준선은 9개 전체 통과로 상향했다.

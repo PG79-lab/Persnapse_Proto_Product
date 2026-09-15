@@ -1,6 +1,6 @@
 # Persnapse MVP Architecture v0.1
 
-- 상태: Phase 3 Seeded Recall 반영, 단계별 기술 검증 진행
+- 상태: Phase 3.5 runtime·projection hardening 반영
 - 작성일: 2026-09-13
 - 목적: 빠른 MVP와 이후 확장 사이의 최소 안정 경계를 정의
 - 비목적: 세부 DB migration, API 최종 계약, 특정 AI 모델 확정
@@ -51,6 +51,8 @@ AI task별 Provider와 모델은 `ADR 0001 — AI Task Model Routing`으로 확�
 | 최고난도 선택 호출        | OpenAI `gpt-5.6-sol`        |
 
 일반 경로에서 최고급 모델을 상시 호출하지 않는다. Model Router는 task 유형과 reasoning escalation 조건을 기준으로 adapter를 선택하며, 각 모델은 환경변수로 교체 가능하게 둔다.
+
+Phase 3.5부터 `mock`은 외부 호출 없는 deterministic adapter만 사용하고, `live`는 task별 credential과 실제 adapter가 없으면 명시적으로 실패한다. 환경변수의 model override, timeout, retry, fallback, schema validation과 개인정보를 포함하지 않는 attempt telemetry는 공통 runtime 계약에서 처리한다.
 
 ## 3. 시스템 경계
 
@@ -131,23 +133,20 @@ Graph API와 semantic retrieval은 별도 원본 저장소가 아니라 PostgreS
 ### Capture Session
 
 ```text
-created
-→ asset_uploaded
-→ card_extracted
-→ context_added
-→ context_structured
-→ awaiting_review
+draft
+→ review
 → committed
 ```
 
 복구 상태:
 
 ```text
-any processing state → failed → retry
-awaiting_review → cancelled
+draft 또는 review → failed
+failed → draft 또는 review
+review → draft 수정
 ```
 
-`committed` 전에는 확정 Person, Interaction과 Graph에 나타나지 않는다. 각 AI 단계의 원본 응답은 제한적으로 보존하되 사용자에게 보이는 Draft는 validation된 구조만 사용한다.
+`committed`는 terminal 상태다. 세부 처리 milestone은 Capture 종류별 application metadata로 표현하고 영속 상태 수를 불필요하게 늘리지 않는다. `committed` 전에는 확정 Person, Interaction과 Graph에 나타나지 않는다. AI 최초 결과인 `model_draft`와 사용자가 수정하는 `structured_draft`를 분리하고, 사용자에게 보이는 Draft는 versioned validation schema를 통과한 구조만 사용한다.
 
 ### Memory Commit
 
@@ -161,7 +160,7 @@ awaiting_review → cancelled
 6. provenance 및 verification 기록
 7. Capture Session을 committed로 전환
 
-검색 문서와 embedding 생성은 commit 이후 재시도 가능한 작업으로 분리한다. 실패해도 원본 Memory commit은 유지된다.
+검색 문서와 embedding 생성은 commit 이후 재시도 가능한 작업으로 분리한다. Person 단위 projection은 content hash가 달라질 때만 갱신하고 해당 embedding을 `pending`으로 되돌린다. embedding은 1024차원 계약을 사용하며 실패해도 원본 Memory commit은 유지된다.
 
 ## 6. 최소 개념 데이터 모델
 
@@ -247,7 +246,7 @@ Query
 → Query / AI Run / Evidence snapshot persistence
 ```
 
-Phase 3 기준선의 semantic retrieval은 외부 모델 호출이나 영속 vector가 아닌 `local-hash-v1` feature hashing을 사용한다. 이는 Golden Dataset에서 retrieval 계약과 UX를 먼저 검증하기 위한 deterministic adapter이며 Canonical Memory가 아니다. 실제 Voyage embedding과 reranking은 동일한 응답 계약 뒤에 교체 가능하게 연결한다.
+Phase 3 기준선의 semantic retrieval은 외부 모델 호출이나 영속 vector가 아닌 `local-hash-v1` feature hashing을 사용한다. 이는 Golden Dataset에서 retrieval 계약과 UX를 먼저 검증하기 위한 deterministic adapter이며 Canonical Memory가 아니다. 실제 token 또는 정의된 의미 concept이 공유되지 않으면 hash 충돌 점수만으로 후보를 만들지 않는다. 실제 Voyage embedding과 reranking은 동일한 응답 계약 뒤에 교체 가능하게 연결한다.
 
 ### Retrieval 우선순위
 

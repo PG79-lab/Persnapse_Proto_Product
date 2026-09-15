@@ -1,4 +1,7 @@
-import { localSemanticSimilarity } from "./local-semantic";
+import {
+  hasLocalSemanticSignal,
+  localSemanticSimilarity,
+} from "./local-semantic";
 import { normalizeRecallText } from "./query-parser";
 import type {
   ParsedRecallQuery,
@@ -50,7 +53,9 @@ function scoreEvidence(
       normalizedEvidence.includes(term) ||
       compact(normalizedEvidence).includes(compact(term)),
   );
-  const semanticScore = localSemanticSimilarity(queryText, evidence.text);
+  const semanticScore = hasLocalSemanticSignal(queryText, evidence.text)
+    ? localSemanticSimilarity(queryText, evidence.text)
+    : 0;
   let score = matchedTerms.length * 8 + semanticScore * 26;
 
   if (
@@ -180,10 +185,12 @@ export function rankRecallCandidates(
       const exactNameMatch = query.normalizedQuery.includes(
         normalizeRecallText(person.displayName),
       );
-      const documentSemantic = localSemanticSimilarity(
+      const documentSemantic = hasLocalSemanticSignal(
         queryText,
         person.documentContent,
-      );
+      )
+        ? localSemanticSimilarity(queryText, person.documentContent)
+        : 0;
       const evidence = person.evidence
         .map((item) => scoreEvidence(item, queryText, query))
         .filter((item): item is ScoredEvidence => Boolean(item))

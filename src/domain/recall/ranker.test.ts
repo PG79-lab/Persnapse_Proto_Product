@@ -70,4 +70,22 @@ describe("recall ranker", () => {
       "confirmed",
     );
   });
+
+  it("returns no result when confirmed memory has no matching context", () => {
+    const text = "고대 악기 복원 연주 전문가";
+    const query = parseRecallQuery(text, new Date("2026-09-15T00:00:00Z"));
+    const response = buildRecallResponse(
+      text,
+      query,
+      [
+        person("one", "김민준", "한울 모빌리티", "부산 물류 실증"),
+        person("two", "이서연", "브릿지 벤처스", "투자 검토 기준"),
+      ],
+      1,
+    );
+
+    expect(response.status).toBe("no_result");
+    expect(response.results).toEqual([]);
+    expect(response.answer).toContain("찾지 못했습니다");
+  });
 });
