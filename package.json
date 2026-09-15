@@ -23,6 +23,7 @@
     "db:seed": "node --env-file=.env.local scripts/db/seed.mjs",
     "db:verify": "node --env-file=.env.local scripts/db/verify.mjs",
     "eval:recall": "node --env-file=.env.local --conditions=react-server --import tsx scripts/evals/recall.ts",
+    "ai:verify:live": "node --env-file=.env.local --import tsx scripts/ai/verify-live.ts --confirm-live",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify": "npm run lint && npm run typecheck && npm run test && npm run format:check && npm run build"

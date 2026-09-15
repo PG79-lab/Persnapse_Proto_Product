@@ -150,3 +150,35 @@ Phase 4 Text Capture to Memory. 텍스트 입력을 검토 가능한 Draft로 �
 ### 다음 단계
 
 Phase 4 Text Capture to Memory. API key 없이 mock 구조화를 사용해 Draft → Review → Identity 선택 → atomic Commit → Profile/Recall 반영 수직 슬라이스를 완성한다.
+
+## 2026-09-15 — Phase 3.5 Live API 검증 진행
+
+### 구축
+
+- 기존 task router의 환경 model override와 credential 판정을 사용하는 명시적 live 검증 명령
+- 실제 개인정보 없는 고정 합성 입력과 원문 응답을 남기지 않는 결과 요약
+- OpenAI strict structured output와 1024차원 embedding fallback 검증
+- Voyage 1024차원 embedding과 `rerank-3-lite` 순위 검증
+- Google Main Agent strict structured output 검증
+- 일시적 HTTP 429, 5xx, timeout과 network error에만 최대 1회 제한 재시도
+- 전체 호출과 단일 케이스 재검증을 분리하여 불필요한 유료 재호출 방지
+
+### 검증 결과
+
+| 경로                | 지정 모델                | 결과                                                              |
+| ------------------- | ------------------------ | ----------------------------------------------------------------- |
+| 정보 구조화 primary | `gpt-5.6-luna`           | 통과, strict JSON schema                                          |
+| embedding fallback  | `text-embedding-3-small` | 통과, 1024차원 finite vector                                      |
+| embedding primary   | `voyage-4`               | 통과, 1024차원 finite vector                                      |
+| reranking primary   | `rerank-3-lite`          | 통과, 관련 합성 문서 1위                                          |
+| Main Agent primary  | `gemini-3.8-flash`       | 미완료, 유효한 요청에 Google `HTTP 503 high demand`가 반복 반환됨 |
+
+- 세 Provider key와 모델 환경변수는 모두 설정됨
+- `.env.local`은 Git 제외 상태
+- 앱 기본 `AI_ROUTING_MODE=mock` 유지
+- Google의 첫 HTTP 400은 최신 REST enum인 `APPLICATION_JSON`으로 수정했고 이후 요청 형식 검증 단계를 통과함
+- Gemini live 생성은 503 응답 때문에 아직 성공으로 확정하지 않음
+
+### Phase 4 진입 게이트
+
+변경된 작업 순서에 따라 `gemini-3.8-flash` 구조화 출력 1회 성공을 확인한 뒤 Phase 4 구축을 시작한다. Google 503이 지속되는 동안 다른 Gemini 모델로 우회하지 않는다.

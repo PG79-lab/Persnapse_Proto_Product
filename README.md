@@ -24,6 +24,14 @@ npm run verify
 npm run eval:recall
 ```
 
+AI Provider key와 지정 모델 접근을 합성 데이터로 live 검증할 때만 아래 명령을 사용합니다. 이 명령은 실제 외부 API를 호출하므로 비용이 발생할 수 있으며 일반 검증에는 포함되지 않습니다.
+
+```bash
+npm run ai:verify:live
+```
+
+자세한 안전 경계와 단일 Provider 재검증 방법은 `docs/operations/live-api-verification.md`에 기록되어 있습니다.
+
 Supabase 개발 프로젝트를 처음 구성할 때는 `.env.local`의 `DATABASE_URL`을 확인한 뒤 다음 명령을 실행합니다. Seed는 실제 개인정보가 없는 합성 데이터입니다.
 
 ```bash
