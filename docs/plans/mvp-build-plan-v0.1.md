@@ -223,6 +223,8 @@ Phase 4 Capture와 이후 live AI 연결 전에 상태, 실행 route, projection
 
 ## 7. Phase 4 — Text Capture to Memory
 
+**상태: 완료 (2026-09-15)**
+
 ### 목표
 
 AI 구조화와 사용자 확인을 거쳐 새로운 관계 기억이 Recall에 반영되는 첫 완전 수직 슬라이스를 만든다.
@@ -248,6 +250,18 @@ AI 구조화와 사용자 확인을 거쳐 새로운 관계 기억이 Recall에 
 - 동일 요청 재시도로 중복 Person/Interaction이 생성되지 않음
 - 사용자 수정값이 저장 후 유지됨
 - 저장한 맥락을 이름 없이도 Golden Query로 찾을 수 있음
+
+### 완료 근거
+
+- `/capture`에서 자유 텍스트 입력, 구조화, 전체 Draft 수정과 명시적 Identity 선택 가능
+- `capture-draft-v1` strict schema를 mock과 OpenAI `gpt-5.6-luna` production adapter가 공유
+- 사용자 확인 전 Person·Profile·Recall 미노출을 실제 개발 DB에서 검증
+- 기존 Person 연결 또는 신규 생성, Organization·Event·Topic resolve와 Interaction·Memory·Action·provenance 저장을 단일 transaction으로 구현
+- committed Capture 재요청 시 기존 `commit_result`를 반환하며 Person·Interaction 중복 0건
+- `model_draft`와 최종 `structured_draft` 분리, 사용자 수정 횟수와 수정값 보존
+- commit 이후 Person 단위 Memory Document 갱신, 실패 시 canonical Memory 유지
+- mock 및 Luna live production adapter 모두 Draft → Commit → 이름 없는 Recall 수직 슬라이스 통과
+- Phase 4 검증 데이터 자동 정리 후 기존 Golden Dataset과 Draft projection 유출 0건 유지
 
 ## 8. Phase 5 — Business Card Capture
 

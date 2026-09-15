@@ -22,6 +22,7 @@
     "db:setup": "node --env-file=.env.local scripts/db/push.mjs --include-seed --yes",
     "db:seed": "node --env-file=.env.local scripts/db/seed.mjs",
     "db:verify": "node --env-file=.env.local scripts/db/verify.mjs",
+    "db:verify:phase4": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/verify-phase4.ts",
     "eval:recall": "node --env-file=.env.local --conditions=react-server --import tsx scripts/evals/recall.ts",
     "ai:verify:live": "node --env-file=.env.local --import tsx scripts/ai/verify-live.ts --confirm-live",
     "format": "prettier --write .",

@@ -57,4 +57,32 @@ Main Agent 검증은 `reasoning.effort=none`으로 워밍업 1회와 동시 4회
 
 ## 범위
 
-이 검증은 Provider endpoint와 모델별 최소 입출력 계약을 확인한다. Phase 4의 production adapter, Capture별 `ai_runs` 기록, fallback 실행과 사용자 오류 표시는 별도 구현 범위다.
+이 검증은 Provider endpoint와 모델별 최소 입출력 계약을 확인한다. Phase 4의 production adapter와 전체 수직 슬라이스는 아래 별도 명령으로 검증한다.
+
+## Phase 4 Production Adapter 수직 검증
+
+Provider endpoint smoke와 별개로, Phase 4의 실제 application service·production adapter·개발 DB를 함께 검증한다.
+
+기본 deterministic 검증:
+
+```bash
+npm run db:verify:phase4
+```
+
+OpenAI `gpt-5.6-luna` production adapter까지 포함한 명시적 live 검증:
+
+```bash
+npm run db:verify:phase4 -- --live
+```
+
+두 명령 모두 합성 데이터만 사용하며 다음 계약을 확인한다.
+
+- 사용자 확인 전 canonical Person과 Memory Document 미생성
+- 명시적 Identity 선택
+- 단일 transaction Memory Commit
+- 같은 Capture commit 재시도의 멱등성
+- 사용자 수정 Draft 보존
+- commit 이후 Person Memory Document 갱신
+- 이름이 없는 Context query의 즉시 Recall
+
+검증이 만든 Capture, Person, Interaction, provenance, AI Run과 파생 데이터는 성공·실패와 관계없이 종료 전에 정확한 ID 범위로 정리한다. `--live`는 실제 유료 API 호출 1회를 포함할 수 있으며 앱의 `.env.local` 기본 `AI_ROUTING_MODE=mock` 값은 변경하지 않는다.

@@ -21,4 +21,5 @@
 - `decisions/0003-seeded-recall-contract.md`: Recall retrieval, Evidence와 Action 계약
 - `decisions/0004-phase35-runtime-and-projection-hardening.md`: Capture 상태, AI runtime과 embedding projection 계약
 - `decisions/0005-main-agent-gpt-56-terra.md`: Main Agent의 OpenAI Terra 전환과 초기 병목 기준
+- `decisions/0006-phase4-text-capture-commit.md`: Text Capture의 Draft·Identity·원자적 Commit 계약
 - `operations/live-api-verification.md`: 합성 데이터 기반 Provider live 검증 절차

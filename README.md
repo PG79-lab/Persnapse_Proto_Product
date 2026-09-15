@@ -22,6 +22,7 @@ npm run dev
 ```bash
 npm run verify
 npm run eval:recall
+npm run db:verify:phase4
 ```
 
 AI Provider key와 지정 모델 접근을 합성 데이터로 live 검증할 때만 아래 명령을 사용합니다. 이 명령은 실제 외부 API를 호출하므로 비용이 발생할 수 있으며 일반 검증에는 포함되지 않습니다.
@@ -31,6 +32,12 @@ npm run ai:verify:live
 ```
 
 자세한 안전 경계와 단일 Provider 재검증 방법은 `docs/operations/live-api-verification.md`에 기록되어 있습니다.
+
+Phase 4의 실제 OpenAI 정보 구조화 adapter와 DB 수직 슬라이스를 합성 데이터로 live 검증할 때는 아래 명령을 명시적으로 사용합니다. 검증 데이터는 성공·실패와 관계없이 정리됩니다.
+
+```bash
+npm run db:verify:phase4 -- --live
+```
 
 Supabase 개발 프로젝트를 처음 구성할 때는 `.env.local`의 `DATABASE_URL`을 확인한 뒤 다음 명령을 실행합니다. Seed는 실제 개인정보가 없는 합성 데이터입니다.
 
@@ -80,4 +87,7 @@ npm run test:e2e
 - Phase 3.5 Capture·AI runtime·projection hardening 완료
 - 9개 Golden Query와 확인된 Evidence 기반 평가 9/9 통과
 - mock/live task router와 `vector(1024)` embedding 수명주기 준비
-- 다음 단계: Text Capture to Memory
+- Phase 4 Text Capture to Memory 수직 슬라이스 완료
+- `/capture`에서 Text → Draft → Review → Identity → Commit → Profile/Recall 흐름 실행 가능
+- OpenAI `gpt-5.6-luna` production adapter와 원자적·멱등 Memory Commit live 검증 완료
+- 다음 단계: Business Card Capture

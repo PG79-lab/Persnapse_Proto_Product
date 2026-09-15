@@ -1,7 +1,8 @@
 # Persnapse MVP Architecture v0.1
 
-- 상태: Phase 3.5 runtime·projection hardening 반영
+- 상태: Phase 4 Text Capture 수직 슬라이스 반영
 - 작성일: 2026-09-13
+- 최종 갱신일: 2026-09-15
 - 목적: 빠른 MVP와 이후 확장 사이의 최소 안정 경계를 정의
 - 비목적: 세부 DB migration, API 최종 계약, 특정 AI 모델 확정
 
@@ -299,9 +300,22 @@ Interaction은 Profile timeline의 중심이지만 초기 Graph에서는 edge ev
 
 관계 강도는 초기에 굵기 하나로 단정하기보다 recency, interaction count, explicit importance 같은 구성 신호를 설명 가능하게 제공한다.
 
-## 10. 제안 API 경계
+## 10. API 경계
 
-세부 URL과 payload는 구현 전 contract로 확정한다.
+Phase 4에서 Text Capture의 첫 구체 계약을 다음과 같이 확정했다.
+
+| Method | URL                                    | 책임                                                |
+| ------ | -------------------------------------- | --------------------------------------------------- |
+| POST   | `/api/captures`                        | Text Capture 생성과 구조화                          |
+| GET    | `/api/captures/[captureId]`            | Capture의 현재 Draft·상태 조회                      |
+| POST   | `/api/captures/[captureId]/structure`  | 실패한 동일 Capture 구조화 재시도                   |
+| POST   | `/api/captures/[captureId]/candidates` | 수정된 Draft 기준 Person 후보 재검색                |
+| POST   | `/api/captures/[captureId]/commit`     | 명시적 Identity와 검토 Draft를 transaction으로 확정 |
+| POST   | `/api/recall`                          | 관련 Person, Evidence와 Action 반환                 |
+
+Capture payload는 `capture-draft-v1`과 strict request schema를 통과해야 한다. 후보 검색은 읽기 작업이며 Person을 선택하지 않는다. Commit은 Capture row lock과 영속 `commit_result`로 멱등성을 보장한다.
+
+전체 MVP application capability는 아래 경계를 유지하며, 이후 phase의 세부 URL과 payload는 구현 직전 contract로 확정한다.
 
 | 작업                     | 책임                                       |
 | ------------------------ | ------------------------------------------ |

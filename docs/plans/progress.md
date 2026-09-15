@@ -216,3 +216,39 @@ Phase 4 Text Capture to Memory. API key 없이 mock 구조화를 사용해 Draft
 - OpenAI 구조화·embedding fallback, Voyage embedding·reranking을 포함한 현재 Phase 4 선행 live 경로 확인 완료
 - 앱 기본 `AI_ROUTING_MODE=mock`은 유지하며 Phase 4 adapter를 연결할 때만 live 실행
 - 변경된 API 검증 게이트를 충족했으므로 Phase 4 구축 진입 가능
+
+## 2026-09-15 — Phase 4 Text Capture to Memory 완료
+
+### 구축
+
+- `/capture` Text 입력 → Draft 구조화 → Review → Identity 선택 → Memory Commit 화면
+- `capture-draft-v1` strict contract와 deterministic mock structurer
+- OpenAI Responses API 기반 `gpt-5.6-luna` production structuring adapter
+- 모델 원본 `model_draft`와 사용자 확인 `structured_draft` 분리
+- 이름·소속 신호 기반 Person 후보와 수정값 재검색
+- 후보가 있어도 자동 선택·병합하지 않는 명시적 기존 Person 연결 또는 신규 생성
+- Capture row lock 안에서 Person·Affiliation·Event·Interaction·Topic·Memory·Action·provenance를 확정하는 transaction
+- 영속 `commit_result`를 이용한 중복 commit 멱등성
+- canonical commit 이후 Person Memory Document 재생성과 즉시 Recall
+- projection 실패가 canonical Memory를 rollback하지 않는 부분 성공 경계
+
+### 검토 보완
+
+- 중복 commit 응답의 Recall query가 요청 재전송값이 아니라 실제 저장된 Draft를 사용하도록 고정
+- PostgreSQL JSON 문자열 반환 시에도 live 검증 데이터가 정리되도록 strict commit-result parser 적용
+- 수정된 Identity 후보 재검색 후 어떤 후보도 자동 선택되지 않는 Chromium E2E 추가
+- 현재 공개 Production Auth가 없는 단일 Workspace 인터뷰 빌드라는 한계를 ADR에 명시
+
+### 검증
+
+- 원격 migration 최신 상태 확인
+- `npm run verify` 통과: lint, typecheck, 단위 테스트 10개 파일·29개, format, production build
+- `npm run db:verify:phase4` 통과: Draft 격리, 명시적 Identity, 원자적·멱등 commit, 수정 보존, projection과 즉시 Recall
+- `npm run db:verify:phase4 -- --live` 통과: OpenAI Luna production adapter 포함 전체 수직 슬라이스
+- Golden Recall 9/9 통과
+- DB 기준선 유지: Person 14, Organization 7, Interaction 18, Memory 20, Action 10, Person projection 14, Draft projection 유출 0
+- Chromium E2E 6개 통과: Foundation, Profile, Recall, ambiguity, no-result와 Capture Review
+
+### 다음 단계
+
+Phase 5 Business Card Capture. Image Source Asset의 업로드·보관 경계와 OCR adapter contract를 확정한 뒤, 기존 Text Review·Identity·Commit pipeline을 재사용한다.
