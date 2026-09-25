@@ -14,6 +14,8 @@ describe("server environment", () => {
     const environment = parseServerEnv(validEnvironment);
 
     expect(environment.AI_ROUTING_MODE).toBe("mock");
+    expect(environment.BUSINESS_CARD_OCR_MODE).toBe("mock");
+    expect(environment.APP_REMOTE_PROTOTYPE_ACCESS).toBe("off");
     expect(environment.OPENAI_TRANSCRIPTION_MODEL).toBe("gpt-transcribe");
     expect(environment.OPENAI_STRUCTURING_MODEL).toBe("gpt-5.6-luna");
     expect(environment.VOYAGE_EMBEDDING_MODEL).toBe("voyage-4");

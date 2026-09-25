@@ -37,7 +37,7 @@ export default function HomePage() {
                 사람 기억 보기
               </Link>
               <span className="text-xs text-[var(--muted)]">
-                Phase 3 · 근거 기반 Recall
+                Phase 5 · Digital Card Capture
               </span>
             </div>
           </div>
@@ -59,7 +59,7 @@ export default function HomePage() {
                   <span className="text-sm font-semibold">{stage}</span>
                   {stage === "Recall" ? (
                     <span className="ml-auto rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-semibold text-[var(--accent)] uppercase">
-                      Live
+                      기억 찾기
                     </span>
                   ) : null}
                 </li>

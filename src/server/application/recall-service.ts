@@ -1,4 +1,6 @@
 import "server-only";
+import { getServerEnv } from "../env";
+import { executeLiveRecall } from "./live-recall-service";
 
 import { parseRecallQuery } from "../../domain/recall/query-parser";
 import { buildRecallResponse } from "../../domain/recall/ranker";
@@ -27,14 +29,24 @@ export async function executeRecall(
 
   const referenceTime = request.referenceTime ?? new Date();
   const startedAt = performance.now();
-  const parsedQuery = parseRecallQuery(queryText, referenceTime);
-  const corpus = await loadRecallCorpus(request.workspaceId);
-  const response = buildRecallResponse(
-    queryText,
-    parsedQuery,
-    corpus,
-    Math.max(1, Math.round(performance.now() - startedAt)),
-  );
+  let response: RecallResponse;
+  if (getServerEnv().AI_ROUTING_MODE === "live") {
+    response = await executeLiveRecall(
+      request.workspaceId,
+      queryText,
+      referenceTime,
+    );
+  } else {
+    const parsedQuery = parseRecallQuery(queryText, referenceTime);
+    const corpus = await loadRecallCorpus(request.workspaceId);
+    response = buildRecallResponse(
+      queryText,
+      parsedQuery,
+      corpus,
+      Math.max(1, Math.round(performance.now() - startedAt)),
+    );
+  }
+  response.latencyMs = Math.max(1, Math.round(performance.now() - startedAt));
 
   if (request.persist !== false) {
     const queryId = await recordRecallResponse({
@@ -44,7 +56,11 @@ export async function executeRecall(
       evaluationCaseId: request.evaluationCaseId,
       response,
     });
-    return { ...response, queryId };
+    return {
+      ...response,
+      queryId,
+      latencyMs: Math.max(1, Math.round(performance.now() - startedAt)),
+    };
   }
 
   return response;

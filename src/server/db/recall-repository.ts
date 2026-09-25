@@ -20,6 +20,7 @@ function toIsoString(value: Date | string | null): string | null {
 
 export async function loadRecallCorpus(
   workspaceId: string,
+  personIds?: string[],
 ): Promise<RecallCorpusPerson[]> {
   const sql = getDatabase();
   const [peopleRows, memoryRows, interactionRows, actionRows] =
@@ -62,6 +63,7 @@ export async function loadRecallCorpus(
          and document.person_id = person.id
          and document.document_kind = 'person_profile'
         where person.workspace_id = ${workspaceId}
+          and (${personIds === undefined} or person.id = any(${personIds ?? []}::uuid[]))
         order by person.display_name, person.id
       `,
       sql<
@@ -69,13 +71,15 @@ export async function loadRecallCorpus(
           id: string;
           person_id: string;
           body: string;
+          interaction_id: string | null;
           occurred_at: Date | string | null;
         }>
       >`
-        select id, person_id, body, occurred_at
+        select id, person_id, body, occurred_at, interaction_id
         from public.memory_statements
         where workspace_id = ${workspaceId}
           and person_id is not null
+          and (${personIds === undefined} or person_id = any(${personIds ?? []}::uuid[]))
           and verification_status = 'confirmed'
         order by occurred_at desc nulls last
       `,
@@ -83,7 +87,7 @@ export async function loadRecallCorpus(
         Array<{
           id: string;
           person_id: string;
-          occurred_at: Date | string;
+          occurred_at: Date | string | null;
           summary: string;
           location: string | null;
           event_name: string | null;
@@ -116,6 +120,7 @@ export async function loadRecallCorpus(
             and interaction_topic.verification_status = 'confirmed'
         ) topic_list on true
         where participant.workspace_id = ${workspaceId}
+          and (${personIds === undefined} or participant.person_id = any(${personIds ?? []}::uuid[]))
           and interaction.verification_status = 'confirmed'
         order by interaction.occurred_at desc
       `,
@@ -127,6 +132,7 @@ export async function loadRecallCorpus(
           details: string | null;
           status: "pending" | "completed" | "dismissed";
           due_at: Date | string | null;
+          interaction_id: string | null;
           occurred_at: Date | string | null;
         }>
       >`
@@ -137,12 +143,14 @@ export async function loadRecallCorpus(
           action.details,
           action.status,
           action.due_at,
+          action.interaction_id,
           interaction.occurred_at
         from public.action_items action
         left join public.interactions interaction
           on interaction.workspace_id = action.workspace_id
          and interaction.id = action.interaction_id
         where action.workspace_id = ${workspaceId}
+          and (${personIds === undefined} or action.person_id = any(${personIds ?? []}::uuid[]))
           and action.verification_status = 'confirmed'
           and action.status <> 'dismissed'
         order by (action.status = 'pending') desc, action.due_at asc nulls last
@@ -187,6 +195,7 @@ export async function loadRecallCorpus(
     corpus.get(row.person_id)?.evidence.push({
       id: row.id,
       type: "memory_statement",
+      interactionId: row.interaction_id,
       text: row.body,
       occurredAt: toIsoString(row.occurred_at),
       verificationStatus: "confirmed",
@@ -209,6 +218,10 @@ export async function loadRecallCorpus(
     corpus.get(row.person_id)?.evidence.push({
       id: row.id,
       type: "interaction",
+      interactionId: row.id,
+      location: row.location,
+      eventName: row.event_name,
+      topics: row.topics ?? [],
       text: context,
       occurredAt: toIsoString(row.occurred_at),
       verificationStatus: "confirmed",
@@ -222,6 +235,7 @@ export async function loadRecallCorpus(
     const action: RecallCorpusAction = {
       id: row.id,
       title: row.title,
+      interactionId: row.interaction_id,
       details: row.details,
       dueAt: toIsoString(row.due_at),
       status: row.status,
@@ -232,8 +246,10 @@ export async function loadRecallCorpus(
     person?.evidence.push({
       id: row.id,
       type: "action_item",
+      interactionId: row.interaction_id,
+      dueAt: toIsoString(row.due_at),
       text: [row.title, row.details].filter(Boolean).join(" · "),
-      occurredAt: toIsoString(row.occurred_at) ?? toIsoString(row.due_at),
+      occurredAt: toIsoString(row.occurred_at),
       verificationStatus: "confirmed",
       memoryStatementId: null,
       memoryDocumentId: null,
@@ -322,9 +338,9 @@ export async function recordRecallResponse(input: {
       values (
         ${input.workspaceId},
         'recall',
-        'local',
+        ${input.response.mode === "live" ? "openai" : "local"},
         ${input.response.model},
-        'mocked',
+        ${input.response.mode === "live" ? "succeeded" : "mocked"},
         'recall-response-v1',
         ${input.response.latencyMs},
         now()
@@ -357,7 +373,7 @@ export async function recordRecallResponse(input: {
         ${input.response.latencyMs},
         ${input.referenceTime.toISOString()},
         ${input.response.parsedQuery.parserVersion},
-        'hybrid-v1',
+        ${input.response.mode === "live" ? "voyage-grounded-v1" : "hybrid-v1"},
         ${input.evaluationCaseId ?? null},
         ${aiRun.id},
         ${input.response.status},

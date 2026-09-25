@@ -4,6 +4,8 @@ import {
 } from "./capture-draft";
 import type { CaptureStructuringInput } from "./capture-workflow";
 
+import { koreanDayRange } from "../recall/date-range";
+
 const locations = [
   "코엑스",
   "벡스코",
@@ -127,7 +129,14 @@ function findOccurredAt(rawText: string, referenceTime: string): string | null {
   const date = rawText.match(/\b(\d{4})[.-](\d{1,2})[.-](\d{1,2})\b/u);
 
   if (!date) {
-    return referenceTime;
+    const relative = /어제/u.test(rawText)
+      ? -1
+      : /오늘/u.test(rawText)
+        ? 0
+        : null;
+    return relative === null
+      ? null
+      : koreanDayRange(new Date(referenceTime), relative, "").from;
   }
 
   const [, year, month, day] = date;
@@ -171,6 +180,7 @@ export function structureTextCaptureMock(
     .filter((sentence) => /보내|전달|연락|소개|공유|후속|약속/u.test(sentence))
     .slice(0, 4);
   const inferredFields = unique([
+    occurredAt ? "interaction.occurredAt" : null,
     displayName ? "identityHint.displayName" : null,
     organizationName ? "identityHint.organizationName" : null,
     title ? "identityHint.title" : null,

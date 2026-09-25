@@ -4,14 +4,14 @@ export type ProfileTimelineItem =
   | {
       id: string;
       kind: "interaction";
-      occurredAt: string;
+      occurredAt: string | null;
       interaction: PersonInteraction;
       memories: MemoryStatement[];
     }
   | {
       id: string;
       kind: "memory";
-      occurredAt: string;
+      occurredAt: string | null;
       memory: MemoryStatement;
     };
 
@@ -41,17 +41,17 @@ export function buildProfileTimeline(
     }),
   );
   const standaloneMemoryItems: ProfileTimelineItem[] = memories
-    .filter((memory) => !memory.interactionId && memory.occurredAt)
+    .filter((memory) => !memory.interactionId)
     .map((memory) => ({
       id: memory.id,
       kind: "memory",
-      occurredAt: memory.occurredAt!,
+      occurredAt: memory.occurredAt,
       memory,
     }));
 
   return [...interactionItems, ...standaloneMemoryItems].sort(
     (left, right) =>
-      new Date(right.occurredAt).getTime() -
-      new Date(left.occurredAt).getTime(),
+      (right.occurredAt ? new Date(right.occurredAt).getTime() : -Infinity) -
+      (left.occurredAt ? new Date(left.occurredAt).getTime() : -Infinity),
   );
 }

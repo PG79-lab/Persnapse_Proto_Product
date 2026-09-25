@@ -1,4 +1,10 @@
+import { aiRateLimitResponse } from "../../../server/ai/rate-limit-response";
 import { z } from "zod";
+import { AiTaskExecutionError } from "../../../server/ai/runtime-router";
+import {
+  assertPrototypeAccess,
+  PrototypeAccessError,
+} from "../../../server/security/prototype-access";
 
 import { executeRecall } from "../../../server/application/recall-service";
 import { getServerEnv } from "../../../server/env";
@@ -11,8 +17,11 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  let inputValidated = false;
   try {
+    assertPrototypeAccess(request);
     const input = requestSchema.parse(await request.json());
+    inputValidated = true;
     const environment = getServerEnv();
     const response = await executeRecall({
       workspaceId: environment.APP_DEFAULT_WORKSPACE_ID,
@@ -24,7 +33,16 @@ export async function POST(request: Request) {
 
     return Response.json(response);
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    const limited = aiRateLimitResponse(error);
+    if (limited) return limited;
+    if (error instanceof PrototypeAccessError)
+      return Response.json({ error: "Not Found" }, { status: 404 });
+    if (error instanceof AiTaskExecutionError)
+      return Response.json(
+        { error: error.message, code: error.code },
+        { status: 503 },
+      );
+    if (error instanceof z.ZodError && !inputValidated) {
       return Response.json(
         { error: "질문은 2자 이상 500자 이하로 입력해 주세요." },
         { status: 400 },

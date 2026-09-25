@@ -43,7 +43,11 @@ function scoreEvidence(
   queryText: string,
   query: ParsedRecallQuery,
 ): ScoredEvidence | null {
-  if (!inDateRange(evidence.occurredAt, query)) {
+  const dateValue =
+    query.intents.includes("action") && evidence.type === "action_item"
+      ? (evidence.dueAt ?? null)
+      : evidence.occurredAt;
+  if (!inDateRange(dateValue, query)) {
     return null;
   }
 
@@ -53,10 +57,32 @@ function scoreEvidence(
       normalizedEvidence.includes(term) ||
       compact(normalizedEvidence).includes(compact(term)),
   );
+  const substantiveTerms = query.terms.filter(
+    (term) => !/연락|후속|약속|보내|전달|해야|무엇|어떻게|누구|할/u.test(term),
+  );
+  if (
+    query.intents.includes("action") &&
+    substantiveTerms.length &&
+    !substantiveTerms.some((term) =>
+      hasLocalSemanticSignal(term, evidence.text),
+    )
+  )
+    return null;
   const semanticScore = hasLocalSemanticSignal(queryText, evidence.text)
     ? localSemanticSimilarity(queryText, evidence.text)
     : 0;
   let score = matchedTerms.length * 8 + semanticScore * 26;
+  // Ranking bonuses must not manufacture relevance.
+  if (score === 0) {
+    if (
+      query.intents.includes("action") &&
+      !substantiveTerms.length &&
+      evidence.type === "action_item" &&
+      evidence.actionStatus === "pending"
+    )
+      score = 1;
+    else return null;
+  }
 
   if (
     query.intents.includes("action") &&
@@ -115,10 +141,15 @@ function resultFor(
   person: RecallCorpusPerson,
   scoredEvidence: ScoredEvidence[],
   rawScore: number,
+  query: ParsedRecallQuery,
 ): RecallPersonResult {
   const selectedEvidence = scoredEvidence.slice(0, 3);
   const storedActions = person.actions
-    .filter((action) => action.status === "pending")
+    .filter(
+      (action) =>
+        action.status === "pending" &&
+        (!query.intents.includes("action") || inDateRange(action.dueAt, query)),
+    )
     .slice(0, 3)
     .map((action) => ({
       ...action,
@@ -136,7 +167,7 @@ function resultFor(
     evidence: selectedEvidence.map(toEvidence),
     storedActions,
     suggestion: {
-      type: "ai_suggestion",
+      type: "guidance",
       title: `${person.displayName}님에게 확인된 최근 맥락으로 후속 연락 검토`,
       rationale:
         "검색된 근거를 먼저 확인한 뒤 필요할 때만 사용자가 직접 실행하는 제안입니다.",
@@ -196,6 +227,8 @@ export function rankRecallCandidates(
         .filter((item): item is ScoredEvidence => Boolean(item))
         .sort((left, right) => right.score - left.score);
 
+      if (!identityMatches.length && !evidence.length) return null;
+
       if (query.dateRange && evidence.length === 0) {
         return null;
       }
@@ -239,14 +272,14 @@ export function rankRecallCandidates(
   if (ambiguousPeople.size > 0) {
     const ambiguousResults = scored
       .filter((item) => ambiguousPeople.has(item.person.id))
-      .map((item) => resultFor(item.person, item.evidence, item.score));
+      .map((item) => resultFor(item.person, item.evidence, item.score, query));
 
     return { status: "ambiguous", results: ambiguousResults };
   }
 
   const results = scored
     .slice(0, 5)
-    .map((item) => resultFor(item.person, item.evidence, item.score));
+    .map((item) => resultFor(item.person, item.evidence, item.score, query));
 
   return {
     status: results.length > 0 ? "resolved" : "no_result",

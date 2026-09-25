@@ -163,6 +163,7 @@ export interface AiAttemptEvent {
   status: "succeeded" | "failed" | "mocked";
   latencyMs: number;
   errorCode?: string;
+  totalTokens?: number;
 }
 
 export class AiTaskExecutionError extends Error {
@@ -170,6 +171,7 @@ export class AiTaskExecutionError extends Error {
     message: string,
     public readonly code: string,
     public readonly retryable: boolean,
+    public readonly retryAfterSeconds?: number,
   ) {
     super(message);
     this.name = "AiTaskExecutionError";
@@ -185,6 +187,7 @@ export interface ExecuteAiTaskOptions<Input, Output> {
   liveAdapters?: Partial<Record<AiProviderId, AiTaskAdapter<Input>>>;
   timeoutMs?: number;
   maxAttemptsPerRoute?: number;
+  beforeLiveAttempt?: (task: AiTaskId) => Promise<void>;
   onAttempt?: (event: AiAttemptEvent) => Promise<void> | void;
 }
 
@@ -323,6 +326,7 @@ export async function executeAiTask<Input, Output>(
       const startedAt = performance.now();
 
       try {
+        await options.beforeLiveAttempt?.(options.task);
         const rawOutput = await executeWithTimeout(
           adapter,
           options.input,

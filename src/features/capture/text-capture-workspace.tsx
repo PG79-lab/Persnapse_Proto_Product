@@ -1,4 +1,5 @@
 "use client";
+import { matchesInferredField } from "../../domain/capture/inferred-fields";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -84,7 +85,9 @@ function ReviewLabel({
   path: string;
   inferredFields: string[];
 }) {
-  const inferred = inferredFields.includes(path);
+  const inferred = inferredFields.some((field) =>
+    matchesInferredField(field, path),
+  );
 
   return (
     <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
@@ -107,6 +110,7 @@ export function TextCaptureWorkspace({
 }: {
   routingMode: "mock" | "live";
 }) {
+  const [processingMs, setProcessingMs] = useState<number | null>(null);
   const [rawText, setRawText] = useState(sampleNote);
   const [capture, setCapture] = useState<CaptureSessionView | null>(null);
   const [draft, setDraft] = useState<CaptureDraftV1 | null>(null);
@@ -134,7 +138,7 @@ export function TextCaptureWorkspace({
         ? {
             ...next,
             inferredFields: next.inferredFields.filter(
-              (field) => field !== inferredPath,
+              (field) => !matchesInferredField(field, inferredPath),
             ),
           }
         : next;
@@ -142,6 +146,8 @@ export function TextCaptureWorkspace({
   }
 
   async function structureCapture() {
+    const startedAt = performance.now();
+    setProcessingMs(null);
     setBusy("structure");
     setError(null);
 
@@ -160,6 +166,9 @@ export function TextCaptureWorkspace({
       setDraft(nextCapture.draft);
       setNewDisplayName(nextCapture.draft?.identityHint.displayName ?? "");
       setIdentityChoice(null);
+      requestAnimationFrame(() =>
+        setProcessingMs(Math.round(performance.now() - startedAt)),
+      );
     } catch (caught) {
       const message =
         caught instanceof Error
@@ -198,6 +207,8 @@ export function TextCaptureWorkspace({
       return;
     }
 
+    const startedAt = performance.now();
+    setProcessingMs(null);
     setBusy("structure");
     setError(null);
 
@@ -211,6 +222,9 @@ export function TextCaptureWorkspace({
       setDraft(nextCapture.draft);
       setNewDisplayName(nextCapture.draft?.identityHint.displayName ?? "");
       setIdentityChoice(null);
+      requestAnimationFrame(() =>
+        setProcessingMs(Math.round(performance.now() - startedAt)),
+      );
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -330,11 +344,11 @@ export function TextCaptureWorkspace({
           검토한 관계 기억이 저장되었습니다.
         </h2>
         <p className="mt-4 max-w-2xl leading-7 text-[var(--muted)]">
-          Person과 Interaction은 한 transaction에서 확정되었고, 검색용 Memory
-          Document는{" "}
           {result.memoryDocumentStatus === "updated"
-            ? "즉시 갱신되었습니다."
-            : "후속 재생성이 필요합니다. 원본 Memory는 안전하게 저장되었습니다."}
+            ? routingMode === "live"
+              ? "기억을 저장하고 AI 검색을 준비했습니다."
+              : "기억을 저장했습니다. 현재는 기본 검색을 사용합니다."
+            : "기억은 저장되었지만 검색 준비를 완료하지 못했습니다. 다시 저장할 필요는 없습니다."}
         </p>
         <div className="mt-7 grid gap-3 sm:grid-cols-3">
           <Link
@@ -436,19 +450,26 @@ export function TextCaptureWorkspace({
   }
 
   return (
-    <CaptureReview
-      capture={capture}
-      draft={draft}
-      identityChoice={identityChoice}
-      newDisplayName={newDisplayName}
-      busy={busy}
-      error={error}
-      setIdentityChoice={setIdentityChoice}
-      setNewDisplayName={setNewDisplayName}
-      updateDraft={updateDraft}
-      commitCapture={commitCapture}
-      refreshIdentityCandidates={refreshIdentityCandidates}
-    />
+    <>
+      {processingMs !== null ? (
+        <p className="mb-3 text-sm text-[var(--muted)]">
+          맥락 제출부터 검토 화면까지 {(processingMs / 1000).toFixed(1)}초
+        </p>
+      ) : null}
+      <CaptureReview
+        capture={capture}
+        draft={draft}
+        identityChoice={identityChoice}
+        newDisplayName={newDisplayName}
+        busy={busy}
+        error={error}
+        setIdentityChoice={setIdentityChoice}
+        setNewDisplayName={setNewDisplayName}
+        updateDraft={updateDraft}
+        commitCapture={commitCapture}
+        refreshIdentityCandidates={refreshIdentityCandidates}
+      />
+    </>
   );
 }
 
@@ -500,7 +521,7 @@ function CaptureReview(props: CaptureReviewProps) {
             </h2>
           </div>
           <span className="rounded-full bg-[var(--draft-soft)] px-3 py-1 text-xs font-medium text-[var(--draft)]">
-            Draft · 미저장
+            검토 중 · 아직 저장되지 않음
           </span>
         </div>
         <details className="mt-6 rounded-2xl bg-[var(--background)] p-4">
@@ -771,7 +792,7 @@ function InteractionEditor({
         </label>
         <label className="grid gap-2">
           <ReviewLabel
-            title="발생 시점"
+            title="만난 시점 (모르면 비워두세요)"
             path="interaction.occurredAt"
             inferredFields={draft.inferredFields}
           />

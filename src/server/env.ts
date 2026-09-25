@@ -18,6 +18,8 @@ export const serverEnvSchema = z.object({
   SUPABASE_SECRET_KEY: optionalSecret,
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   AI_ROUTING_MODE: z.enum(["mock", "live"]).default("mock"),
+  BUSINESS_CARD_OCR_MODE: z.enum(["mock", "live"]).default("mock"),
+  APP_REMOTE_PROTOTYPE_ACCESS: z.enum(["off", "vercel_preview"]).default("off"),
   CLOVA_OCR_INVOKE_URL: optionalUrl,
   CLOVA_OCR_SECRET: optionalSecret,
   OPENAI_API_KEY: optionalSecret,

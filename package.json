@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=20.9.0"
+    "node": "24.x"
   },
   "scripts": {
     "dev": "next dev",
@@ -23,11 +23,25 @@
     "db:seed": "node --env-file=.env.local scripts/db/seed.mjs",
     "db:verify": "node --env-file=.env.local scripts/db/verify.mjs",
     "db:verify:phase4": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/verify-phase4.ts",
+    "db:verify:phase5": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/verify-phase5.ts",
+    "db:verify:phase5:live": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/verify-phase5.ts --live-ocr --confirm-live",
+    "db:verify:ocr-guard": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/verify-ocr-cost-guard.ts",
+    "db:report:ocr-usage": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/report-ocr-cost-usage.ts",
     "eval:recall": "node --env-file=.env.local --conditions=react-server --import tsx scripts/evals/recall.ts",
     "ai:verify:live": "node --env-file=.env.local --import tsx scripts/ai/verify-live.ts --confirm-live",
+    "ai:verify:clova": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ai/verify-clova-ocr.ts --confirm-live",
+    "security:audit:secret-residue": "node --env-file=.env.local scripts/security/audit-secret-residue.mjs",
+    "security:clean:local-secret-cache": "node scripts/security/clean-local-secret-cache.mjs",
+    "deploy:protect:all": "node scripts/deploy/set-vercel-all-deployments-protection.mjs",
+    "deploy:bootstrap": "node scripts/deploy/bootstrap-vercel-project.mjs",
+    "deploy:verify:readiness": "node scripts/deploy/verify-vercel-preview-readiness.mjs",
+    "deploy:env:preview": "node --env-file=.env.local scripts/deploy/sync-vercel-preview-env.mjs",
+    "deploy:preview": "node scripts/deploy/deploy-vercel-preview.mjs",
+    "deploy:verify:preview:live": "node --env-file=.env.local --conditions=react-server --import tsx scripts/deploy/verify-vercel-preview.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run format:check && npm run build"
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run format:check && npm run build",
+    "deploy:verify:preview:assistant": "node --env-file=.env.local --conditions=react-server --import tsx scripts/deploy/verify-live-memory-preview.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",

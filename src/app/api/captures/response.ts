@@ -1,3 +1,4 @@
+import { aiRateLimitResponse } from "../../../server/ai/rate-limit-response";
 import { z } from "zod";
 
 import { CaptureStructuringError } from "../../../server/application/capture-service";
@@ -8,6 +9,8 @@ import {
 } from "../../../server/db/capture-repository";
 
 export function captureErrorResponse(error: unknown): Response {
+  const limited = aiRateLimitResponse(error);
+  if (limited) return limited;
   if (error instanceof z.ZodError) {
     return Response.json(
       {

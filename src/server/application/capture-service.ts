@@ -1,4 +1,6 @@
 import "server-only";
+import { indexPersonMemory } from "../db/memory-search-repository";
+import { reserveAiCall } from "../db/ai-budget-repository";
 
 import { captureDraftV1Schema } from "../../domain/capture/capture-draft";
 import { structureTextCaptureMock } from "../../domain/capture/mock-structurer";
@@ -36,6 +38,7 @@ export class CaptureStructuringError extends Error {
   constructor(
     public readonly captureId: string,
     public readonly code: string,
+    public readonly retryAfterSeconds?: number,
   ) {
     super("Capture structuring failed.");
     this.name = "CaptureStructuringError";
@@ -98,8 +101,10 @@ async function runStructuring(
             openai: openAiAdapter,
           }
         : undefined,
-      timeoutMs: 25_000,
-      maxAttemptsPerRoute: 2,
+      timeoutMs: 15_000,
+      maxAttemptsPerRoute: 1,
+      beforeLiveAttempt: (task) =>
+        reserveAiCall(workspaceId, task, environment),
       onAttempt: createAiAttemptRecorder({
         workspaceId,
         captureSessionId: captureId,
@@ -114,7 +119,13 @@ async function runStructuring(
         ? error.code
         : "CAPTURE_STRUCTURING_FAILED";
     await markCaptureFailed(workspaceId, captureId, code);
-    throw new CaptureStructuringError(captureId, code);
+    throw new CaptureStructuringError(
+      captureId,
+      code,
+      error instanceof AiTaskExecutionError
+        ? error.retryAfterSeconds
+        : undefined,
+    );
   }
 }
 
@@ -204,6 +215,7 @@ export async function commitReviewedTextCapture(input: {
 
   try {
     await rebuildPersonMemoryDocument(input.workspaceId, result.personId);
+    await indexPersonMemory(input.workspaceId, result.personId);
   } catch {
     memoryDocumentStatus = "failed";
   }

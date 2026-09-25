@@ -130,6 +130,7 @@ test("reviews a text capture and requires an explicit identity decision", async 
   await expect(
     page.getByRole("heading", { level: 1, name: "만남을 관계 기억으로" }),
   ).toBeVisible();
+  await page.getByRole("button", { name: "텍스트 메모" }).click();
   await expect(page.getByText("아직 Memory가 아닙니다")).toBeVisible();
 
   await page.getByRole("button", { name: "구조화하고 검토하기" }).click();
@@ -173,4 +174,101 @@ test("reviews a text capture and requires an explicit identity decision", async 
   await expect(
     page.getByRole("link", { name: "방금 저장한 기억 찾기" }),
   ).toBeVisible();
+});
+
+test("shows a CLOVA-extracted business card as an editable Digital Card", async ({
+  page,
+}) => {
+  const businessCardDraft = {
+    schemaVersion: "business-card-draft-v1",
+    identity: {
+      displayName: "김하늘",
+      organizationName: "Persnapse Labs",
+      title: "Product Lead",
+      department: "Product",
+      emails: ["haneul.kim@example.com"],
+      phones: ["010-1234-5678"],
+      websites: ["www.persnapse.example"],
+      address: "서울특별시 강남구 테헤란로 123",
+    },
+    interaction: {
+      interactionType: "meeting",
+      occurredAt: "2026-09-16T12:00:00+09:00",
+      summary: "김하늘님과 명함을 교환했다.",
+      location: null,
+      eventName: null,
+    },
+    topics: [],
+    memories: [],
+    actions: [],
+    observedFields: [
+      "identity.displayName",
+      "identity.organizationName",
+      "identity.title",
+      "identity.department",
+      "identity.emails",
+      "identity.phones",
+      "identity.websites",
+      "identity.address",
+    ],
+    inferredFields: [],
+  } as const;
+  await page.setContent(`
+    <main style="width: 634px; height: 400px; padding: 48px; background: #fffdf7; color: #16221a; font-family: Arial, sans-serif">
+      <strong style="font-size: 28px; color: #17613b">PERSNAPSE LABS</strong>
+      <h1 style="margin: 64px 0 12px; font-size: 52px">김하늘</h1>
+      <p style="font-size: 24px">Product Lead · Product Team</p>
+    </main>
+  `);
+  const cardImage = await page.locator("main").screenshot({ type: "png" });
+
+  await page.route("**/api/business-cards", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    await route.fulfill({
+      status: 201,
+      contentType: "application/json",
+      body: JSON.stringify({
+        captureId: "10000000-0000-4000-8000-000000000005",
+        state: "draft",
+        stage: "card_review",
+        originalAssetId: "11000000-0000-4000-8000-000000000005",
+        displayAssetId: "12000000-0000-4000-8000-000000000005",
+        imageUrl: `data:image/png;base64,${cardImage.toString("base64")}`,
+        draft: businessCardDraft,
+        modelDraft: businessCardDraft,
+        contextNote: "",
+        identityCandidates: [],
+        userCorrectionCount: 0,
+        ocrProvider: "naver_clova",
+        ocrLatencyMs: 1763,
+        lastErrorCode: null,
+        commitResult: null,
+        createdAt: "2026-09-16T03:00:00.000Z",
+      }),
+    });
+  });
+
+  await page.goto("/capture");
+  await expect(
+    page.getByText(
+      "NAVER CLOVA OCR로 인식하며, 결과는 저장 전 모두 확인하고 수정할 수 있습니다.",
+    ),
+  ).toBeVisible();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "synthetic-card.png",
+    mimeType: "image/png",
+    buffer: cardImage,
+  });
+
+  await expect(
+    page.getByRole("heading", { level: 2, name: "인식한 명함 정보" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("textbox", { name: "이름", exact: true }),
+  ).toHaveValue("김하늘");
+  await expect(
+    page.getByRole("textbox", { name: "회사·조직", exact: true }),
+  ).toHaveValue("Persnapse Labs");
+  await expect(page.getByText("NAVER CLOVA OCR · 수정 가능")).toBeVisible();
+  await expect(page.getByText(/NAVER CLOVA OCR · 1763ms/)).toBeVisible();
 });

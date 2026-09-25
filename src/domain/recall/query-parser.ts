@@ -1,5 +1,7 @@
 import type { ParsedRecallQuery, RecallDateRange, RecallIntent } from "./types";
 
+import { koreanDayRange } from "./date-range";
+
 const stopWords = new Set([
   "그",
   "내가",
@@ -102,6 +104,8 @@ function parseDateRange(
   query: string,
   referenceTime: Date,
 ): RecallDateRange | null {
+  if (/오늘/u.test(query)) return koreanDayRange(referenceTime, 0, "오늘");
+  if (/어제/u.test(query)) return koreanDayRange(referenceTime, -1, "어제");
   const explicitYearMonth = query.match(/(\d{4})년\s*(\d{1,2})월/u);
 
   if (explicitYearMonth) {
@@ -180,7 +184,7 @@ export function parseRecallQuery(
         .filter((term) => term.length >= 2 && !stopWords.has(term))
         .filter((term) => !/^\d{1,4}년?$/u.test(term))
         .filter((term) => !/^\d{1,2}월$/u.test(term))
-        .filter((term) => term !== "지난달"),
+        .filter((term) => !["지난달", "오늘", "어제"].includes(term)),
     ),
   ];
 

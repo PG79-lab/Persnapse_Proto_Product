@@ -52,7 +52,7 @@ export default async function PeoplePage() {
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-sm font-semibold">최근 맥락순</h2>
             <span className="text-xs text-[var(--muted)]">
-              합성 Golden Dataset
+              저장된 관계 기억
             </span>
           </div>
           <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { z } from "zod";
 
 import { AppShell } from "../../../components/app-shell";
+import { DigitalBusinessCard } from "../../../components/digital-business-card";
 import { EvidenceBadge } from "../../../components/evidence-badge";
 import { buildProfileTimeline } from "../../../domain/profile-timeline";
 import { getPersonProfile } from "../../../server/db/people-repository";
@@ -167,6 +168,33 @@ export default async function PersonProfilePage({
           </div>
         </section>
 
+        {profile.businessCards.length > 0 ? (
+          <section className="mt-8">
+            <div className="mb-5">
+              <p className="text-xs font-semibold tracking-[0.16em] text-[var(--accent)] uppercase">
+                Digital business cards
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
+                저장된 실제 명함
+              </h2>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {profile.businessCards.map((card) => (
+                <DigitalBusinessCard
+                  key={card.id}
+                  imageUrl={card.imageUrl}
+                  identity={card.identity}
+                  badge={
+                    card.originalRetained
+                      ? "Original retained"
+                      : "Display image only"
+                  }
+                />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <section>
             <div className="mb-5 flex items-end justify-between">
@@ -190,9 +218,11 @@ export default async function PersonProfilePage({
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="text-xs font-semibold text-[var(--accent)]">
-                            {fullDateFormatter.format(
-                              new Date(item.interaction.occurredAt),
-                            )}
+                            {item.interaction.occurredAt
+                              ? fullDateFormatter.format(
+                                  new Date(item.interaction.occurredAt),
+                                )
+                              : "만남 날짜 미상"}
                           </p>
                           <h3 className="mt-1 font-semibold">
                             {interactionLabels[
@@ -268,7 +298,11 @@ export default async function PersonProfilePage({
                     <article className="rounded-3xl border border-dashed border-[var(--border-strong)] bg-[var(--surface)]/70 p-5 sm:p-6">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="text-xs font-semibold text-[var(--muted)]">
-                          {fullDateFormatter.format(new Date(item.occurredAt))}{" "}
+                          {item.occurredAt
+                            ? fullDateFormatter.format(
+                                new Date(item.occurredAt),
+                              )
+                            : "날짜 미상"}{" "}
                           · 독립 기억
                         </p>
                         <EvidenceBadge

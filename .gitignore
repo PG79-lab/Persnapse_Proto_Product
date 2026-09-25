@@ -16,6 +16,7 @@ build/
 coverage/
 .cache/
 .next/
+.vercel/
 playwright-report/
 test-results/
 
@@ -38,3 +39,4 @@ Desktop.ini
 *.log
 tmp/
 temp/
+/output/

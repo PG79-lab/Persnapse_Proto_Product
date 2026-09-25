@@ -5,6 +5,15 @@ import { getServerEnv } from "../../src/server/env";
 
 const environment = getServerEnv();
 
+if (
+  environment.AI_ROUTING_MODE === "live" &&
+  !process.argv.includes("--confirm-live")
+) {
+  throw new Error(
+    "Live evaluation requires --confirm-live and an approved call budget.",
+  );
+}
+
 try {
   const cases = await listGoldenQueryCases(
     environment.APP_DEFAULT_WORKSPACE_ID,
@@ -17,6 +26,7 @@ try {
       queryText: evaluationCase.queryText,
       referenceTime: new Date(evaluationCase.referenceTime),
       evaluationCaseId: evaluationCase.id,
+      persist: false,
     });
     const actualPersonIds = response.results.map((result) => result.personId);
     const actualEvidenceIds = response.results.flatMap((result) =>
@@ -30,10 +40,13 @@ try {
           )
         : evaluationCase.expectationStatus === "no_result"
           ? actualPersonIds.length === 0
-          : actualPersonIds[0] === evaluationCase.expectedPersonIds[0];
+          : actualPersonIds[0] === evaluationCase.expectedPersonIds[0] &&
+            actualPersonIds.every((id) =>
+              evaluationCase.expectedPersonIds.includes(id),
+            );
     const evidencePassed =
       evaluationCase.expectedEvidenceIds.length === 0 ||
-      evaluationCase.expectedEvidenceIds.some((evidenceId) =>
+      evaluationCase.expectedEvidenceIds.every((evidenceId) =>
         actualEvidenceIds.includes(evidenceId),
       );
 

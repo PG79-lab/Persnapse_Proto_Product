@@ -1,11 +1,13 @@
 import "server-only";
 
+import { businessCardIdentitySchema } from "../../domain/business-card/business-card-draft";
 import { getDatabase } from "./client";
 import type {
   MemoryStatement,
   PersonActionItem,
   PersonAffiliation,
   PersonAttribute,
+  PersonBusinessCard,
   PersonInteraction,
   PersonProfile,
   PersonSummary,
@@ -144,6 +146,7 @@ export async function getPersonProfile(
     memoryRows,
     interactionRows,
     actionRows,
+    businessCardRows,
   ] = await Promise.all([
     sql<
       Array<{
@@ -219,7 +222,7 @@ export async function getPersonProfile(
       Array<{
         id: string;
         interaction_type: string;
-        occurred_at: Date | string;
+        occurred_at: Date | string | null;
         location: string | null;
         summary: string;
         source_kind: string;
@@ -289,6 +292,21 @@ export async function getPersonProfile(
           and person_id = ${personId}
         order by (status = 'pending') desc, due_at asc nulls last, created_at desc
       `,
+    sql<
+      Array<{
+        id: string;
+        display_asset_id: string;
+        card_data: unknown;
+        original_retained: boolean;
+        created_at: Date | string;
+      }>
+    >`
+        select id, display_asset_id, card_data, original_retained, created_at
+        from public.business_cards
+        where workspace_id = ${workspaceId}
+          and person_id = ${personId}
+        order by created_at desc
+      `,
   ]);
 
   const affiliations: PersonAffiliation[] = affiliationRows.map((row) => ({
@@ -318,7 +336,7 @@ export async function getPersonProfile(
   const interactions: PersonInteraction[] = interactionRows.map((row) => ({
     id: row.id,
     interactionType: row.interaction_type,
-    occurredAt: toIsoString(row.occurred_at)!,
+    occurredAt: toIsoString(row.occurred_at),
     location: row.location,
     summary: row.summary,
     sourceKind: row.source_kind,
@@ -338,6 +356,30 @@ export async function getPersonProfile(
     sourceKind: row.source_kind,
     verificationStatus: row.verification_status,
   }));
+  const businessCards: PersonBusinessCard[] = businessCardRows.flatMap(
+    (row) => {
+      let value = row.card_data;
+      if (typeof value === "string") {
+        try {
+          value = JSON.parse(value) as unknown;
+        } catch {
+          return [];
+        }
+      }
+      const parsed = businessCardIdentitySchema.safeParse(value);
+      return parsed.success
+        ? [
+            {
+              id: row.id,
+              imageUrl: `/api/source-assets/${row.display_asset_id}`,
+              identity: parsed.data,
+              originalRetained: row.original_retained,
+              createdAt: toIsoString(row.created_at)!,
+            },
+          ]
+        : [];
+    },
+  );
 
   return {
     id: person.id,
@@ -350,5 +392,6 @@ export async function getPersonProfile(
     memories,
     interactions,
     actions,
+    businessCards,
   };
 }

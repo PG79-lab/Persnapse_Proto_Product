@@ -42,7 +42,7 @@ export interface MemoryStatement {
 export interface PersonInteraction {
   id: string;
   interactionType: string;
-  occurredAt: string;
+  occurredAt: string | null;
   location: string | null;
   summary: string;
   sourceKind: string;
@@ -64,6 +64,23 @@ export interface PersonActionItem {
   verificationStatus: VerificationStatus;
 }
 
+export interface PersonBusinessCard {
+  id: string;
+  imageUrl: string;
+  identity: {
+    displayName: string | null;
+    organizationName: string | null;
+    title: string | null;
+    department: string | null;
+    emails: string[];
+    phones: string[];
+    websites: string[];
+    address: string | null;
+  };
+  originalRetained: boolean;
+  createdAt: string;
+}
+
 export interface PersonProfile {
   id: string;
   displayName: string;
@@ -75,4 +92,5 @@ export interface PersonProfile {
   memories: MemoryStatement[];
   interactions: PersonInteraction[];
   actions: PersonActionItem[];
+  businessCards: PersonBusinessCard[];
 }

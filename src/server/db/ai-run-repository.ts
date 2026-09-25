@@ -47,6 +47,7 @@ export function createAiAttemptRecorder(context: AiAttemptRecorderContext) {
           ${JSON.stringify({
             mode: event.mode,
             lane: event.lane,
+            totalTokens: event.totalTokens,
           })}::jsonb,
           now()
         )

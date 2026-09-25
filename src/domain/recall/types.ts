@@ -31,10 +31,15 @@ export interface ParsedRecallQuery {
   terms: string[];
   intents: RecallIntent[];
   dateRange: RecallDateRange | null;
-  parserVersion: "structured-v1";
+  parserVersion: "structured-v1" | "llm-v1";
 }
 
 export interface RecallCorpusEvidence {
+  interactionId?: string | null;
+  location?: string | null;
+  eventName?: string | null;
+  topics?: string[];
+  dueAt?: string | null;
   id: string;
   type: RecallEvidenceType;
   text: string;
@@ -46,6 +51,7 @@ export interface RecallCorpusEvidence {
 }
 
 export interface RecallCorpusAction {
+  interactionId?: string | null;
   id: string;
   title: string;
   details: string | null;
@@ -87,7 +93,7 @@ export interface RecallAction {
 }
 
 export interface RecallSuggestion {
-  type: "ai_suggestion";
+  type: "ai_suggestion" | "guidance";
   title: string;
   rationale: string;
   executes: false;
@@ -102,7 +108,7 @@ export interface RecallPersonResult {
   reason: string;
   evidence: RecallEvidence[];
   storedActions: RecallAction[];
-  suggestion: RecallSuggestion;
+  suggestion: RecallSuggestion | null;
 }
 
 export interface RecallResponse {
@@ -112,6 +118,10 @@ export interface RecallResponse {
   parsedQuery: ParsedRecallQuery;
   results: RecallPersonResult[];
   latencyMs: number;
-  mode: "structured_local_semantic";
-  model: "local-hash-v1";
+  mode: "structured_local_semantic" | "live";
+  model: string;
+  analysis?: string;
+  clarification?: string | null;
+  warnings?: string[];
+  metrics?: { stage: string; latencyMs: number; totalTokens?: number }[];
 }

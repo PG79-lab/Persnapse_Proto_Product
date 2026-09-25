@@ -651,8 +651,7 @@ async function commitTextCaptureDetails(
     organizationId: string | null;
   },
 ): Promise<{ result: CaptureCommitResult; alreadyCommitted: false }> {
-  const occurredAt =
-    input.draft.interaction.occurredAt ?? input.session.created_at;
+  const occurredAt = input.draft.interaction.occurredAt;
   let eventId: string | null = null;
 
   if (input.draft.interaction.eventName) {
