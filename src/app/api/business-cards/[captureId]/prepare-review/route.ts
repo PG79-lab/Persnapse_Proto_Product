@@ -1,8 +1,10 @@
+import { uuidSchema } from "../../../../../domain/workspace/contracts";
 import { prepareBusinessCardReviewRequestSchema } from "../../../../../domain/business-card/business-card-workflow";
 import { prepareBusinessCardReview } from "../../../../../server/application/business-card-service";
 import { getServerEnv } from "../../../../../server/env";
 import { assertPrototypeAccess } from "../../../../../server/security/prototype-access";
 import { businessCardErrorResponse } from "../../response";
+import { readJsonBody } from "../../../../../server/http/request-body";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -14,8 +16,9 @@ export async function POST(
   try {
     assertPrototypeAccess(request);
     const { captureId } = await params;
+    uuidSchema.parse(captureId);
     const input = prepareBusinessCardReviewRequestSchema.parse(
-      await request.json(),
+      await readJsonBody(request),
     );
     const environment = getServerEnv();
     const card = await prepareBusinessCardReview({

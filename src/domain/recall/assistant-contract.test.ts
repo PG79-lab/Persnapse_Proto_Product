@@ -17,6 +17,7 @@ const plan: QueryPlan = {
   ],
   sameInteraction: true,
   timeTarget: "interaction",
+  actionKind: null,
   period: "yesterday",
   fromDate: null,
   toDateExclusive: null,
@@ -196,5 +197,68 @@ describe("grounded assistant contract", () => {
         "test",
       ),
     ).toThrow();
+  });
+  it("does not use an interaction summary or saved suggestion as proof of a promise", () => {
+    const p = structuredClone(person);
+    p.evidence.push({
+      ...p.evidence[0],
+      id: "proposal",
+      type: "action_item",
+      actionKind: "suggestion",
+      actionStatus: "pending",
+    });
+    const raw = structuredClone(answer);
+    raw.people[0].evidenceKeys.push("action_item:proposal");
+    expect(() =>
+      validateAssistantAnswer(
+        raw,
+        { ...plan, actionKind: "commitment" },
+        [p],
+        "약속한 사람",
+        reference,
+        "test",
+      ),
+    ).toThrow();
+  });
+  it("retains action kind in the API result and only returns the requested kind", () => {
+    const p = structuredClone(person);
+    for (const kind of ["commitment", "suggestion"] as const) {
+      p.actions.push({
+        id: kind,
+        kind,
+        title: "합성 행동",
+        details: null,
+        dueAt: null,
+        status: "pending",
+        interactionId: "meeting1",
+      });
+      p.evidence.push({
+        ...p.evidence[0],
+        id: kind,
+        type: "action_item",
+        actionKind: kind,
+        actionStatus: "pending",
+      });
+    }
+    const raw = structuredClone(answer);
+    raw.people[0].evidenceKeys.push(
+      "action_item:commitment",
+      "action_item:suggestion",
+    );
+    const result = validateAssistantAnswer(
+      raw,
+      { ...plan, actionKind: "commitment" },
+      [p],
+      "약속한 사람",
+      reference,
+      "test",
+    );
+    expect(result.results[0].storedActions).toEqual([
+      expect.objectContaining({
+        kind: "commitment",
+        type: "stored",
+        executes: false,
+      }),
+    ]);
   });
 });

@@ -5,7 +5,10 @@ import { resolve } from "node:path";
 import { createVercelCommand } from "./vercel-cli-environment.mjs";
 import { previewEnvironmentPolicy } from "./vercel-preview-environment-policy.mjs";
 const { expectedPreviewEnvironment, previewOverrides, previewVariables } =
-  previewEnvironmentPolicy(process.argv.includes("--live-assistant"));
+  previewEnvironmentPolicy(
+    process.argv.includes("--live-assistant"),
+    process.argv.includes("--openai-ocr"),
+  );
 import {
   assertAllDeploymentsProtected,
   assertPreviewEnvironmentInventory,

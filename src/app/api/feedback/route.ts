@@ -2,6 +2,10 @@ import { z } from "zod";
 import { getDatabase } from "../../../server/db/client";
 import { getServerEnv } from "../../../server/env";
 import {
+  readJsonBody,
+  requestInputErrorResponse,
+} from "../../../server/http/request-body";
+import {
   assertPrototypeAccess,
   PrototypeAccessError,
 } from "../../../server/security/prototype-access";
@@ -17,7 +21,7 @@ const schema = z
 export async function POST(request: Request) {
   try {
     assertPrototypeAccess(request);
-    const input = schema.parse(await request.json());
+    const input = schema.parse(await readJsonBody(request));
     const workspaceId = getServerEnv().APP_DEFAULT_WORKSPACE_ID;
     const sql = getDatabase();
     const rows =
@@ -31,10 +35,13 @@ export async function POST(request: Request) {
       );
     if (input.elapsedMs !== null)
       await sql`update public.queries
-      set retrieval_trace = retrieval_trace || jsonb_build_object('clientElapsedMs', ${input.elapsedMs}::integer)
+      set retrieval_trace = (case when jsonb_typeof(retrieval_trace) = 'object' then retrieval_trace
+        else jsonb_build_object('legacyTrace', retrieval_trace) end) || jsonb_build_object('clientElapsedMs', ${input.elapsedMs}::integer)
       where workspace_id = ${workspaceId} and id = ${input.queryId}`;
     return Response.json({ saved: true });
   } catch (error) {
+    const invalidInput = requestInputErrorResponse(error);
+    if (invalidInput) return invalidInput;
     return Response.json(
       { error: "평가를 저장하지 못했습니다." },
       {

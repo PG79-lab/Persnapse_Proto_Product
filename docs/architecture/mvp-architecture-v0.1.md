@@ -1,5 +1,7 @@
 # Persnapse MVP Architecture v0.1
 
+> 2026-10-07 연결 준비·검색 복구 변경은 [ADR 0013](../decisions/0013-backend-readiness-and-search-recovery.md)을 함께 참고한다. 아래 v0.1의 과거 구현 단계와 모델 표기는 해당 시점의 기준이다.
+
 - 상태: Phase 4 Text Capture 수직 슬라이스 반영
 - 작성일: 2026-09-13
 - 최종 갱신일: 2026-09-15
@@ -304,14 +306,16 @@ Interaction은 Profile timeline의 중심이지만 초기 Graph에서는 edge ev
 
 Phase 4에서 Text Capture의 첫 구체 계약을 다음과 같이 확정했다.
 
-| Method | URL                                    | 책임                                                |
-| ------ | -------------------------------------- | --------------------------------------------------- |
-| POST   | `/api/captures`                        | Text Capture 생성과 구조화                          |
-| GET    | `/api/captures/[captureId]`            | Capture의 현재 Draft·상태 조회                      |
-| POST   | `/api/captures/[captureId]/structure`  | 실패한 동일 Capture 구조화 재시도                   |
-| POST   | `/api/captures/[captureId]/candidates` | 수정된 Draft 기준 Person 후보 재검색                |
-| POST   | `/api/captures/[captureId]/commit`     | 명시적 Identity와 검토 Draft를 transaction으로 확정 |
-| POST   | `/api/recall`                          | 관련 Person, Evidence와 Action 반환                 |
+| Method | URL                                    | 책임                                                         |
+| ------ | -------------------------------------- | ------------------------------------------------------------ |
+| POST   | `/api/captures`                        | Text Capture 생성과 구조화                                   |
+| GET    | `/api/captures/[captureId]`            | Capture의 현재 Draft·상태 조회                               |
+| POST   | `/api/captures/[captureId]/structure`  | 실패한 동일 Capture 구조화 재시도                            |
+| POST   | `/api/captures/[captureId]/candidates` | 수정된 Draft 기준 Person 후보 재검색                         |
+| POST   | `/api/captures/[captureId]/commit`     | 명시적 Identity와 검토 Draft를 transaction으로 확정          |
+| POST   | `/api/recall`                          | 관련 Person, Evidence와 Action 반환                          |
+| GET    | `/api/recall/preparation`              | 기본 워크스페이스 검색 준비 상태 조회, 모델 호출 없음        |
+| POST   | `/api/recall/preparation`              | 사용자 요청당 최대 2명의 검색 준비 복구, 답변 자동 실행 없음 |
 
 Capture payload는 `capture-draft-v1`과 strict request schema를 통과해야 한다. 후보 검색은 읽기 작업이며 Person을 선택하지 않는다. Commit은 Capture row lock과 영속 `commit_result`로 멱등성을 보장한다.
 

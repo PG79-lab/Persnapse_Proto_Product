@@ -39,6 +39,7 @@ function fixture(dueAt: string | null = null): RecallCorpusPerson {
       {
         id: "a",
         title: "포장 샘플 전달",
+        kind: "commitment",
         details: null,
         dueAt,
         status: "pending",

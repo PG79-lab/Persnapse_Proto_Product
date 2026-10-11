@@ -1,5 +1,7 @@
+import { PrototypeAccessError } from "../../../server/security/prototype-access";
 import { aiRateLimitResponse } from "../../../server/ai/rate-limit-response";
 import { z } from "zod";
+import { requestInputErrorResponse } from "../../../server/http/request-body";
 
 import { CaptureStructuringError } from "../../../server/application/capture-service";
 import {
@@ -9,6 +11,10 @@ import {
 } from "../../../server/db/capture-repository";
 
 export function captureErrorResponse(error: unknown): Response {
+  if (error instanceof PrototypeAccessError)
+    return Response.json({ error: "Not Found" }, { status: 404 });
+  const invalidInput = requestInputErrorResponse(error);
+  if (invalidInput) return invalidInput;
   const limited = aiRateLimitResponse(error);
   if (limited) return limited;
   if (error instanceof z.ZodError) {

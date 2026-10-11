@@ -11,9 +11,15 @@ import { getDatabase } from "./client";
 
 export const clovaBusinessCardProviderScope =
   "naver_clova:business-card-extraction-v1";
+export const openAiBusinessCardProviderScope =
+  "openai:business-card-extraction-v1";
+export type BusinessCardProviderScope =
+  | typeof clovaBusinessCardProviderScope
+  | typeof openAiBusinessCardProviderScope;
 
 export interface OcrProviderReservation {
   id: string;
+  providerScope: BusinessCardProviderScope;
 }
 
 export class OcrCostLimitError extends Error {
@@ -49,16 +55,18 @@ export async function reserveOcrProviderCall(input: {
   captureId: string;
   operationKey: string;
   imageSha256: string;
+  providerScope?: BusinessCardProviderScope;
   now?: Date;
 }): Promise<OcrProviderReservation> {
   const sql = getDatabase();
   const reservationId = randomUUID();
+  const providerScope = input.providerScope ?? clovaBusinessCardProviderScope;
 
   try {
     return await sql.begin(async (transaction) => {
       await transaction`
         select pg_advisory_xact_lock(
-          hashtextextended(${`persnapse:${clovaBusinessCardProviderScope}`}, 0)
+          hashtextextended(${`persnapse:${providerScope}`}, 0)
         )
       `;
 
@@ -69,7 +77,7 @@ export async function reserveOcrProviderCall(input: {
           status = 'failed',
           completed_at = ${now},
           error_code = 'OCR_GUARD_LEASE_EXPIRED'
-        where provider_scope = ${clovaBusinessCardProviderScope}
+        where provider_scope = ${providerScope}
           and status in ('reserved', 'started')
           and lease_expires_at <= ${now}
       `;
@@ -80,7 +88,7 @@ export async function reserveOcrProviderCall(input: {
         select status, lease_expires_at
         from public.ocr_provider_calls
         where workspace_id = ${input.workspaceId}
-          and provider_scope = ${clovaBusinessCardProviderScope}
+          and provider_scope = ${providerScope}
           and operation_key = ${input.operationKey}::uuid
         limit 1
       `;
@@ -92,7 +100,7 @@ export async function reserveOcrProviderCall(input: {
         select id
         from public.ocr_provider_calls
         where workspace_id = ${input.workspaceId}
-          and provider_scope = ${clovaBusinessCardProviderScope}
+          and provider_scope = ${providerScope}
           and image_sha256 = ${input.imageSha256}
           and status in ('reserved', 'started')
           and lease_expires_at > ${now}
@@ -105,7 +113,7 @@ export async function reserveOcrProviderCall(input: {
       const [usage] = await transaction<UsageRow[]>`
         select max(reserved_at) as latest_reservation_at, min(reserved_at) as oldest_recent_reservation_at, count(*) as recent_reservations
         from public.ocr_provider_calls
-        where provider_scope = ${clovaBusinessCardProviderScope}
+        where provider_scope = ${providerScope}
           and reserved_at > ${new Date(now.getTime() - clovaOcrCostPolicy.windowMs)}
       `;
       const decision = evaluateOcrCostPolicy(
@@ -135,7 +143,7 @@ export async function reserveOcrProviderCall(input: {
           ${reservationId},
           ${input.workspaceId},
           ${input.captureId},
-          ${clovaBusinessCardProviderScope},
+          ${providerScope},
           ${input.operationKey}::uuid,
           ${input.imageSha256},
           'reserved',
@@ -144,7 +152,7 @@ export async function reserveOcrProviderCall(input: {
         )
       `;
 
-      return { id: reservationId };
+      return { id: reservationId, providerScope };
     });
   } catch (error) {
     if (error instanceof OcrCostLimitError) throw error;
@@ -154,6 +162,7 @@ export async function reserveOcrProviderCall(input: {
 
 export async function markOcrProviderCallStarted(
   reservationId: string,
+  providerScope: BusinessCardProviderScope = clovaBusinessCardProviderScope,
 ): Promise<void> {
   const sql = getDatabase();
   try {
@@ -161,7 +170,7 @@ export async function markOcrProviderCallStarted(
       update public.ocr_provider_calls
       set status = 'started', provider_request_started_at = clock_timestamp()
       where id = ${reservationId}
-        and provider_scope = ${clovaBusinessCardProviderScope}
+        and provider_scope = ${providerScope}
         and status = 'reserved'
         and lease_expires_at > clock_timestamp()
       returning id
@@ -174,6 +183,7 @@ export async function markOcrProviderCallStarted(
 
 export async function completeOcrProviderCall(input: {
   reservationId: string;
+  providerScope?: BusinessCardProviderScope;
   status: "succeeded" | "failed";
   errorCode?: string;
 }): Promise<void> {
@@ -185,7 +195,7 @@ export async function completeOcrProviderCall(input: {
       completed_at = clock_timestamp(),
       error_code = ${input.errorCode ?? null}
     where id = ${input.reservationId}
-      and provider_scope = ${clovaBusinessCardProviderScope}
+      and provider_scope = ${input.providerScope ?? clovaBusinessCardProviderScope}
       and status in ('reserved', 'started')
   `;
 }

@@ -2,7 +2,7 @@
 import { InferenceHint } from "./inference-hint";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { DigitalBusinessCard } from "../../components/digital-business-card";
 import type { BusinessCardDraftV1 } from "../../domain/business-card/business-card-draft";
@@ -75,15 +75,25 @@ function ocrProviderLabel(
   mode: "mock" | "live",
 ): string {
   if (provider === "naver_clova") return "NAVER CLOVA OCR";
+  if (provider === "openai") return "OpenAI 이미지 인식";
+  if (provider === "openai_cache") return "OpenAI 이미지 인식 · 재사용";
   if (provider === "naver_clova_cache") return "NAVER CLOVA OCR · 재사용";
   if (provider === "mock") return "Mock OCR";
-  return mode === "live" ? "NAVER CLOVA OCR" : "Mock OCR";
+  return mode === "live" ? "AI 이미지 인식" : "Mock OCR";
 }
 
 export function BusinessCardWorkspace({
   ocrMode,
+  onSaved,
+  onStageChange,
+  onViewPerson,
+  onFindMemory,
 }: {
   ocrMode: "mock" | "live";
+  onSaved?: (personId: string) => void;
+  onStageChange?: (stage: number) => void;
+  onViewPerson?: (personId: string) => void;
+  onFindMemory?: (question: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ocrInFlightRef = useRef(new Set<string>());
@@ -93,6 +103,14 @@ export function BusinessCardWorkspace({
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   const activeItem = items.find((item) => item.id === activeId) ?? null;
+  const stage =
+    !activeItem || activeItem.operation === "ocr"
+      ? 1
+      : activeItem.status === "card_review" ||
+          activeItem.operation === "context"
+        ? 2
+        : 3;
+  useEffect(() => onStageChange?.(stage), [onStageChange, stage]);
 
   function updateItem(itemId: string, updater: (item: QueueItem) => QueueItem) {
     setItems((current) =>
@@ -124,7 +142,12 @@ export function BusinessCardWorkspace({
     );
 
     try {
+      const preprocessStartedAt = performance.now();
       const processed = await processBusinessCardImage(sourceFile);
+      performance.measure("business-card:preprocess", {
+        start: preprocessStartedAt,
+        end: performance.now(),
+      });
       const displayUrl = URL.createObjectURL(processed.displayFile);
       updateItem(itemId, (item) => {
         URL.revokeObjectURL(item.previewUrl);
@@ -142,11 +165,16 @@ export function BusinessCardWorkspace({
       formData.append("original", processed.originalFile);
       formData.append("display", processed.displayFile);
 
+      const requestStartedAt = performance.now();
       const response = await fetch("/api/business-cards", {
         method: "POST",
         body: formData,
       });
       const card = await responseJson<BusinessCardSessionView>(response);
+      performance.measure("business-card:upload-and-ocr", {
+        start: requestStartedAt,
+        end: performance.now(),
+      });
       updateItem(itemId, (item) => ({
         ...item,
         card,
@@ -369,7 +397,7 @@ export function BusinessCardWorkspace({
     if (!item.identityChoice) {
       updateItem(item.id, (current) => ({
         ...current,
-        error: "기존 Person 연결 또는 신규 Person 생성을 직접 선택해 주세요.",
+        error: "기존 인맥에 연결할지 새 인맥으로 등록할지 선택해 주세요.",
       }));
       return;
     }
@@ -379,7 +407,7 @@ export function BusinessCardWorkspace({
     ) {
       updateItem(item.id, (current) => ({
         ...current,
-        error: "저장할 Person 이름을 입력해 주세요.",
+        error: "새 인맥의 이름을 입력해 주세요.",
       }));
       return;
     }
@@ -408,6 +436,8 @@ export function BusinessCardWorkspace({
         },
       );
       const result = await responseJson<BusinessCardCommitResponse>(response);
+      if (result.card.commitResult)
+        onSaved?.(result.card.commitResult.personId);
       updateItem(item.id, (current) => ({
         ...current,
         card: result.card,
@@ -517,59 +547,50 @@ export function BusinessCardWorkspace({
     updateItem(item.id, (current) => ({
       ...current,
       error: response.ok
-        ? "원본은 삭제했고, 보정된 Digital Card는 유지됩니다."
+        ? "원본 사진은 삭제했고, 디지털 명함은 유지됩니다."
         : "원본 이미지를 삭제하지 못했습니다.",
     }));
   }
 
   return (
-    <section className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
-        <aside className="space-y-4">
-          <section className="rounded-[1.75rem] border border-[var(--border)] bg-white/85 p-5">
-            <p className="text-xs font-semibold tracking-[0.14em] text-[var(--accent)] uppercase">
-              Card inbox
-            </p>
-            <h2 className="mt-2 text-xl font-semibold">
-              명함 {items.length}/5
-            </h2>
-            <div className="mt-5 grid gap-2">
-              <button
-                type="button"
-                disabled={items.length >= 5}
-                onClick={() => setCameraOpen(true)}
-                className="rounded-xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-40"
-              >
-                카메라로 촬영
-              </button>
-              <button
-                type="button"
-                disabled={items.length >= 5}
-                onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm font-semibold disabled:opacity-40"
-              >
-                이미지 선택
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                className="sr-only"
-                onChange={(event) => {
-                  if (event.target.files) void enqueueFiles(event.target.files);
-                  event.target.value = "";
-                }}
-              />
-            </div>
-            <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
-              한 사진에는 명함 한 장만 담아주세요. 여러 파일은 각각 독립적으로
-              순차 처리됩니다.
-            </p>
-          </section>
+    <section className="business-card-flow space-y-6">
+      <div
+        className={`grid gap-6 ${items.length ? "lg:grid-cols-[18rem_minmax(0,1fr)]" : ""}`}
+      >
+        {items.length > 0 && (
+          <aside className="space-y-4">
+            <section className="rounded-[1.75rem] border border-[var(--border)] bg-white/85 p-5">
+              <p className="text-xs font-semibold tracking-[0.14em] text-[var(--accent)] uppercase">
+                진행 중인 명함
+              </p>
+              <h2 className="mt-2 text-xl font-semibold">
+                명함 {items.length}/5
+              </h2>
+              <div className="mt-5 grid gap-2">
+                <button
+                  type="button"
+                  disabled={items.length >= 5}
+                  onClick={() => setCameraOpen(true)}
+                  className="rounded-xl bg-[var(--foreground)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-40"
+                >
+                  다음 명함 촬영
+                </button>
+                <button
+                  type="button"
+                  disabled={items.length >= 5}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="rounded-xl border border-[var(--border-strong)] bg-white px-4 py-3 text-sm font-semibold disabled:opacity-40"
+                >
+                  다음 이미지 선택
+                </button>
+              </div>
+              <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
+                한 사진에는 명함 한 장만 담아주세요. 여러 파일은 각각 독립적으로
+                순차 처리됩니다.
+              </p>
+            </section>
 
-          {items.length > 0 ? (
-            <ol className="space-y-2">
+            <ol className="space-y-2" aria-label="등록 중인 명함">
               {items.map((item, index) => (
                 <li key={item.id}>
                   <button
@@ -592,10 +613,10 @@ export function BusinessCardWorkspace({
                 </li>
               ))}
             </ol>
-          ) : null}
-        </aside>
+          </aside>
+        )}
 
-        <main>
+        <div>
           {!activeItem ? (
             <EmptyCardCapture
               ocrMode={ocrMode}
@@ -614,10 +635,25 @@ export function BusinessCardWorkspace({
               retry={retry}
               removeItem={removeItem}
               deleteOriginal={deleteOriginal}
+              onViewPerson={onViewPerson}
+              onFindMemory={onFindMemory}
             />
           )}
-        </main>
+        </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        className="sr-only"
+        aria-label="명함 이미지 선택"
+        onChange={(event) => {
+          if (event.target.files) void enqueueFiles(event.target.files);
+          event.target.value = "";
+        }}
+      />
 
       {globalError ? (
         <p
@@ -631,7 +667,15 @@ export function BusinessCardWorkspace({
       {cameraOpen ? (
         <BusinessCardCamera
           onClose={() => setCameraOpen(false)}
-          onCapture={async (file) => enqueueFiles([file])}
+          onCapture={(file) => {
+            void enqueueFiles([file]).catch((error: unknown) => {
+              setGlobalError(
+                error instanceof Error
+                  ? error.message
+                  : "명함 등록을 시작하지 못했습니다.",
+              );
+            });
+          }}
         />
       ) : null}
     </section>
@@ -648,7 +692,7 @@ function EmptyCardCapture({
   onUpload: () => void;
 }) {
   return (
-    <section className="grid min-h-[31rem] place-items-center rounded-[2rem] border border-dashed border-[var(--border-strong)] bg-white/65 p-8 text-center">
+    <section className="card-capture-empty grid min-h-[31rem] place-items-center rounded-[2rem] border border-dashed border-[var(--border-strong)] bg-white/65 p-8 text-center">
       <div>
         <div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-[var(--accent-soft)] text-2xl">
           ◫
@@ -657,8 +701,8 @@ function EmptyCardCapture({
           첫 명함을 디지털 카드로
         </h2>
         <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[var(--muted)]">
-          실제 명함의 디자인은 보정 이미지로 그대로 보존하고, 연락처와 만남
-          맥락은 상호작용 가능한 정보로 연결합니다.
+          명함 한 장을 촬영하거나 업로드하세요. 이름과 연락처를 확인하고, 어디서
+          만났는지 함께 남길 수 있어요.
         </p>
         <div className="mt-7 flex flex-wrap justify-center gap-3">
           <button
@@ -678,7 +722,7 @@ function EmptyCardCapture({
         </div>
         <p className="mt-6 text-xs text-[var(--draft)]">
           {ocrMode === "live"
-            ? "NAVER CLOVA OCR로 인식하며, 결과는 저장 전 모두 확인하고 수정할 수 있습니다."
+            ? "AI가 명함을 읽고 정보를 정리합니다. 직접 확인한 뒤에만 인맥으로 저장됩니다."
             : "현재 Mock OCR이며, 추출값은 실제 이미지와 다를 수 있습니다."}
         </p>
       </div>
@@ -700,6 +744,8 @@ interface CardWorkItemProps {
   retry: (item: QueueItem) => Promise<void>;
   removeItem: (item: QueueItem) => Promise<void>;
   deleteOriginal: (item: QueueItem) => Promise<void>;
+  onViewPerson?: (personId: string) => void;
+  onFindMemory?: (question: string) => void;
 }
 
 function CardWorkItem(props: CardWorkItemProps) {
@@ -714,6 +760,8 @@ function CardWorkItem(props: CardWorkItemProps) {
     retry,
     removeItem,
     deleteOriginal,
+    onViewPerson,
+    onFindMemory,
   } = props;
   const imageUrl = item.card?.imageUrl || item.previewUrl;
 
@@ -763,7 +811,7 @@ function CardWorkItem(props: CardWorkItemProps) {
             {item.operation === "context"
               ? "만남의 맥락을 구조화하고 있습니다"
               : item.operation === "commit"
-                ? "Digital Card와 관계 기억을 저장하고 있습니다"
+                ? "인맥과 만남 기록을 저장하고 있습니다"
                 : "명함을 디지털화하고 있습니다"}
           </h2>
           <p className="mt-2 text-sm text-[var(--muted)]">
@@ -771,7 +819,7 @@ function CardWorkItem(props: CardWorkItemProps) {
               ? "만남 · 관심사 · 기억 · 약속 검토"
               : item.operation === "commit"
                 ? "인물 확인 · 기억 저장"
-                : "이미지 보정 · private 저장 · " +
+                : "이미지 처리 · 안전하게 저장 · " +
                   ocrProviderLabel(item.card?.ocrProvider, ocrMode)}
           </p>
           {item.slow && item.operation === "ocr" ? (
@@ -794,14 +842,14 @@ function CardWorkItem(props: CardWorkItemProps) {
           <DigitalBusinessCard
             imageUrl={imageUrl}
             draft={item.draft}
-            badge="Saved digital card"
+            badge="저장한 디지털 명함"
           />
           <div className="rounded-[2rem] border border-[var(--border)] bg-white/90 p-6">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-[var(--confirmed-soft)] text-xl text-[var(--confirmed)]">
               ✓
             </div>
             <p className="mt-5 text-sm font-semibold text-[var(--confirmed)]">
-              Digital Card + Memory 저장 완료
+              인맥과 만남 기록 저장 완료
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
               명함과 관계 맥락이 연결됐습니다.
@@ -813,24 +861,47 @@ function CardWorkItem(props: CardWorkItemProps) {
                 : ""}
             </p>
             <div className="mt-6 grid gap-2">
-              <Link
-                href={`/people/${commitResult.personId}`}
-                className="rounded-xl bg-[var(--foreground)] px-5 py-3 text-center text-sm font-semibold text-white"
-              >
-                Person Context 보기
-              </Link>
-              <Link
-                href={{ pathname: "/recall", query: { q: result.recallQuery } }}
-                className="rounded-xl border border-[var(--border-strong)] px-5 py-3 text-center text-sm font-semibold"
-              >
-                저장한 기억 Recall
-              </Link>
+              {onViewPerson ? (
+                <button
+                  type="button"
+                  onClick={() => onViewPerson(commitResult.personId)}
+                  className="rounded-xl bg-[var(--accent)] px-5 py-3 text-center text-sm font-semibold text-white"
+                >
+                  인맥 프로필 보기
+                </button>
+              ) : (
+                <Link
+                  href={`/people/${commitResult.personId}`}
+                  className="rounded-xl bg-[var(--accent)] px-5 py-3 text-center text-sm font-semibold text-white"
+                >
+                  인맥 프로필 보기
+                </Link>
+              )}
+              {onFindMemory ? (
+                <button
+                  type="button"
+                  onClick={() => onFindMemory(result.recallQuery)}
+                  className="rounded-xl border border-[var(--border-strong)] px-5 py-3 text-center text-sm font-semibold"
+                >
+                  방금 저장한 기억 찾아보기
+                </button>
+              ) : (
+                <Link
+                  href={{
+                    pathname: "/recall",
+                    query: { q: result.recallQuery },
+                  }}
+                  className="rounded-xl border border-[var(--border-strong)] px-5 py-3 text-center text-sm font-semibold"
+                >
+                  방금 저장한 기억 찾아보기
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => void deleteOriginal(item)}
                 className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm text-[var(--muted)]"
               >
-                원본만 삭제 · Digital Card 유지
+                원본 사진만 삭제
               </button>
             </div>
           </div>
@@ -854,24 +925,19 @@ function CardWorkItem(props: CardWorkItemProps) {
           <DigitalBusinessCard
             imageUrl={imageUrl}
             draft={item.draft}
-            badge={
-              item.card?.ocrProvider === "naver_clova"
-                ? "CLOVA OCR · Digital card"
-                : "Mock OCR preview"
-            }
+            badge={`${ocrProviderLabel(item.card?.ocrProvider, ocrMode)} · 디지털 명함`}
           />
           <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[var(--muted)]">
             <span>
-              비생성형 보정 ·{" "}
-              {ocrProviderLabel(item.card?.ocrProvider, ocrMode)} ·{" "}
-              {item.card?.ocrLatencyMs ?? 0}ms
+              이미지 처리 완료 ·{" "}
+              {ocrProviderLabel(item.card?.ocrProvider, ocrMode)}
             </span>
             <button
               type="button"
               onClick={() => void removeItem(item)}
               className="rounded-full border border-[var(--border)] px-3 py-1.5"
             >
-              Draft와 이미지 삭제
+              이 명함 삭제
             </button>
           </div>
         </div>
@@ -893,7 +959,7 @@ function CardWorkItem(props: CardWorkItemProps) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-[var(--accent)]">
-                2. Context
+                2. 만남 맥락
               </p>
               <h2 className="mt-2 text-2xl font-semibold tracking-[-0.03em]">
                 이 사람을 어디서, 왜 만났나요?
@@ -956,15 +1022,14 @@ function CardWorkItem(props: CardWorkItemProps) {
           />
           <section className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[var(--border-strong)] bg-white/95 p-4 shadow-[0_20px_70px_rgba(24,45,32,0.14)] backdrop-blur">
             <p className="text-xs leading-5 text-[var(--muted)]">
-              저장 전에는 Digital Card와 관계 기억이 Profile·Recall에 나타나지
-              않습니다.
+              저장하면 인맥 프로필과 AI 검색에서 이 기록을 찾을 수 있습니다.
             </p>
             <button
               type="button"
               onClick={() => void commit(item)}
               className="rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white"
             >
-              확인하고 Digital Card 저장
+              확인하고 인맥에 저장
             </button>
           </section>
         </>
@@ -1023,28 +1088,30 @@ function CardIdentityEditor({
         </span>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        {fields.map(([field, label]) => (
-          <label
-            key={field}
-            className={field === "address" ? "sm:col-span-2" : ""}
-          >
-            <span className="text-xs font-semibold text-[var(--muted)]">
-              {label}
-            </span>
-            <input
-              value={draft.identity[field] ?? ""}
-              onChange={(event) => {
-                const value = event.target.value;
-                onChange((current) => ({
-                  ...current,
-                  identity: { ...current.identity, [field]: nullable(value) },
-                }));
-                if (field === "displayName") onNameChange(value);
-              }}
-              className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
-            />
-          </label>
-        ))}
+        {fields
+          .filter(([field]) => field !== "address" && field !== "department")
+          .map(([field, label]) => (
+            <label
+              key={field}
+              className={field === "address" ? "sm:col-span-2" : ""}
+            >
+              <span className="text-sm font-semibold text-[var(--foreground)]">
+                {label}
+              </span>
+              <input
+                value={draft.identity[field] ?? ""}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  onChange((current) => ({
+                    ...current,
+                    identity: { ...current.identity, [field]: nullable(value) },
+                  }));
+                  if (field === "displayName") onNameChange(value);
+                }}
+                className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              />
+            </label>
+          ))}
       </div>
       <div className="mt-4 grid gap-3">
         {(
@@ -1053,28 +1120,76 @@ function CardIdentityEditor({
             ["phones", "전화번호"],
             ["websites", "웹사이트"],
           ] as const
-        ).map(([field, label]) => (
-          <label key={field}>
-            <span className="text-xs font-semibold text-[var(--muted)]">
-              {label} · 여러 값은 줄바꿈
+        )
+          .filter(([field]) => field !== "websites")
+          .map(([field, label]) => (
+            <label key={field}>
+              <span className="text-sm font-semibold text-[var(--foreground)]">
+                {label} · 여러 값은 줄바꿈
+              </span>
+              <textarea
+                rows={draft.identity[field].length > 1 ? 2 : 1}
+                value={draft.identity[field].join("\n")}
+                onChange={(event) =>
+                  onChange((current) => ({
+                    ...current,
+                    identity: {
+                      ...current.identity,
+                      [field]: splitValues(event.target.value),
+                    },
+                  }))
+                }
+                className="mt-1.5 w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              />
+            </label>
+          ))}
+      </div>
+      <details className="mt-5 rounded-xl border border-[var(--border)] px-4 py-3">
+        <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">
+          추가 정보 · 부서, 웹사이트, 주소
+        </summary>
+        <div className="mt-4 grid gap-3">
+          {(["department", "address"] as const).map((field) => (
+            <label key={field}>
+              <span className="text-sm font-medium text-[var(--muted)]">
+                {field === "department" ? "부서" : "주소"}
+              </span>
+              <input
+                value={draft.identity[field] ?? ""}
+                onChange={(event) =>
+                  onChange((current) => ({
+                    ...current,
+                    identity: {
+                      ...current.identity,
+                      [field]: nullable(event.target.value),
+                    },
+                  }))
+                }
+                className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              />
+            </label>
+          ))}
+          <label>
+            <span className="text-sm font-medium text-[var(--muted)]">
+              웹사이트 · 여러 개는 줄바꿈
             </span>
             <textarea
-              rows={draft.identity[field].length > 1 ? 2 : 1}
-              value={draft.identity[field].join("\n")}
+              rows={Math.max(1, draft.identity.websites.length)}
+              value={draft.identity.websites.join("\n")}
               onChange={(event) =>
                 onChange((current) => ({
                   ...current,
                   identity: {
                     ...current.identity,
-                    [field]: splitValues(event.target.value),
+                    websites: splitValues(event.target.value),
                   },
                 }))
               }
-              className="mt-1.5 w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
+              className="mt-1.5 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)]"
             />
           </label>
-        ))}
-      </div>
+        </div>
+      </details>
     </section>
   );
 }
@@ -1082,12 +1197,12 @@ function CardIdentityEditor({
 function toDateTimeInput(value: string | null): string {
   if (!value) return "";
   const date = new Date(value);
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  const local = new Date(date.getTime() + 9 * 60 * 60_000);
   return local.toISOString().slice(0, 16);
 }
 
 function fromDateTimeInput(value: string): string | null {
-  return value ? new Date(value).toISOString() : null;
+  return value ? new Date(`${value}+09:00`).toISOString() : null;
 }
 
 function MemoryReviewEditor({

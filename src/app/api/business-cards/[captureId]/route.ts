@@ -1,3 +1,4 @@
+import { uuidSchema } from "../../../../domain/workspace/contracts";
 import { discardBusinessCardCapture } from "../../../../server/application/business-card-service";
 import { getBusinessCardCapture } from "../../../../server/db/business-card-repository";
 import { getServerEnv } from "../../../../server/env";
@@ -13,6 +14,7 @@ export async function GET(
   try {
     assertPrototypeAccess(request);
     const { captureId } = await params;
+    uuidSchema.parse(captureId);
     const environment = getServerEnv();
     const card = await getBusinessCardCapture(
       environment.APP_DEFAULT_WORKSPACE_ID,
@@ -37,6 +39,7 @@ export async function DELETE(
   try {
     assertPrototypeAccess(request);
     const { captureId } = await params;
+    uuidSchema.parse(captureId);
     const environment = getServerEnv();
     await discardBusinessCardCapture(
       environment.APP_DEFAULT_WORKSPACE_ID,

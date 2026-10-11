@@ -42,6 +42,7 @@ export class AssistantProvider {
     const report = async (
       status: "succeeded" | "failed",
       totalTokens?: number,
+      errorCode?: string,
     ) => {
       try {
         await this.onAttempt?.({
@@ -57,7 +58,10 @@ export class AssistantProvider {
           status,
           latencyMs: Math.round(performance.now() - started),
           totalTokens,
-          errorCode: status === "failed" ? "AI_REQUEST_FAILED" : undefined,
+          errorCode:
+            status === "failed"
+              ? (errorCode ?? "AI_REQUEST_FAILED")
+              : undefined,
         });
       } catch {
         /* Telemetry must never retry a billable request. */
@@ -73,6 +77,24 @@ export class AssistantProvider {
         body: JSON.stringify(body),
         signal: AbortSignal.timeout(15000),
       });
+      if (response.status === 429) {
+        const header = response.headers.get("retry-after");
+        const seconds =
+          header && /^\d+(\.\d+)?$/.test(header)
+            ? Number(header)
+            : header
+              ? (Date.parse(header) - Date.now()) / 1000
+              : NaN;
+        const retryAfter = Number.isFinite(seconds)
+          ? Math.min(3600, Math.max(1, Math.ceil(seconds)))
+          : 60;
+        throw new AiTaskExecutionError(
+          "AI 제공자의 호출 제한에 도달했습니다. 잠시 후 다시 시도해 주세요.",
+          "AI_PROVIDER_RATE_LIMITED",
+          false,
+          retryAfter,
+        );
+      }
       if (!response.ok)
         throw new AiTaskExecutionError(
           "AI 제공자 요청이 실패했습니다.",
@@ -96,7 +118,11 @@ export class AssistantProvider {
       );
       return payload;
     } catch (error) {
-      await report("failed");
+      await report(
+        "failed",
+        undefined,
+        error instanceof AiTaskExecutionError ? error.code : undefined,
+      );
       if (error instanceof AiTaskExecutionError) throw error;
       throw new AiTaskExecutionError(
         "AI 처리 시간이 초과되었거나 응답을 받지 못했습니다.",

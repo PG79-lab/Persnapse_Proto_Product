@@ -41,3 +41,19 @@ it("does not mislabel other provider failures", () => {
     ),
   ).toBeNull();
 });
+it("keeps provider rate limits distinct and honors waits beyond a minute", async () => {
+  const response = aiRateLimitResponse(
+    new AiTaskExecutionError(
+      "private provider body",
+      "AI_PROVIDER_RATE_LIMITED",
+      false,
+      125,
+    ),
+  )!;
+  expect(response.status).toBe(429);
+  expect(response.headers.get("retry-after")).toBe("125");
+  expect(await response.json()).toMatchObject({
+    code: "AI_PROVIDER_RATE_LIMITED",
+    retryAfterSeconds: 125,
+  });
+});

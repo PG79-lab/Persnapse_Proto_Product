@@ -1,6 +1,25 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 export const vercelCliPackage = "vercel@59.17.0";
 
 export function createVercelCommand(arguments_) {
+  // The curl subcommand forwards unknown global flags to native curl.
+  // Its already authenticated CLI token is supplied through child env instead.
+  const cliArguments =
+    process.env.PERSNAPSE_VERCEL_CONFIG_DIR && arguments_[0] !== "curl"
+      ? [
+          "--global-config",
+          process.env.PERSNAPSE_VERCEL_CONFIG_DIR,
+          ...arguments_,
+        ]
+      : arguments_;
+  if (process.env.PERSNAPSE_VERCEL_CLI_PATH) {
+    return {
+      executable: process.execPath,
+      arguments: [process.env.PERSNAPSE_VERCEL_CLI_PATH, ...cliArguments],
+    };
+  }
   const npmCli = process.env.npm_execpath;
   if (npmCli) {
     return {
@@ -12,7 +31,7 @@ export function createVercelCommand(arguments_) {
         `--package=${vercelCliPackage}`,
         "--",
         "vercel",
-        ...arguments_,
+        ...cliArguments,
       ],
     };
   }
@@ -25,7 +44,7 @@ export function createVercelCommand(arguments_) {
 
   return {
     executable: "npx",
-    arguments: ["--yes", vercelCliPackage, ...arguments_],
+    arguments: ["--yes", vercelCliPackage, ...cliArguments],
   };
 }
 
@@ -39,6 +58,7 @@ const variablesToRemove = [
   "APP_DEFAULT_WORKSPACE_ID",
   "AI_ROUTING_MODE",
   "BUSINESS_CARD_OCR_MODE",
+  "BUSINESS_CARD_OCR_PROVIDER",
   "APP_REMOTE_PROTOTYPE_ACCESS",
   "OPENAI_API_KEY",
   "VOYAGE_API_KEY",
@@ -69,5 +89,30 @@ export function createSanitizedVercelEnvironment() {
     delete environment[name];
   }
   environment.VERCEL_TELEMETRY_DISABLED = "1";
+  return environment;
+}
+
+export function createVercelCurlEnvironment() {
+  const environment = createSanitizedVercelEnvironment();
+  const configDir = process.env.PERSNAPSE_VERCEL_CONFIG_DIR;
+  if (configDir) {
+    // Only the explicit, previously authenticated CLI config is read. Do not
+    // copy credentials, include them in arguments, or log the child environment.
+    let token;
+    try {
+      token = JSON.parse(
+        readFileSync(join(configDir, "auth.json"), "utf8"),
+      ).token;
+    } catch {
+      throw new Error(
+        "The configured Vercel CLI authentication could not be read.",
+      );
+    }
+    if (typeof token !== "string" || !token)
+      throw new Error(
+        "The configured Vercel CLI authentication is unavailable.",
+      );
+    environment.VERCEL_TOKEN = token;
+  }
   return environment;
 }

@@ -180,19 +180,21 @@ export async function findReusableBusinessCardExtraction(input: {
   workspaceId: string;
   captureId: string;
   imageSha256: string;
+  provider?: "naver_clova" | "openai";
 }): Promise<BusinessCardExtractionV1 | null> {
   const sql = getDatabase();
+  const provider = input.provider ?? "naver_clova";
   const rows = await sql<Array<{ model_draft: unknown }>>`
     select draft.model_draft
     from public.business_card_drafts draft
     join public.source_assets asset
       on asset.workspace_id = draft.workspace_id
-     and asset.id = draft.display_asset_id
+     and asset.id = draft.original_asset_id
     where draft.workspace_id = ${input.workspaceId}
       and draft.capture_session_id <> ${input.captureId}
       and asset.sha256 = ${input.imageSha256}
       and asset.deleted_at is null
-      and draft.ocr_provider in ('naver_clova', 'naver_clova_cache')
+      and draft.ocr_provider in (${provider}, ${`${provider}_cache`})
       and draft.model_draft <> '{}'::jsonb
     order by draft.updated_at desc
     limit 1
@@ -207,11 +209,11 @@ export async function createBusinessCardCapture(input: {
   idempotencyKey: string;
   original: BusinessCardAssetInput;
   display: BusinessCardAssetInput;
-}): Promise<void> {
+}): Promise<boolean> {
   const sql = getDatabase();
 
-  await sql.begin(async (transaction) => {
-    await transaction`
+  return sql.begin(async (transaction) => {
+    const inserted = await transaction<Array<{ id: string }>>`
       insert into public.capture_sessions (
         id, workspace_id, state, input_kind, structured_draft, model_draft,
         draft_schema_version, idempotency_key
@@ -221,7 +223,10 @@ export async function createBusinessCardCapture(input: {
         '{}'::jsonb, '{}'::jsonb, 'business-card-draft-v1',
         ${input.idempotencyKey}
       )
+      on conflict (workspace_id, idempotency_key) do nothing
+      returning id
     `;
+    if (!inserted[0]) return false;
 
     for (const asset of [input.original, input.display]) {
       await transaction`
@@ -248,6 +253,7 @@ export async function createBusinessCardCapture(input: {
         ${input.display.id}
       )
     `;
+    return true;
   });
 }
 
@@ -440,7 +446,7 @@ export async function findBusinessCardIdentityCandidates(
       order by candidate_affiliation.is_current desc, candidate_affiliation.created_at desc
       limit 1
     ) affiliation on true
-    where person.workspace_id = ${workspaceId}
+    where person.workspace_id = ${workspaceId} and person.archived_at is null
       and (
         (${normalizedName} <> '' and person.normalized_name = ${normalizedName})
         or (${normalizedOrganization} <> '' and affiliation.normalized_organization_name = ${normalizedOrganization})
@@ -595,11 +601,12 @@ export async function commitBusinessCard(input: {
     let personId: string;
     let createdPerson = false;
     if (input.identity.mode === "existing") {
+      // Share the workspace editor revision/lock when OCR adds contact facts.
       const people = await transaction<Array<{ id: string }>>`
-        select id from public.persons
+        update public.persons set updated_at = now()
         where workspace_id = ${input.workspaceId}
-          and id = ${input.identity.personId}
-        limit 1
+          and id = ${input.identity.personId} and archived_at is null
+        returning id
       `;
       if (!people[0]) {
         throw new CaptureIdentityConflictError(
@@ -978,7 +985,7 @@ export async function getBusinessCardOcrInput(
     from public.business_card_drafts draft
     join public.source_assets asset
       on asset.workspace_id = draft.workspace_id
-     and asset.id = draft.display_asset_id
+     and asset.id = draft.original_asset_id
     where draft.workspace_id = ${workspaceId}
       and draft.capture_session_id = ${captureId}
       and asset.deleted_at is null

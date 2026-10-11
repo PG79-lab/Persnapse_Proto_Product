@@ -65,7 +65,7 @@ export async function listPeople(
         on o.workspace_id = a.workspace_id
        and o.id = a.organization_id
       where a.workspace_id = p.workspace_id
-        and a.person_id = p.id
+        and a.person_id = p.id and a.is_current and a.verification_status='confirmed'
       order by a.is_current desc, a.valid_from desc nulls last
       limit 1
     ) current_affiliation on true
@@ -78,16 +78,16 @@ export async function listPeople(
         on i.workspace_id = ip.workspace_id
        and i.id = ip.interaction_id
       where ip.workspace_id = p.workspace_id
-        and ip.person_id = p.id
+        and ip.person_id = p.id and i.archived_at is null
     ) interaction_stats on true
     left join lateral (
       select count(*) as pending_action_count
       from public.action_items action
       where action.workspace_id = p.workspace_id
         and action.person_id = p.id
-        and action.status = 'pending'
+        and action.status = 'pending' and action.archived_at is null and (action.interaction_id is null or exists(select 1 from public.interactions i where i.workspace_id=action.workspace_id and i.id=action.interaction_id and i.archived_at is null and exists(select 1 from public.interaction_participants ip where ip.workspace_id=action.workspace_id and ip.interaction_id=action.interaction_id and ip.person_id=action.person_id)))
     ) action_stats on true
-    where p.workspace_id = ${workspaceId}
+    where p.workspace_id = ${workspaceId} and p.archived_at is null
     order by interaction_stats.last_interaction_at desc nulls last, p.display_name
   `;
 
@@ -127,10 +127,10 @@ export async function getPersonProfile(
         select count(*)
         from public.persons matching
         where matching.workspace_id = p.workspace_id
-          and matching.normalized_name = p.normalized_name
+          and matching.normalized_name = p.normalized_name and matching.archived_at is null
       ) as matching_name_count
     from public.persons p
-    where p.workspace_id = ${workspaceId}
+    where p.workspace_id = ${workspaceId} and p.archived_at is null
       and p.id = ${personId}
     limit 1
   `;
@@ -215,7 +215,7 @@ export async function getPersonProfile(
         ) provenance on true
         where memory.workspace_id = ${workspaceId}
           and memory.person_id = ${personId}
-          and memory.verification_status <> 'rejected'
+          and memory.verification_status <> 'rejected' and memory.archived_at is null and (memory.interaction_id is null or exists(select 1 from public.interactions i where i.workspace_id=memory.workspace_id and i.id=memory.interaction_id and i.archived_at is null and exists(select 1 from public.interaction_participants ip where ip.workspace_id=memory.workspace_id and ip.interaction_id=memory.interaction_id and ip.person_id=memory.person_id)))
         order by memory.occurred_at desc nulls last, memory.created_at desc
       `,
     sql<
@@ -255,11 +255,11 @@ export async function getPersonProfile(
             on topic.workspace_id = interaction_topic.workspace_id
            and topic.id = interaction_topic.topic_id
           where interaction_topic.workspace_id = interaction.workspace_id
-            and interaction_topic.interaction_id = interaction.id
+            and interaction_topic.interaction_id = interaction.id and interaction_topic.verification_status <> 'rejected'
         ) topic_list on true
         where participant.workspace_id = ${workspaceId}
           and participant.person_id = ${personId}
-          and interaction.verification_status <> 'rejected'
+          and interaction.verification_status <> 'rejected' and interaction.archived_at is null
         order by interaction.occurred_at desc
       `,
     sql<
@@ -290,6 +290,7 @@ export async function getPersonProfile(
         from public.action_items
         where workspace_id = ${workspaceId}
           and person_id = ${personId}
+        and archived_at is null and (interaction_id is null or exists(select 1 from public.interactions i where i.workspace_id=action_items.workspace_id and i.id=action_items.interaction_id and i.archived_at is null and exists(select 1 from public.interaction_participants ip where ip.workspace_id=action_items.workspace_id and ip.interaction_id=action_items.interaction_id and ip.person_id=action_items.person_id)))
         order by (status = 'pending') desc, due_at asc nulls last, created_at desc
       `,
     sql<

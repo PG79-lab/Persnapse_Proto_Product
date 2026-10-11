@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState, type FormEvent } from "react";
+import { useCallback, useRef, useState, type FormEvent } from "react";
+import { SearchPreparation } from "./search-preparation";
 import type {
   RecallEvidenceType,
   RecallIntent,
@@ -244,6 +245,8 @@ export function RecallWorkspace({
   const [busy, setBusy] = useState(false);
   const pending = useRef(false);
   const [error, setError] = useState("");
+  const [needsPreparation, setNeedsPreparation] = useState(false);
+  const handlePrepared = useCallback(() => setError(""), []);
   const [elapsed, setElapsed] = useState<number | null>(null);
   const [feedback, setFeedback] = useState("");
   const [feedbackBusy, setFeedbackBusy] = useState(false);
@@ -256,6 +259,7 @@ export function RecallWorkspace({
     pending.current = true;
     setBusy(true);
     setError("");
+    setNeedsPreparation(false);
     setResponse(null);
     setFeedback("");
     setReason("");
@@ -270,8 +274,10 @@ export function RecallWorkspace({
         signal: AbortSignal.timeout(70000),
       });
       const payload = await result.json();
-      if (!result.ok)
+      if (!result.ok) {
+        if (payload.code === "SEARCH_NOT_READY") setNeedsPreparation(true);
         throw new Error(payload.error ?? "검색을 완료하지 못했습니다.");
+      }
       setResponse(payload as RecallResponse);
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
@@ -376,6 +382,9 @@ export function RecallWorkspace({
         >
           {error}
         </p>
+      ) : null}
+      {needsPreparation ? (
+        <SearchPreparation onPrepared={handlePrepared} />
       ) : null}
       {response ? (
         <>

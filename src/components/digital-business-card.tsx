@@ -6,10 +6,9 @@ import type { BusinessCardDraftV1 } from "../domain/business-card/business-card-
 
 function safeWebsiteHref(value: string): string | null {
   try {
-    const normalized = value.toLowerCase();
-    const hasWebScheme =
-      normalized.startsWith("http://") || normalized.startsWith("https://");
-    const url = new URL(hasWebScheme ? value : "https://" + value);
+    const url = new URL(
+      /^https?:\/\//iu.test(value) ? value : `https://${value}`,
+    );
     return url.protocol === "http:" || url.protocol === "https:"
       ? url.toString()
       : null;
@@ -22,7 +21,7 @@ export function DigitalBusinessCard({
   imageUrl,
   draft,
   identity: identityProp,
-  badge = "Digital card",
+  badge = "디지털 명함",
 }: {
   imageUrl: string;
   draft?: BusinessCardDraftV1;
@@ -32,85 +31,84 @@ export function DigitalBusinessCard({
   const [side, setSide] = useState<"image" | "info">("image");
   const identity = identityProp ?? draft?.identity;
 
-  if (!identity) {
-    return null;
-  }
+  if (!identity) return null;
 
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border border-black/10 bg-[#111813] shadow-[0_22px_60px_rgba(14,29,20,0.18)]">
-      <div className="flex items-center justify-between px-4 py-3 text-white">
-        <span className="text-[10px] font-semibold tracking-[0.14em] text-white/55 uppercase">
+    <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-3">
+        <span className="truncate text-xs font-semibold text-[var(--muted)]">
           {badge}
         </span>
-        <div className="flex rounded-full bg-white/10 p-1 text-xs">
+        <div
+          className="flex shrink-0 rounded-lg bg-[var(--background)] p-1 text-xs"
+          role="tablist"
+          aria-label="명함 보기"
+        >
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "image"}
             onClick={() => setSide("image")}
-            className={`rounded-full px-3 py-1.5 ${
-              side === "image" ? "bg-white text-black" : "text-white/70"
-            }`}
+            className={`rounded-md px-3 py-1.5 font-medium ${side === "image" ? "bg-white text-[var(--foreground)] shadow-sm" : "text-[var(--muted)]"}`}
           >
-            명함
+            원본 이미지
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "info"}
             onClick={() => setSide("info")}
-            className={`rounded-full px-3 py-1.5 ${
-              side === "info" ? "bg-white text-black" : "text-white/70"
-            }`}
+            className={`rounded-md px-3 py-1.5 font-medium ${side === "info" ? "bg-white text-[var(--foreground)] shadow-sm" : "text-[var(--muted)]"}`}
           >
-            정보
+            디지털 명함
           </button>
         </div>
       </div>
 
       {side === "image" ? (
-        <div className="relative aspect-[1.586/1] bg-[#e9ece8]">
+        <div className="grid min-h-[18rem] place-items-center bg-[#f5f4f8] p-4">
           {/* Private dynamic asset and local blob previews intentionally bypass optimization. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
-            alt={`${identity.displayName ?? "미확인"} 명함`}
-            className="size-full object-contain"
+            alt={`${identity.displayName ?? "인식 중"}의 명함 원본`}
+            className="max-h-[26rem] max-w-full rounded-md object-contain shadow-sm"
           />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent px-5 pt-12 pb-4 text-white">
-            <p className="text-lg font-semibold">
-              {identity.displayName ?? "이름 확인 필요"}
-            </p>
-            <p className="mt-0.5 text-xs text-white/75">
-              {[identity.organizationName, identity.title]
-                .filter(Boolean)
-                .join(" · ") || "소속과 역할을 확인해 주세요"}
-            </p>
-          </div>
         </div>
       ) : (
-        <div className="min-h-[16rem] bg-[linear-gradient(145deg,#f7f4ea,#e3eee6)] p-6">
-          <p className="text-2xl font-semibold tracking-[-0.04em]">
+        <div className="min-h-[18rem] p-6 sm:p-8">
+          <div className="mb-6 h-1 w-10 rounded-full bg-[var(--accent)]" />
+          <p className="text-2xl font-semibold tracking-tight">
             {identity.displayName ?? "이름 확인 필요"}
           </p>
-          <p className="mt-2 text-sm text-black/60">
+          <p className="mt-1.5 text-sm text-[var(--muted)]">
             {[identity.organizationName, identity.department, identity.title]
               .filter(Boolean)
-              .join(" · ") || "소속 정보 없음"}
+              .join(" · ") || "소속과 직함을 확인해 주세요"}
           </p>
-          <div className="mt-7 flex flex-wrap gap-2">
+          <div className="mt-7 space-y-3 border-t border-[var(--border)] pt-5 text-sm">
             {identity.phones.map((phone) => (
               <a
                 key={phone}
-                href={`tel:${phone.replace(/\s/g, "")}`}
-                className="rounded-full bg-white/75 px-3 py-2 text-xs font-medium"
+                href={`tel:${phone.replace(/\s/gu, "")}`}
+                className="block text-[var(--foreground)] hover:text-[var(--accent)]"
               >
-                전화 {phone}
+                <span className="mr-3 inline-block w-12 text-[var(--muted)]">
+                  전화
+                </span>
+                {phone}
               </a>
             ))}
             {identity.emails.map((email) => (
               <a
                 key={email}
                 href={`mailto:${email}`}
-                className="rounded-full bg-white/75 px-3 py-2 text-xs font-medium"
+                className="block break-all text-[var(--foreground)] hover:text-[var(--accent)]"
               >
-                메일 {email}
+                <span className="mr-3 inline-block w-12 text-[var(--muted)]">
+                  이메일
+                </span>
+                {email}
               </a>
             ))}
             {identity.websites.map((website) => {
@@ -121,25 +119,31 @@ export function DigitalBusinessCard({
                   href={href}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-full bg-white/75 px-3 py-2 text-xs font-medium"
+                  className="block break-all text-[var(--foreground)] hover:text-[var(--accent)]"
                 >
-                  웹사이트
+                  <span className="mr-3 inline-block w-12 text-[var(--muted)]">
+                    웹
+                  </span>
+                  {website}
                 </a>
               ) : (
-                <span
-                  key={website}
-                  className="rounded-full bg-white/75 px-3 py-2 text-xs font-medium"
-                >
+                <p key={website}>
+                  <span className="mr-3 inline-block w-12 text-[var(--muted)]">
+                    웹
+                  </span>
                   {website}
-                </span>
+                </p>
               );
             })}
+            {identity.address ? (
+              <p>
+                <span className="mr-3 inline-block w-12 text-[var(--muted)]">
+                  주소
+                </span>
+                {identity.address}
+              </p>
+            ) : null}
           </div>
-          {identity.address ? (
-            <p className="mt-6 text-xs leading-5 text-black/55">
-              {identity.address}
-            </p>
-          ) : null}
         </div>
       )}
     </section>

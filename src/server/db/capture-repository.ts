@@ -389,7 +389,7 @@ export async function findIdentityCandidates(
       order by candidate_affiliation.is_current desc, candidate_affiliation.created_at desc
       limit 1
     ) affiliation on true
-    where person.workspace_id = ${workspaceId}
+    where person.workspace_id = ${workspaceId} and person.archived_at is null
       and (
         (${normalizedName} <> '' and person.normalized_name = ${normalizedName})
         or (
@@ -504,12 +504,13 @@ export async function commitTextCapture(input: {
     let createdPerson = false;
 
     if (input.identity.mode === "existing") {
+      // Lock identity and advance the UI revision before appending profile facts.
+      // An already-open workspace editor must not overwrite this reviewed capture.
       const people = await transaction<Array<{ id: string }>>`
-        select id
-        from public.persons
+        update public.persons set updated_at = now()
         where workspace_id = ${input.workspaceId}
-          and id = ${input.identity.personId}
-        limit 1
+          and id = ${input.identity.personId} and archived_at is null
+        returning id
       `;
 
       if (!people[0]) {

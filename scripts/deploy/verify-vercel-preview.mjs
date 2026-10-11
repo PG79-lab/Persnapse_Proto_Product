@@ -14,11 +14,14 @@ import { relative, resolve, sep } from "node:path";
 import { createSyntheticBusinessCardImage } from "../ai/synthetic-business-card-image.ts";
 import { discardBusinessCardCapture } from "../../src/server/application/business-card-service.ts";
 import { closeDatabase, getDatabase } from "../../src/server/db/client.ts";
-import { clovaBusinessCardProviderScope } from "../../src/server/db/ocr-cost-guard-repository.ts";
+import {
+  clovaBusinessCardProviderScope,
+  openAiBusinessCardProviderScope,
+} from "../../src/server/db/ocr-cost-guard-repository.ts";
 import { getServerEnv } from "../../src/server/env.ts";
 import { removeBusinessCardAssets } from "../../src/server/storage/business-card-storage.ts";
 import {
-  createSanitizedVercelEnvironment,
+  createVercelCurlEnvironment,
   createVercelCommand,
 } from "./vercel-cli-environment.mjs";
 import {
@@ -60,6 +63,11 @@ console.log(
 );
 
 const environment = getServerEnv();
+const expectedProvider = environment.BUSINESS_CARD_OCR_PROVIDER;
+const providerScope =
+  expectedProvider === "openai"
+    ? openAiBusinessCardProviderScope
+    : clovaBusinessCardProviderScope;
 const temporaryDirectory = resolve(workspace, "tmp", "vercel-preview-smoke");
 const temporaryRelative = relative(workspace, temporaryDirectory);
 if (
@@ -75,7 +83,7 @@ if (existsSync(temporaryDirectory)) {
 
 const sql = getDatabase();
 try {
-  const childEnvironment = createSanitizedVercelEnvironment();
+  const childEnvironment = createVercelCurlEnvironment();
   const idempotencyKey = randomUUID();
   const verificationMarker = `REMOTE-${idempotencyKey.slice(0, 8)}`;
   const uncertainRequestDeadlineMs = 75_000;
@@ -149,7 +157,7 @@ try {
       completed_at is not null as completed
     from public.ocr_provider_calls
     where workspace_id = ${environment.APP_DEFAULT_WORKSPACE_ID}
-      and provider_scope = ${clovaBusinessCardProviderScope}
+      and provider_scope = ${providerScope}
       and operation_key = ${idempotencyKey}::uuid
     limit 1
   `;
@@ -294,7 +302,7 @@ try {
       );
     }
     if (
-      payload.ocrProvider !== "naver_clova" ||
+      payload.ocrProvider !== expectedProvider ||
       typeof payload.ocrLatencyMs !== "number" ||
       !payload.draft ||
       payload.state !== "draft" ||

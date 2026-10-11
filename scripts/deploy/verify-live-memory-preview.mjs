@@ -6,7 +6,7 @@ import { getDatabase, closeDatabase } from "../../src/server/db/client.ts";
 import { getServerEnv } from "../../src/server/env.ts";
 import {
   createVercelCommand,
-  createSanitizedVercelEnvironment,
+  createVercelCurlEnvironment,
 } from "./vercel-cli-environment.mjs";
 import {
   assertAllDeploymentsProtected,
@@ -102,7 +102,7 @@ function request(path, body) {
   ]);
   const result = spawnSync(command.executable, command.arguments, {
     cwd: process.cwd(),
-    env: createSanitizedVercelEnvironment(),
+    env: createVercelCurlEnvironment(),
     encoding: "utf8",
     windowsHide: true,
     maxBuffer: 4 * 1024 * 1024,

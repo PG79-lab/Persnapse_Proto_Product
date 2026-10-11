@@ -5,6 +5,7 @@ import { AssistantProvider } from "../ai/assistant-provider";
 import { reserveAiCall } from "./ai-budget-repository";
 import { getServerEnv } from "../env";
 import { AiTaskExecutionError } from "../ai/runtime-router";
+import type { SearchPreparationStatus } from "../../domain/recall/search-preparation";
 import {
   planDateRange,
   type QueryPlan,
@@ -24,14 +25,14 @@ export async function indexPersonMemory(
     set embedding_status = 'processing', embedding_updated_at = now(), embedding_attempts = embedding_attempts + 1
     where workspace_id = ${workspaceId} and person_id = ${personId} and document_kind = 'person_profile'
       and (embedding_status in ('pending','failed') or
-           (embedding_status = 'ready' and embedding_model is distinct from ${env.VOYAGE_EMBEDDING_MODEL}) or
-           (embedding_status = 'processing' and embedding_updated_at < now() - interval '2 minutes'))
+           (embedding_status = 'ready' and (embedding is null or embedding_model is distinct from ${env.VOYAGE_EMBEDDING_MODEL})) or
+           (embedding_status = 'processing' and (embedding_updated_at is null or embedding_updated_at < now() - interval '2 minutes')))
     returning id, content, content_hash
   `;
   if (!doc) {
     const [current] = await sql<
       { ready: boolean }[]
-    >`select (embedding_status = 'ready' and embedding_model = ${env.VOYAGE_EMBEDDING_MODEL}) as ready
+    >`select (embedding_status = 'ready' and embedding is not null and embedding_model = ${env.VOYAGE_EMBEDDING_MODEL}) as ready
       from public.memory_documents where workspace_id = ${workspaceId} and person_id = ${personId} and document_kind = 'person_profile'`;
     if (!current?.ready)
       throw new AiTaskExecutionError(
@@ -73,8 +74,8 @@ export async function assertSearchReady(
   const [row] = await getDatabase()<{ incomplete: number }[]>`
     select count(*)::int as incomplete from public.persons person
     left join public.memory_documents doc on doc.workspace_id = person.workspace_id and doc.person_id = person.id and doc.document_kind = 'person_profile'
-    where person.workspace_id = ${workspaceId}
-      and (doc.id is null or doc.embedding_status <> 'ready' or doc.embedding_model is distinct from ${model})
+    where person.workspace_id = ${workspaceId} and person.archived_at is null
+      and (doc.id is null or doc.embedding_status <> 'ready' or doc.embedding is null or doc.embedding_model is distinct from ${model})
   `;
   if (row.incomplete)
     throw new AiTaskExecutionError(
@@ -82,6 +83,57 @@ export async function assertSearchReady(
       "SEARCH_NOT_READY",
       false,
     );
+}
+
+export async function getSearchPreparationStatus(
+  workspaceId: string,
+  model: string,
+  mode: "mock" | "live",
+): Promise<SearchPreparationStatus> {
+  const [row] = await getDatabase()<
+    {
+      total: number;
+      prepared: number;
+      processing: number;
+    }[]
+  >`
+    select count(*)::int as total,
+      count(*) filter (where doc.embedding_status = 'ready' and doc.embedding is not null
+        and doc.embedding_model = ${model})::int as prepared,
+      count(*) filter (where doc.embedding_status = 'processing'
+        and doc.embedding_updated_at >= now() - interval '2 minutes')::int as processing
+    from public.persons person
+    left join public.memory_documents doc on doc.workspace_id = person.workspace_id
+      and doc.person_id = person.id and doc.document_kind = 'person_profile'
+    where person.workspace_id = ${workspaceId} and person.archived_at is null
+  `;
+  const remaining = row.total - row.prepared;
+  return {
+    mode,
+    ready: mode === "mock" || remaining === 0,
+    ...row,
+    remaining,
+    retryable: remaining - row.processing,
+  };
+}
+
+export async function listRetryableMemoryPeople(
+  workspaceId: string,
+  model: string,
+  limit: number,
+): Promise<string[]> {
+  const rows = await getDatabase()<{ person_id: string }[]>`
+    select person.id as person_id from public.persons person
+    left join public.memory_documents doc on doc.workspace_id = person.workspace_id
+      and doc.person_id = person.id and doc.document_kind = 'person_profile'
+    where person.workspace_id = ${workspaceId} and person.archived_at is null
+      and (doc.id is null or doc.embedding_status <> 'ready' or doc.embedding is null
+        or doc.embedding_model is distinct from ${model})
+      and (doc.embedding_status is distinct from 'processing'
+        or doc.embedding_updated_at is null or doc.embedding_updated_at < now() - interval '2 minutes')
+    order by coalesce(doc.embedding_attempts, 0), doc.embedding_updated_at nulls first, person.id limit ${limit}
+  `;
+  return rows.map((row) => row.person_id);
 }
 
 export async function retrieveMemoryCandidates(
@@ -107,7 +159,8 @@ export async function retrieveMemoryCandidates(
         and ((${plan.personName}::text is not null and p.display_name = ${plan.personName}) or
           (${plan.intent === "action"} and exists (
             select 1 from public.action_items a where a.workspace_id = doc.workspace_id and a.person_id = doc.person_id
-              and a.status = 'pending' and a.verification_status = 'confirmed'
+              and a.archived_at is null and a.status = 'pending' and a.verification_status = 'confirmed'
+              and (${plan.actionKind}::text is null or a.kind = ${plan.actionKind})
               and (${range === null || plan.timeTarget !== "action_due"} or
                 (a.due_at >= ${range?.from ?? null}::timestamptz and a.due_at < ${range?.to ?? null}::timestamptz))
           )))

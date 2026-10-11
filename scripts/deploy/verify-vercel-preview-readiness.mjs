@@ -1,6 +1,7 @@
 import { previewEnvironmentPolicy } from "./vercel-preview-environment-policy.mjs";
 const { expectedPreviewEnvironment } = previewEnvironmentPolicy(
   process.argv.includes("--live-assistant"),
+  process.argv.includes("--openai-ocr"),
 );
 import {
   assertAllDeploymentsProtected,

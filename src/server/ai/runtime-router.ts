@@ -121,7 +121,16 @@ export function resolveAiRoute(
   lane: AiRouteLane,
   environment: ServerEnv,
 ): ResolvedAiRoute | undefined {
-  const definition = routeDefinition(task, lane);
+  const definition =
+    task === "businessCardOcr" &&
+    environment.BUSINESS_CARD_OCR_PROVIDER === "openai"
+      ? lane === "primary"
+        ? {
+            provider: "openai" as const,
+            target: environment.OPENAI_STRUCTURING_MODEL,
+          }
+        : undefined
+      : routeDefinition(task, lane);
 
   if (!definition) {
     return undefined;

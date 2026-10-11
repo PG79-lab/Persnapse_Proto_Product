@@ -68,12 +68,12 @@ function toDateTimeInput(value: string | null): string {
   }
 
   const date = new Date(value);
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  const local = new Date(date.getTime() + 9 * 60 * 60_000);
   return local.toISOString().slice(0, 16);
 }
 
 function fromDateTimeInput(value: string): string | null {
-  return value ? new Date(value).toISOString() : null;
+  return value ? new Date(`${value}+09:00`).toISOString() : null;
 }
 
 function ReviewLabel({
@@ -107,11 +107,15 @@ function ReviewLabel({
 
 export function TextCaptureWorkspace({
   routingMode,
+  initialText = sampleNote,
+  onSaved,
 }: {
   routingMode: "mock" | "live";
+  initialText?: string;
+  onSaved?: (personId: string) => void;
 }) {
   const [processingMs, setProcessingMs] = useState<number | null>(null);
-  const [rawText, setRawText] = useState(sampleNote);
+  const [rawText, setRawText] = useState(initialText);
   const [capture, setCapture] = useState<CaptureSessionView | null>(null);
   const [draft, setDraft] = useState<CaptureDraftV1 | null>(null);
   const [identityChoice, setIdentityChoice] = useState<
@@ -273,6 +277,8 @@ export function TextCaptureWorkspace({
       const commitResult = await responseJson<CaptureCommitResponse>(response);
       setResult(commitResult);
       setCapture(commitResult.capture);
+      if (commitResult.capture.commitResult)
+        onSaved?.(commitResult.capture.commitResult.personId);
     } catch (caught) {
       setError(
         caught instanceof Error

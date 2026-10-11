@@ -12,6 +12,7 @@ export const recallIntentIds = [
 
 export type RecallIntent = (typeof recallIntentIds)[number];
 export type RecallStatus = "resolved" | "ambiguous" | "no_result";
+export type RecallActionKind = "commitment" | "follow_up" | "suggestion";
 export type RecallEvidenceType =
   | "person_profile"
   | "affiliation"
@@ -35,6 +36,7 @@ export interface ParsedRecallQuery {
 }
 
 export interface RecallCorpusEvidence {
+  actionKind?: RecallActionKind | null;
   interactionId?: string | null;
   location?: string | null;
   eventName?: string | null;
@@ -51,6 +53,7 @@ export interface RecallCorpusEvidence {
 }
 
 export interface RecallCorpusAction {
+  kind: RecallActionKind;
   interactionId?: string | null;
   id: string;
   title: string;
@@ -83,6 +86,7 @@ export interface RecallEvidence {
 }
 
 export interface RecallAction {
+  kind: RecallActionKind;
   id: string;
   type: "stored";
   title: string;

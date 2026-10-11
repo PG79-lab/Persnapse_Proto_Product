@@ -24,6 +24,19 @@ function environment(
 const outputSchema = z.object({ value: z.string() }).strict();
 
 describe("AI runtime router", () => {
+  it("selects OpenAI vision only when configured for business cards", () => {
+    const env = environment({
+      BUSINESS_CARD_OCR_PROVIDER: "openai",
+      OPENAI_API_KEY: "secret",
+      OPENAI_STRUCTURING_MODEL: "vision-model",
+    });
+    expect(resolveAiRoute("businessCardOcr", "primary", env)).toMatchObject({
+      provider: "openai",
+      target: "vision-model",
+      available: true,
+    });
+    expect(resolveAiRoute("businessCardOcr", "fallback", env)).toBeUndefined();
+  });
   it("applies environment model overrides to the executable route", () => {
     const route = resolveAiRoute(
       "informationStructuring",

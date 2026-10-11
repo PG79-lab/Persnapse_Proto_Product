@@ -35,6 +35,7 @@ function readVercelJson(endpoint, action) {
     encoding: "utf8",
     windowsHide: true,
     maxBuffer: 8 * 1024 * 1024,
+    timeout: 60_000,
   });
 
   if (result.status !== 0) {

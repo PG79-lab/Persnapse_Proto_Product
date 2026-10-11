@@ -140,7 +140,7 @@ test("reviews a text capture and requires an explicit identity decision", async 
       name: "구조화 결과를 직접 확인하세요",
     }),
   ).toBeVisible();
-  await expect(page.getByText("Draft · 미저장")).toBeVisible();
+  await expect(page.getByText("검토 중 · 아직 저장되지 않음")).toBeVisible();
 
   await page.getByRole("button", { name: "확인하고 Memory 저장" }).click();
   await expect(
@@ -251,7 +251,7 @@ test("shows a CLOVA-extracted business card as an editable Digital Card", async 
   await page.goto("/capture");
   await expect(
     page.getByText(
-      "NAVER CLOVA OCR로 인식하며, 결과는 저장 전 모두 확인하고 수정할 수 있습니다.",
+      "AI가 명함을 읽고 정보를 정리합니다. 직접 확인한 뒤에만 인맥으로 저장됩니다.",
     ),
   ).toBeVisible();
   await page.locator('input[type="file"]').setInputFiles({
@@ -270,5 +270,7 @@ test("shows a CLOVA-extracted business card as an editable Digital Card", async 
     page.getByRole("textbox", { name: "회사·조직", exact: true }),
   ).toHaveValue("Persnapse Labs");
   await expect(page.getByText("NAVER CLOVA OCR · 수정 가능")).toBeVisible();
-  await expect(page.getByText(/NAVER CLOVA OCR · 1763ms/)).toBeVisible();
+  await expect(
+    page.getByText("이미지 처리 완료 · NAVER CLOVA OCR"),
+  ).toBeVisible();
 });

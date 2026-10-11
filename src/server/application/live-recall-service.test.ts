@@ -40,6 +40,7 @@ const plan: QueryPlan = {
   conditions: [],
   sameInteraction: false,
   timeTarget: "interaction",
+  actionKind: null,
   period: "none",
   fromDate: null,
   toDateExclusive: null,

@@ -23,6 +23,7 @@ import {
   type BusinessCardOcrInput,
 } from "../ai/clova-business-card-adapter";
 import { createOpenAiCaptureAdapter } from "../ai/openai-capture-adapter";
+import { createOpenAiBusinessCardAdapter } from "../ai/openai-business-card-adapter";
 import {
   AiTaskExecutionError,
   executeAiTask,
@@ -46,14 +47,17 @@ import {
   saveBusinessCardReview,
 } from "../db/business-card-repository";
 import {
+  CaptureNotFoundError,
   CaptureStateConflictError,
   rebuildPersonMemoryDocument,
 } from "../db/capture-repository";
 import {
+  clovaBusinessCardProviderScope,
   completeOcrProviderCall,
   markOcrProviderCallStarted,
   OcrCostGuardUnavailableError,
   OcrCostLimitError,
+  openAiBusinessCardProviderScope,
   reserveOcrProviderCall,
   type OcrProviderReservation,
 } from "../db/ocr-cost-guard-repository";
@@ -99,6 +103,23 @@ export class BusinessCardCostLimitError extends Error {
     super("Business card OCR was blocked by the application cost guard.");
     this.name = "BusinessCardCostLimitError";
   }
+}
+
+function reusableUploadResult(
+  existing: BusinessCardSessionView,
+): BusinessCardSessionView {
+  if (existing.state === "failed") {
+    throw new BusinessCardProcessingError(
+      existing.captureId,
+      existing.lastErrorCode ?? "CARD_OCR_FAILED",
+    );
+  }
+  if (existing.draft) return existing;
+  throw new BusinessCardCostLimitError(
+    existing.captureId,
+    "OCR_DUPLICATE_IN_PROGRESS",
+    2,
+  );
 }
 
 function detectedMimeType(bytes: Uint8Array): string | null {
@@ -182,6 +203,12 @@ async function runBusinessCardOcr(input: {
   operationKey: string;
 }): Promise<BusinessCardSessionView> {
   const environment = getServerEnv();
+  const selectedProvider =
+    environment.BUSINESS_CARD_OCR_PROVIDER ?? "naver_clova";
+  const providerScope =
+    selectedProvider === "openai"
+      ? openAiBusinessCardProviderScope
+      : clovaBusinessCardProviderScope;
   const ocrEnvironment = {
     ...environment,
     AI_ROUTING_MODE: environment.BUSINESS_CARD_OCR_MODE,
@@ -206,6 +233,7 @@ async function runBusinessCardOcr(input: {
         workspaceId: input.workspaceId,
         captureId: input.captureId,
         imageSha256: input.sha256,
+        provider: selectedProvider,
       });
       if (reusableExtraction) {
         const draft = extractionToBusinessCardDraft(
@@ -216,7 +244,7 @@ async function runBusinessCardOcr(input: {
           workspaceId: input.workspaceId,
           captureId: input.captureId,
           draft,
-          provider: "naver_clova_cache",
+          provider: `${selectedProvider}_cache`,
           latencyMs: Math.max(0, Math.round(performance.now() - startedAt)),
         });
         const capture = await getBusinessCardCapture(
@@ -234,6 +262,7 @@ async function runBusinessCardOcr(input: {
         captureId: input.captureId,
         operationKey: input.operationKey,
         imageSha256: input.sha256,
+        providerScope,
       });
     }
 
@@ -244,10 +273,26 @@ async function runBusinessCardOcr(input: {
             invokeUrl: environment.CLOVA_OCR_INVOKE_URL,
             secret: environment.CLOVA_OCR_SECRET,
             beforeRequest: activeReservation
-              ? () => markOcrProviderCallStarted(activeReservation.id)
+              ? () =>
+                  markOcrProviderCallStarted(
+                    activeReservation.id,
+                    activeReservation.providerScope,
+                  )
               : undefined,
           })
         : undefined;
+    const openAiAdapter = environment.OPENAI_API_KEY
+      ? createOpenAiBusinessCardAdapter(
+          environment.OPENAI_API_KEY,
+          activeReservation && selectedProvider === "openai"
+            ? () =>
+                markOcrProviderCallStarted(
+                  activeReservation.id,
+                  activeReservation.providerScope,
+                )
+            : undefined,
+        )
+      : undefined;
     const extraction = await executeAiTask({
       task: "businessCardOcr",
       environment: ocrEnvironment,
@@ -259,7 +304,10 @@ async function runBusinessCardOcr(input: {
       },
       outputSchema: businessCardExtractionV1Schema,
       mockAdapter,
-      liveAdapters: clovaAdapter ? { naver_clova: clovaAdapter } : undefined,
+      liveAdapters: {
+        ...(clovaAdapter ? { naver_clova: clovaAdapter } : {}),
+        ...(openAiAdapter ? { openai: openAiAdapter } : {}),
+      },
       timeoutMs: 12_000,
       maxAttemptsPerRoute: 1,
       async onAttempt(event) {
@@ -283,7 +331,7 @@ async function runBusinessCardOcr(input: {
         successfulProvider ??
         (environment.BUSINESS_CARD_OCR_MODE === "mock"
           ? "mock"
-          : "naver_clova"),
+          : selectedProvider),
       latencyMs: elapsedMs,
       ocrReservationId: reservation?.id,
     });
@@ -306,6 +354,7 @@ async function runBusinessCardOcr(input: {
     if (reservation) {
       await completeOcrProviderCall({
         reservationId: reservation.id,
+        providerScope: reservation.providerScope,
         status: "failed",
         errorCode: code,
       }).catch(() => undefined);
@@ -350,20 +399,7 @@ export async function createAndExtractBusinessCard(input: {
     input.workspaceId,
     input.idempotencyKey,
   );
-  if (existing?.draft) return existing;
-  if (existing?.state === "failed") {
-    throw new BusinessCardProcessingError(
-      existing.captureId,
-      existing.lastErrorCode ?? "CARD_OCR_FAILED",
-    );
-  }
-  if (existing) {
-    throw new BusinessCardCostLimitError(
-      existing.captureId,
-      "OCR_DUPLICATE_IN_PROGRESS",
-      2,
-    );
-  }
+  if (existing) return reusableUploadResult(existing);
 
   if (
     input.originalFile.size + input.displayFile.size >=
@@ -385,21 +421,31 @@ export async function createAndExtractBusinessCard(input: {
   const originalPath = `${input.workspaceId}/${captureId}/${originalAssetId}-original.${extensionForMime(originalImage.mimeType)}`;
   const displayPath = `${input.workspaceId}/${captureId}/${displayAssetId}-display.${extensionForMime(displayImage.mimeType)}`;
   const uploadedPaths: string[] = [];
+  let captureCreated = false;
 
   try {
-    await uploadBusinessCardAsset({
-      path: originalPath,
-      bytes: originalImage.bytes,
-      contentType: originalImage.mimeType,
-    });
-    uploadedPaths.push(originalPath);
-    await uploadBusinessCardAsset({
-      path: displayPath,
-      bytes: displayImage.bytes,
-      contentType: displayImage.mimeType,
-    });
-    uploadedPaths.push(displayPath);
-    await createBusinessCardCapture({
+    const uploadResults = await Promise.allSettled([
+      uploadBusinessCardAsset({
+        path: originalPath,
+        bytes: originalImage.bytes,
+        contentType: originalImage.mimeType,
+      }),
+      uploadBusinessCardAsset({
+        path: displayPath,
+        bytes: displayImage.bytes,
+        contentType: displayImage.mimeType,
+      }),
+    ]);
+    for (const [index, result] of uploadResults.entries()) {
+      if (result.status === "fulfilled") {
+        uploadedPaths.push(index === 0 ? originalPath : displayPath);
+      }
+    }
+    const failedUpload = uploadResults.find(
+      (result): result is PromiseRejectedResult => result.status === "rejected",
+    );
+    if (failedUpload) throw failedUpload.reason;
+    captureCreated = await createBusinessCardCapture({
       workspaceId: input.workspaceId,
       captureId,
       idempotencyKey: input.idempotencyKey,
@@ -438,13 +484,27 @@ export async function createAndExtractBusinessCard(input: {
     throw error;
   }
 
+  if (!captureCreated) {
+    // A different worker won the DB idempotency key while files were uploading.
+    // Remove only this request's files before returning the winner's state.
+    await removeBusinessCardAssets(uploadedPaths);
+    const winner = await getBusinessCardByIdempotencyKey(
+      input.workspaceId,
+      input.idempotencyKey,
+    );
+    if (winner) return reusableUploadResult(winner);
+    throw new CaptureStateConflictError(
+      "Idempotency key is already bound to a different capture.",
+    );
+  }
+
   return runBusinessCardOcr({
     workspaceId: input.workspaceId,
     captureId,
-    filename: input.displayFile.name,
-    bytes: displayImage.bytes,
-    mimeType: displayImage.mimeType,
-    sha256: displayImage.sha256,
+    filename: input.originalFile.name,
+    bytes: originalImage.bytes,
+    mimeType: originalImage.mimeType,
+    sha256: originalImage.sha256,
     referenceTime: input.referenceTime,
     operationKey: input.idempotencyKey,
   });
@@ -501,7 +561,12 @@ export async function prepareBusinessCardReview(input: {
     input.workspaceId,
     input.captureId,
   );
-  if (!capture) throw new Error("Business card Capture was not found.");
+  if (!capture) throw new CaptureNotFoundError();
+  if (capture.state === "review" || capture.state === "committed") {
+    throw new CaptureStateConflictError(
+      "Business card must be in draft or failed before context review.",
+    );
+  }
   if (capture.state === "failed") {
     await resetBusinessCardForRetry(input.workspaceId, input.captureId);
   }
@@ -556,6 +621,13 @@ export async function prepareBusinessCardReview(input: {
     );
     return reviewed;
   } catch (error) {
+    if (
+      error instanceof CaptureNotFoundError ||
+      error instanceof CaptureStateConflictError
+    ) {
+      // A competing review/commit must not be turned into an OCR failure.
+      throw error;
+    }
     const code =
       error instanceof AiTaskExecutionError
         ? error.code
@@ -571,8 +643,11 @@ export async function searchBusinessCardCandidates(
   draft: unknown,
 ) {
   const capture = await getBusinessCardCapture(workspaceId, captureId);
-  if (!capture || capture.state !== "review") {
-    throw new Error("Business card must be in review before candidate search.");
+  if (!capture) throw new CaptureNotFoundError();
+  if (capture.state !== "review") {
+    throw new CaptureStateConflictError(
+      "Business card must be in review before candidate search.",
+    );
   }
   return findBusinessCardIdentityCandidates(
     workspaceId,

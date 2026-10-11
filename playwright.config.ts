@@ -5,6 +5,7 @@ const baseURL = `http://127.0.0.1:${port}`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  outputDir: "test-results/playwright",
   fullyParallel: true,
   timeout: 20_000,
   retries: process.env.CI ? 2 : 0,
@@ -21,7 +22,12 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      use: {
+        ...devices["Desktop Chrome"],
+        ...(process.env.PLAYWRIGHT_CHANNEL
+          ? { channel: process.env.PLAYWRIGHT_CHANNEL }
+          : {}),
+      },
     },
   ],
 });

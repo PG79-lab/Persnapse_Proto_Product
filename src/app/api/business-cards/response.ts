@@ -1,5 +1,6 @@
 import { aiRateLimitResponse } from "../../../server/ai/rate-limit-response";
 import { z } from "zod";
+import { requestInputErrorResponse } from "../../../server/http/request-body";
 
 import {
   BusinessCardCostLimitError,
@@ -96,6 +97,8 @@ function publicProcessingCode(code: string): string {
 }
 
 export function businessCardErrorResponse(error: unknown): Response {
+  const invalidInput = requestInputErrorResponse(error);
+  if (invalidInput) return invalidInput;
   const limited = aiRateLimitResponse(error);
   if (limited) return limited;
   if (error instanceof PrototypeAccessError) {

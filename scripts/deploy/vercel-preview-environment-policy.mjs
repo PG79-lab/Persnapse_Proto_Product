@@ -27,15 +27,27 @@ export const expectedPreviewEnvironment = Object.freeze([
 ]);
 
 // Explicit opt-in only. Upload/deploy confirmation guards remain unchanged.
-export function previewEnvironmentPolicy(liveAssistant = false) {
-  if (!liveAssistant)
+export function previewEnvironmentPolicy(
+  liveAssistant = false,
+  openAiOcr = false,
+) {
+  if (!liveAssistant && !openAiOcr)
     return { previewVariables, previewOverrides, expectedPreviewEnvironment };
   const variables = [
     ...previewVariables,
     { name: "OPENAI_API_KEY", visibility: "secret" },
-    { name: "VOYAGE_API_KEY", visibility: "secret" },
+    ...(liveAssistant
+      ? [{ name: "VOYAGE_API_KEY", visibility: "secret" }]
+      : []),
+    ...(openAiOcr
+      ? [{ name: "OPENAI_STRUCTURING_MODEL", visibility: "config" }]
+      : []),
   ];
-  const overrides = { ...previewOverrides, AI_ROUTING_MODE: "live" };
+  const overrides = {
+    ...previewOverrides,
+    ...(liveAssistant ? { AI_ROUTING_MODE: "live" } : {}),
+    ...(openAiOcr ? { BUSINESS_CARD_OCR_PROVIDER: "openai" } : {}),
+  };
   return {
     previewVariables: variables,
     previewOverrides: overrides,

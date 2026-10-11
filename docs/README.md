@@ -1,5 +1,15 @@
 # Documentation
 
+> 최신 UX 스프린트: [사용자 과업 루프 개선 결정](decisions/0018-user-task-loop-frontend-sprint.md), [구현·검증 기록](operations/ux-task-loop-sprint-2026-10-10.md). 사용자 평가 결과는 아직 수집 전입니다.
+
+> 최신 작업: [사용자·VC 관점 UI/UX 개선과 검증](operations/experience-review-2026-10-08.md), [제품 판단과 개선 결정](decisions/0017-relationship-memory-experience.md). 작업 경로는 `D:\Persnapse\persnapse-mvp`입니다.
+
+> 통합 기반: [프론트·백엔드 결합 현황](operations/workspace-integration-2026-10-08.md). 아래 이전 보고서는 작성 시점의 이력으로 보존합니다.
+
+> 통합 전 검증 이력: [10월 8일 기록·명함 실제 저장 검증](operations/capture-storage-verification-2026-10-08.md)의 17개 시나리오가 통과했습니다. 동시 명함 업로드와 잘못된 검토 상태 오류를 수정했습니다. 해당 보고서의 AI/OCR은 검증 프로세스에서 mock입니다. 이후 live 검색·프론트 통합·배포 현황은 상단의 최신 통합 보고서를 참고합니다. 연결 복구 이력은 [10월 7일 기준점](handoff/2026-10-07-backend-readiness.md)을 참고합니다.
+
+> OCR 고도화의 현재 집중 범위와 보류 항목은 [9월 30일 OCR 범위·후속 개선 목록](plans/ocr-follow-up-backlog-2026-09-30.md)을 참고합니다.
+
 > 최신 작업 순서와 미해결 장애는 [9월 25일 OCR 우선 개발 기준점](handoff/2026-09-25-ocr-priority-checkpoint.md)을 먼저 확인한다. 아래 기록은 작성 시점의 이력이다.
 
 이 디렉터리는 Persnapse MVP의 근거와 결정을 단계별로 보존합니다.
@@ -39,3 +49,13 @@
 
 - [구현 결정과 경계](decisions/0011-live-memory-assistant.md)
 - [활성화·검증 절차](operations/live-memory-assistant.md)
+
+## 프론트 연결 준비 — 2026-10-07
+
+- 최신: [검색 복구·Recall·연결 전 점검](operations/recall-and-integration-readiness-2026-10-08.md): 16/16 준비, 실제 AI 저장→검색→피드백, 로그·오류 수정, UI 데이터 계약 점검과 남은 연결 조건
+- [Recall 행동 종류·저장·오류 계약](decisions/0014-recall-action-kinds-and-persistence.md)
+
+- [제품 기준과 검색 복구 결정](decisions/0013-backend-readiness-and-search-recovery.md)
+- [현재 검증 상태와 재개 순서](handoff/2026-10-07-backend-readiness.md)
+- [실제 제공자·백엔드 후속 검증](operations/backend-provider-verification-2026-10-07.md): 제공자 합성 검증, API 입력 오류 수정, 153테스트·HTTP 16개 확인. 19:54 KST DB·REST·Storage 연결 복구 완료, 검색 문서 3개 복구·전체 수직 검증은 미완료
+- [기록·명함 실제 저장 검증](operations/capture-storage-verification-2026-10-08.md): 격리된 원격 DB·Storage의 17개 시나리오 통과, 동시 업로드·검토 상태 오류 수정, 기존 DB 보존·테스트 잔여물 0개

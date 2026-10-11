@@ -1,14 +1,18 @@
 # Persnapse MVP
 
-Persnapse MVP를 0에서 1로 구축하기 위한 독립 작업공간입니다.
+> 최신 작업: [사용자 과업 루프 UX 개선·검증](docs/operations/ux-task-loop-sprint-2026-10-10.md). [프론트·백엔드 결합 현황](docs/operations/workspace-integration-2026-10-08.md)은 통합 당시의 기록으로 보존합니다.
 
-현재 Canonical Context와 초기 MVP 설계를 바탕으로 실행 가능한 수직 슬라이스를 단계적으로 구축하고 있습니다.
+기존 koin-contact-map 프론트와 Persnapse Canonical 백엔드를 결합한 작업공간입니다.
+
+메인 화면은 일정/업무, 관계 지도, 인맥, 만남, 명함, 녹음의 6개 메뉴입니다. 실제 서버 저장과 검토형 Capture·OCR·Recall·업무 브리핑을 연결했습니다.
+
+통합 전 이력은 [2026-10-08 검색·프론트 연결 전 점검](docs/operations/recall-and-integration-readiness-2026-10-08.md)을 확인합니다. 검색 준비 16/16개, 실제 AI 구조화·수정·저장·Recall·피드백 흐름을 검증했습니다. 행동 종류·호출 제한·JSON 로그 저장 오류를 수정했으며, 당시 남았던 프론트 DTO/CRUD는 통합 작업으로 연결했습니다. 엄격 Golden 근거 ID 불일치 2건은 후속 평가 대상으로 남아 있습니다. 이전 [기록·명함 저장 검증](docs/operations/capture-storage-verification-2026-10-08.md)과 [연결 복구 이력](docs/handoff/2026-10-07-backend-readiness.md)도 보존합니다.
 
 ## 시작하기
 
 요구 환경:
 
-- Node.js 20.9 이상
+- Node.js 24.x (`package.json` 기준)
 - npm 11 이상 권장
 
 ```bash
@@ -23,6 +27,18 @@ npm run dev
 npm run verify
 npm run eval:recall
 npm run db:verify:phase4
+```
+
+기존 환경의 연결·워크스페이스·schema를 먼저 읽기 전용으로 점검할 때는 다음 명령을 사용합니다. DB 쓰기·유료 모델 호출·seed는 실행하지 않으며, 실패 시 키 대신 오류 분류만 출력합니다.
+
+```bash
+npm run db:preflight
+```
+
+기록·명함의 실제 DB·private Storage 경로를 합성 데이터로 검증할 때는 다음 명령을 사용합니다. 실행 전용 테스트 워크스페이스를 생성·정리하며 AI/OCR은 프로세스에서만 mock입니다. 환경 파일·기존 데이터·schema를 변경하지 않고 유료 제공자를 호출하지 않습니다.
+
+```bash
+npm run db:verify:capture-storage
 ```
 
 AI Provider key와 지정 모델 접근을 합성 데이터로 live 검증할 때만 아래 명령을 사용합니다. 이 명령은 실제 외부 API를 호출하므로 비용이 발생할 수 있으며 일반 검증에는 포함되지 않습니다.
@@ -75,7 +91,7 @@ npm run test:e2e
 - `docs/decisions`: 중요한 제품·기술 의사결정 기록
 - `docs/plans`: 단계별 실행 계획과 작업 단위
 
-## 현재 상태
+## 초기 구축 이력
 
 - 독립 Git 저장소 구성 완료
 - Canonical Context 및 MVP v0 분석 완료

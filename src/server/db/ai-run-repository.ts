@@ -44,11 +44,13 @@ export function createAiAttemptRecorder(context: AiAttemptRecorderContext) {
           ${event.errorCode ?? null},
           ${event.attempt},
           ${previousRunId ?? null},
-          ${JSON.stringify({
+          ${transaction.json({
             mode: event.mode,
             lane: event.lane,
-            totalTokens: event.totalTokens,
-          })}::jsonb,
+            ...(event.totalTokens === undefined
+              ? {}
+              : { totalTokens: event.totalTokens }),
+          })},
           now()
         )
         returning id

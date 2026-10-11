@@ -24,6 +24,7 @@ export const queryPlanSchema = z
       .max(6),
     sameInteraction: z.boolean(),
     timeTarget: z.enum(["interaction", "action_due"]),
+    actionKind: z.enum(["commitment", "follow_up", "suggestion"]).nullable(),
     period: z.enum(["none", "today", "yesterday", "last_month", "range"]),
     fromDate: z.iso.date().nullable(),
     toDateExclusive: z.iso.date().nullable(),
@@ -132,6 +133,15 @@ export function validateAssistantAnswer(
     const selected = evidence as RecallCorpusEvidence[];
     if (new Set(result.evidenceKeys).size !== result.evidenceKeys.length)
       fail();
+    // A saved suggestion or an encounter summary cannot prove a recorded promise.
+    // Require the actual typed action source when the question asks for a kind.
+    if (
+      plan.actionKind &&
+      !selected.some(
+        (e) => e.type === "action_item" && e.actionKind === plan.actionKind,
+      )
+    )
+      fail();
     if (result.conditionEvidence.length !== plan.conditions.length) fail();
     const witnesses: RecallCorpusEvidence[][] = [];
     for (let index = 0; index < plan.conditions.length; index++) {
@@ -204,6 +214,7 @@ export function validateAssistantAnswer(
           (a) =>
             a.status === "pending" &&
             result.evidenceKeys.includes("action_item:" + a.id) &&
+            (!plan.actionKind || a.kind === plan.actionKind) &&
             (plan.timeTarget !== "action_due" ||
               withinRange(a.dueAt, dateRange)),
         )

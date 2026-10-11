@@ -108,7 +108,12 @@ try {
   });
   captureId = card.captureId;
   assert.equal(card.stage, "card_review");
-  assert.equal(card.ocrProvider, liveOcr ? "naver_clova" : "mock");
+  assert.equal(
+    card.ocrProvider,
+    liveOcr
+      ? (process.env.BUSINESS_CARD_OCR_PROVIDER ?? "naver_clova")
+      : "mock",
+  );
   const extractedDraft = card.draft;
   assert(
     extractedDraft?.identity.displayName ||
@@ -184,6 +189,15 @@ try {
       and deleted_at is null
   `;
   assetPaths = paths.map((row) => row.storage_path);
+  const [ocrRun] = await sql<Array<{ latency_ms: number | null }>>`
+    select latency_ms from public.ai_runs
+    where workspace_id = ${workspaceId}
+      and capture_session_id = ${captureId}
+      and task = 'businessCardOcr'
+      and status = 'succeeded'
+    order by completed_at desc
+    limit 1
+  `;
 
   console.log(
     JSON.stringify(
@@ -192,9 +206,11 @@ try {
         schema: "business-card-draft-v1",
         privateBucket: true,
         mockOcr: !liveOcr,
-        clovaOcr: liveOcr,
+        clovaOcr: card.ocrProvider === "naver_clova",
+        openAiOcr: card.ocrProvider === "openai",
         ocrProvider: card.ocrProvider,
         ocrLatencyMs: card.ocrLatencyMs,
+        providerLatencyMs: ocrRun?.latency_ms ?? null,
         metFiveSecondGoal:
           card.ocrLatencyMs !== null && card.ocrLatencyMs <= 5_000,
         explicitIdentity: true,

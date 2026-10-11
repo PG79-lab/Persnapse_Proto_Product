@@ -54,6 +54,53 @@ describe("bounded AI provider", () => {
     ).rejects.toThrow();
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+  it.each([
+    ["125", 125],
+    ["0", 1],
+    ["99999", 3600],
+    ["invalid", 60],
+    [null, 60],
+  ])(
+    "returns a bounded provider cooldown for Retry-After=%s without retrying",
+    async (header, expected) => {
+      const headers = new Headers();
+      if (header !== null) headers.set("Retry-After", header);
+      fetchMock.mockResolvedValue(
+        new Response("private provider body", { status: 429, headers }),
+      );
+      const recorder = vi.fn();
+      await expect(
+        new AssistantProvider(env, vi.fn(), recorder).embed("text", "query"),
+      ).rejects.toMatchObject({
+        code: "AI_PROVIDER_RATE_LIMITED",
+        retryAfterSeconds: expected,
+        retryable: false,
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(recorder).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "failed",
+          errorCode: "AI_PROVIDER_RATE_LIMITED",
+        }),
+      );
+    },
+  );
+  it("respects an HTTP-date cooldown", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-10-08T00:00:00Z"));
+    fetchMock.mockResolvedValue(
+      new Response("", {
+        status: 429,
+        headers: { "Retry-After": "Thu, 08 Oct 2026 00:02:00 GMT" },
+      }),
+    );
+    try {
+      await expect(
+        new AssistantProvider(env, vi.fn()).embed("text", "query"),
+      ).rejects.toMatchObject({ retryAfterSeconds: 120 });
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
   it("validates answer shape after structured output", async () => {
     fetchMock.mockResolvedValue(
       Response.json({

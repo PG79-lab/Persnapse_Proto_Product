@@ -1,3 +1,5 @@
+import { assertPrototypeAccess } from "../../../../server/security/prototype-access";
+import { uuidSchema } from "../../../../domain/workspace/contracts";
 import { getTextCapture } from "../../../../server/application/capture-service";
 import { getServerEnv } from "../../../../server/env";
 import { captureErrorResponse } from "../response";
@@ -5,11 +7,13 @@ import { captureErrorResponse } from "../response";
 export const runtime = "nodejs";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ captureId: string }> },
 ) {
   try {
+    assertPrototypeAccess(request);
     const { captureId } = await context.params;
+    uuidSchema.parse(captureId);
     const environment = getServerEnv();
     const capture = await getTextCapture(
       environment.APP_DEFAULT_WORKSPACE_ID,

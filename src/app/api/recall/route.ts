@@ -8,19 +8,25 @@ import {
 
 import { executeRecall } from "../../../server/application/recall-service";
 import { getServerEnv } from "../../../server/env";
+import {
+  readJsonBody,
+  requestInputErrorResponse,
+} from "../../../server/http/request-body";
 
 export const runtime = "nodejs";
 
-const requestSchema = z.object({
-  query: z.string().trim().min(2).max(500),
-  referenceTime: z.iso.datetime({ offset: true }).optional(),
-});
+const requestSchema = z
+  .object({
+    query: z.string().trim().min(2).max(500),
+    referenceTime: z.iso.datetime({ offset: true }).optional(),
+  })
+  .strict();
 
 export async function POST(request: Request) {
   let inputValidated = false;
   try {
     assertPrototypeAccess(request);
-    const input = requestSchema.parse(await request.json());
+    const input = requestSchema.parse(await readJsonBody(request));
     inputValidated = true;
     const environment = getServerEnv();
     const response = await executeRecall({
@@ -31,8 +37,12 @@ export async function POST(request: Request) {
         : undefined,
     });
 
-    return Response.json(response);
+    return Response.json(response, {
+      headers: { "Cache-Control": "private, no-store" },
+    });
   } catch (error) {
+    const invalidInput = requestInputErrorResponse(error);
+    if (invalidInput) return invalidInput;
     const limited = aiRateLimitResponse(error);
     if (limited) return limited;
     if (error instanceof PrototypeAccessError)
@@ -44,7 +54,10 @@ export async function POST(request: Request) {
       );
     if (error instanceof z.ZodError && !inputValidated) {
       return Response.json(
-        { error: "질문은 2자 이상 500자 이하로 입력해 주세요." },
+        {
+          error:
+            "요청 형식을 확인해 주세요. 질문은 2자 이상 500자 이하로 입력해 주세요.",
+        },
         { status: 400 },
       );
     }

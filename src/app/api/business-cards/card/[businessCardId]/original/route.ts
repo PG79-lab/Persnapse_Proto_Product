@@ -1,3 +1,4 @@
+import { uuidSchema } from "../../../../../../domain/workspace/contracts";
 import { deleteBusinessCardOriginal } from "../../../../../../server/application/business-card-service";
 import { getServerEnv } from "../../../../../../server/env";
 import { assertPrototypeAccess } from "../../../../../../server/security/prototype-access";
@@ -12,6 +13,7 @@ export async function DELETE(
   try {
     assertPrototypeAccess(request);
     const { businessCardId } = await params;
+    uuidSchema.parse(businessCardId);
     const environment = getServerEnv();
     const status = await deleteBusinessCardOriginal(
       environment.APP_DEFAULT_WORKSPACE_ID,
