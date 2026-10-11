@@ -1,5 +1,7 @@
 # Documentation
 
+> 처음 읽기: [제품·시스템 핵심 요약](PROJECT_BRIEF.md). 현재 구현 상태와 검증 경계를 한 페이지에서 확인합니다.
+
 > 최신 UX 스프린트: [사용자 과업 루프 개선 결정](decisions/0018-user-task-loop-frontend-sprint.md), [구현·검증 기록](operations/ux-task-loop-sprint-2026-10-10.md). 사용자 평가 결과는 아직 수집 전입니다.
 
 > 최신 작업: [사용자·VC 관점 UI/UX 개선과 검증](operations/experience-review-2026-10-08.md), [제품 판단과 개선 결정](decisions/0017-relationship-memory-experience.md). 작업 경로는 `D:\Persnapse\persnapse-mvp`입니다.

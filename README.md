@@ -1,5 +1,7 @@
 # Persnapse MVP
 
+> **처음 읽기:** [제품·시스템 핵심 요약](docs/PROJECT_BRIEF.md) — 현재 범위, 기술 인프라, 검증 경계와 다음 작업.
+
 > 최신 작업: [사용자 과업 루프 UX 개선·검증](docs/operations/ux-task-loop-sprint-2026-10-10.md). [프론트·백엔드 결합 현황](docs/operations/workspace-integration-2026-10-08.md)은 통합 당시의 기록으로 보존합니다.
 
 기존 koin-contact-map 프론트와 Persnapse Canonical 백엔드를 결합한 작업공간입니다.
