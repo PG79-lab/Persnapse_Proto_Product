@@ -19,7 +19,8 @@ export type RecallEvidenceType =
   | "event"
   | "interaction"
   | "memory_statement"
-  | "action_item";
+  | "action_item"
+  | "workspace_task";
 
 export interface RecallDateRange {
   from: string;
@@ -36,6 +37,10 @@ export interface ParsedRecallQuery {
 }
 
 export interface RecallCorpusEvidence {
+  dueHasTime?: boolean;
+  interactionOccurredAt?: string | null;
+  participantRole?: "contact" | "introduced_by" | "mentioned";
+  provenance?: RecallProvenance[];
   actionKind?: RecallActionKind | null;
   interactionId?: string | null;
   location?: string | null;
@@ -53,6 +58,8 @@ export interface RecallCorpusEvidence {
 }
 
 export interface RecallCorpusAction {
+  sourceType?: "action_item" | "workspace_task";
+  dueHasTime?: boolean;
   kind: RecallActionKind;
   interactionId?: string | null;
   id: string;
@@ -75,6 +82,8 @@ export interface RecallCorpusPerson {
 }
 
 export interface RecallEvidence {
+  interactionId?: string | null;
+  provenance?: RecallProvenance[];
   id: string;
   type: RecallEvidenceType;
   excerpt: string;
@@ -83,6 +92,13 @@ export interface RecallEvidence {
   score: number;
   memoryStatementId: string | null;
   memoryDocumentId: string | null;
+}
+
+export interface RecallProvenance {
+  sourceKind: string;
+  sourceRef: string | null;
+  capturedAt: string;
+  originalText: string | null;
 }
 
 export interface RecallAction {

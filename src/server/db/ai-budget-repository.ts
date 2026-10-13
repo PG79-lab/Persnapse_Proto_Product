@@ -18,6 +18,19 @@ export async function reserveAiCall(
     );
   await getDatabase().begin(async (sql) => {
     await sql`select pg_advisory_xact_lock(hashtextextended(${"assistant-budget:" + workspaceId}, 0))`;
+    if (task === "assistant_index_embedding") {
+      const [hourly] = await sql<
+        { count: number }[]
+      >`select count(*)::int as count from public.ai_call_reservations
+        where workspace_id=${workspaceId} and task=${task} and created_at>clock_timestamp()-interval '1 hour'`;
+      if (hourly.count >= 120)
+        throw new AiTaskExecutionError(
+          "자동 검색 복구의 시간당 호출 한도에 도달했습니다.",
+          "AI_RATE_LIMITED",
+          false,
+          3600,
+        );
+    }
     const [usage] = await sql<{ recent: number; retry_after: number }[]>`
       select count(*)::int as recent,
         greatest(1, ceil(extract(epoch from (min(created_at) + interval '60 seconds' - clock_timestamp()))))::int as retry_after

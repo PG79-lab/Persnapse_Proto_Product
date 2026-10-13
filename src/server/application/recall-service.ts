@@ -1,6 +1,7 @@
 import "server-only";
 import { getServerEnv } from "../env";
 import { executeLiveRecall } from "./live-recall-service";
+import { executeAssistantMemory } from "./assistant-memory-service";
 
 import { parseRecallQuery } from "../../domain/recall/query-parser";
 import { buildRecallResponse } from "../../domain/recall/ranker";
@@ -30,7 +31,14 @@ export async function executeRecall(
   const referenceTime = request.referenceTime ?? new Date();
   const startedAt = performance.now();
   let response: RecallResponse;
-  if (getServerEnv().AI_ROUTING_MODE === "live") {
+  if (getServerEnv().ASSISTANT_CONTEXT_ENABLED === "on") {
+    const result = await executeAssistantMemory({
+      workspaceId: request.workspaceId,
+      query: queryText,
+      reference: referenceTime,
+    });
+    response = { ...result.response, warnings: result.coverage.reasons };
+  } else if (getServerEnv().AI_ROUTING_MODE === "live") {
     response = await executeLiveRecall(
       request.workspaceId,
       queryText,

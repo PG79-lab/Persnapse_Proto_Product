@@ -1,0 +1,46 @@
+.assistant-context-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+}
+.assistant-context-controls select,
+.assistant-context-controls button,
+.assistant-context-controls input {
+  border: 1px solid var(--border, #d8dee7);
+  border-radius: 8px;
+  padding: 6px;
+  background: transparent;
+  color: inherit;
+  max-width: 220px;
+}
+.assistant-section {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border, #d8dee7);
+  border-radius: 10px;
+}
+.assistant-section h4 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.assistant-section p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.assistant-section small {
+  display: block;
+  margin-top: 8px;
+  opacity: 0.7;
+}
+.assistant-coverage {
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(192, 132, 0, 0.08);
+  font-size: 12px;
+}
+.assistant-coverage p {
+  margin: 4px 0;
+}

@@ -24,7 +24,7 @@ export async function loadRecallCorpus(
   personIds?: string[],
 ): Promise<RecallCorpusPerson[]> {
   const sql = getDatabase();
-  const [peopleRows, memoryRows, interactionRows, actionRows] =
+  const [peopleRows, memoryRows, interactionRows, actionRows, taskRows] =
     await Promise.all([
       sql<
         Array<{
@@ -74,16 +74,21 @@ export async function loadRecallCorpus(
           body: string;
           interaction_id: string | null;
           occurred_at: Date | string | null;
+          interaction_occurred_at: Date | string | null;
         }>
       >`
-        select id, person_id, body, occurred_at, interaction_id
-        from public.memory_statements
-        where workspace_id = ${workspaceId}
-          and person_id is not null
-          and (${personIds === undefined} or person_id = any(${personIds ?? []}::uuid[]))
-          and verification_status = 'confirmed' and archived_at is null
-          and (interaction_id is null or exists(select 1 from public.interactions i where i.workspace_id=memory_statements.workspace_id and i.id=memory_statements.interaction_id and i.archived_at is null and exists(select 1 from public.interaction_participants ip where ip.workspace_id=memory_statements.workspace_id and ip.interaction_id=memory_statements.interaction_id and ip.person_id=memory_statements.person_id)))
-        order by occurred_at desc nulls last
+        select m.id, selected.person_id, m.body, m.occurred_at, m.interaction_id, i.occurred_at as interaction_occurred_at
+        from public.memory_statements m
+        left join public.interactions i on i.workspace_id=m.workspace_id and i.id=m.interaction_id
+        cross join lateral (select m.person_id where m.person_id is not null union all
+          select ip.person_id from public.interaction_participants ip
+          where m.person_id is null and ip.workspace_id=m.workspace_id and ip.interaction_id=m.interaction_id) selected
+        where m.workspace_id = ${workspaceId}
+          and (${personIds === undefined} or selected.person_id = any(${personIds ?? []}::uuid[]))
+          and m.verification_status = 'confirmed' and m.archived_at is null
+          and (m.interaction_id is null or (i.archived_at is null and i.verification_status='confirmed' and exists(
+            select 1 from public.interaction_participants ip where ip.workspace_id=m.workspace_id and ip.interaction_id=m.interaction_id and ip.person_id=selected.person_id)))
+        order by m.occurred_at desc nulls last
       `,
       sql<
         Array<{
@@ -94,11 +99,13 @@ export async function loadRecallCorpus(
           location: string | null;
           event_name: string | null;
           topics: string[] | null;
+          participant_role: "contact" | "introduced_by" | "mentioned";
         }>
       >`
         select
           interaction.id,
           participant.person_id,
+          participant.role as participant_role,
           interaction.occurred_at,
           interaction.summary,
           interaction.location,
@@ -135,6 +142,7 @@ export async function loadRecallCorpus(
           kind: RecallActionKind;
           status: "pending" | "completed" | "dismissed";
           due_at: Date | string | null;
+          due_has_time: boolean;
           interaction_id: string | null;
           occurred_at: Date | string | null;
         }>
@@ -147,6 +155,7 @@ export async function loadRecallCorpus(
           action.kind,
           action.status,
           action.due_at,
+          action.due_has_time,
           action.interaction_id,
           interaction.occurred_at
         from public.action_items action
@@ -156,9 +165,26 @@ export async function loadRecallCorpus(
         where action.workspace_id = ${workspaceId}
           and (${personIds === undefined} or action.person_id = any(${personIds ?? []}::uuid[]))
           and action.verification_status = 'confirmed'
-          and action.status <> 'dismissed' and action.archived_at is null and (action.interaction_id is null or (interaction.archived_at is null and exists(select 1 from public.interaction_participants ip where ip.workspace_id=action.workspace_id and ip.interaction_id=action.interaction_id and ip.person_id=action.person_id)))
+          and action.status <> 'dismissed' and action.archived_at is null and (action.interaction_id is null or (interaction.archived_at is null and interaction.verification_status='confirmed' and exists(select 1 from public.interaction_participants ip where ip.workspace_id=action.workspace_id and ip.interaction_id=action.interaction_id and ip.person_id=action.person_id)))
         order by (action.status = 'pending') desc, action.due_at asc nulls last
       `,
+      sql<
+        Array<{
+          id: string;
+          person_id: string;
+          title: string;
+          done: boolean;
+          due_at: Date | string | null;
+          due_has_time: boolean;
+        }>
+      >`
+        select t.id,t.person_id,t.title,t.done,
+          (t.due_date+coalesce(t.due_time,time '00:00')) at time zone 'Asia/Seoul' as due_at,
+          (t.due_time is not null) as due_has_time
+        from public.workspace_tasks t join public.persons p on p.workspace_id=t.workspace_id and p.id=t.person_id
+        where t.workspace_id=${workspaceId} and t.archived_at is null and p.archived_at is null
+          and (${personIds === undefined} or t.person_id=any(${personIds ?? []}::uuid[]))
+        order by t.done,t.due_date nulls last,t.id`,
     ]);
 
   const corpus = new Map<string, RecallCorpusPerson>();
@@ -204,6 +230,7 @@ export async function loadRecallCorpus(
       occurredAt: toIsoString(row.occurred_at),
       verificationStatus: "confirmed",
       memoryStatementId: row.id,
+      interactionOccurredAt: toIsoString(row.interaction_occurred_at),
       memoryDocumentId: null,
       actionStatus: null,
     });
@@ -222,6 +249,7 @@ export async function loadRecallCorpus(
     corpus.get(row.person_id)?.evidence.push({
       id: row.id,
       type: "interaction",
+      participantRole: row.participant_role,
       interactionId: row.id,
       location: row.location,
       eventName: row.event_name,
@@ -243,6 +271,7 @@ export async function loadRecallCorpus(
       interactionId: row.interaction_id,
       details: row.details,
       dueAt: toIsoString(row.due_at),
+      dueHasTime: row.due_has_time,
       status: row.status,
     };
     const person = corpus.get(row.person_id);
@@ -251,6 +280,7 @@ export async function loadRecallCorpus(
     person?.evidence.push({
       id: row.id,
       type: "action_item",
+      dueHasTime: row.due_has_time,
       actionKind: row.kind,
       interactionId: row.interaction_id,
       dueAt: toIsoString(row.due_at),
@@ -260,6 +290,34 @@ export async function loadRecallCorpus(
       memoryStatementId: null,
       memoryDocumentId: null,
       actionStatus: row.status,
+    });
+  }
+
+  for (const row of taskRows) {
+    const person = corpus.get(row.person_id);
+    const status = row.done ? ("completed" as const) : ("pending" as const);
+    person?.actions.push({
+      id: row.id,
+      sourceType: "workspace_task",
+      kind: "follow_up",
+      title: row.title,
+      details: null,
+      dueAt: toIsoString(row.due_at),
+      dueHasTime: row.due_has_time,
+      status,
+    });
+    person?.evidence.push({
+      id: row.id,
+      type: "workspace_task",
+      text: row.title,
+      actionKind: "follow_up",
+      actionStatus: status,
+      dueAt: toIsoString(row.due_at),
+      dueHasTime: row.due_has_time,
+      occurredAt: null,
+      verificationStatus: "confirmed",
+      memoryStatementId: null,
+      memoryDocumentId: null,
     });
   }
 

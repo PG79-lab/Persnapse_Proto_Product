@@ -15,6 +15,9 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:assistant:db": "node scripts/db/verify-assistant-isolated.mjs",
+    "test:assistant:e2e": "playwright test tests/e2e/assistant-context.spec.ts --workers=1",
+    "assistant:worker": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ai/assistant-worker.ts",
     "test:watch": "vitest",
     "test:e2e": "npm run build && playwright test",
     "test:e2e:install": "playwright install chromium",
@@ -65,7 +68,7 @@
     "deploy:verify:preview:live": "node --env-file=.env.local --conditions=react-server --import tsx scripts/deploy/verify-vercel-preview.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run format:check && npm run build",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run test:assistant:db && npm run format:check && npm run build",
     "deploy:verify:preview:assistant": "node --env-file=.env.local --conditions=react-server --import tsx scripts/deploy/verify-live-memory-preview.mjs",
     "db:verify:workspace": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/verify-workspace-integration.ts --confirm-test-writes",
     "test:workspace:browser": "node --env-file=.env.local --conditions=react-server --import tsx scripts/db/verify-workspace-browser.ts --confirm-test-writes",
@@ -87,6 +90,8 @@
     "zod": "4.6.2"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.9",
+    "@electric-sql/pglite-pgvector": "^0.0.10",
     "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.3.3",
     "@testing-library/jest-dom": "7.0.1",

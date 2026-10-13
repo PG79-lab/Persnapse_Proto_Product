@@ -28,6 +28,7 @@ const intentLabels: Record<RecallIntent, string> = {
 
 const evidenceLabels: Record<RecallEvidenceType, string> = {
   action_item: "저장된 행동",
+  workspace_task: "사용자 업무",
   affiliation: "소속",
   event: "행사",
   interaction: "만남 기록",
