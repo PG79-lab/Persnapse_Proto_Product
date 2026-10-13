@@ -17,6 +17,7 @@ import {
 import useAudioRecorder, {
   MAX_AUDIO_BYTES,
 } from "../hooks/useAudioRecorder.js";
+import { RecordingTranscription } from "../../../speech/recording-transcription";
 import { uid } from "../domain/model.js";
 import { addNote } from "../domain/editing.js";
 import {
@@ -31,7 +32,13 @@ export function durationLabel(seconds = 0) {
 }
 const emptyDraft = () => ({ title: "", notes: "", personId: "" });
 function extension(type) {
-  return type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+  return type.includes("wav")
+    ? "wav"
+    : type.includes("mp4")
+      ? "m4a"
+      : type.includes("ogg")
+        ? "ogg"
+        : "webm";
 }
 function fileName(title) {
   return Array.from(title || "녹음")
@@ -116,27 +123,65 @@ export default function RecordingPage({
     [error, setError] = useState(""),
     [captureError, setCaptureError] = useState(""),
     [saving, setSaving] = useState(false);
+  const [realtime, setRealtime] = useState(true);
+  const [liveLanguage, setLiveLanguage] = useState("ko");
   const input = useRef(null),
     player = useRef(null),
     detail = useRef(null),
     urls = useRef(new Set()),
     pendingNote = useRef(null),
     initialWrites = useRef(new Map());
+  const clipsRef = useRef([]);
+  useEffect(() => {
+    clipsRef.current = clips;
+  }, [clips]);
   const selected = clips.find((clip) => clip.id === selectedId);
   const value = selected || draft;
-  const recorder = useAudioRecorder(({ blob, duration }) => {
-    addClip(
-      blob,
-      draft.title.trim() || `새 녹음 ${clips.length + 1}`,
-      duration,
-      draft,
-    );
-    setDraft(emptyDraft());
-  });
+  const recorder = useAudioRecorder(
+    ({ blob, duration, realtime: liveRecording }) => {
+      const id = addClip(
+        blob,
+        draft.title.trim() || `새 녹음 ${clips.length + 1}`,
+        duration,
+        { ...draft, transcriptStatus: liveRecording ? "pending" : undefined },
+      );
+      setDraft(emptyDraft());
+      return id;
+    },
+    {
+      realtime,
+      language: liveLanguage,
+      onTranscript: (id, text, finalError) => {
+        const clip = clipsRef.current.find((item) => item.id === id);
+        if (!clip) return;
+        const notes = [clip.notes.trim(), text.trim()]
+          .filter(Boolean)
+          .join("\n");
+        const next = {
+          ...clip,
+          transcript: text,
+          transcriptStatus: finalError
+            ? "failed"
+            : notes.length > 2000
+              ? "review_required"
+              : "completed",
+          notes: !finalError && notes.length <= 2000 ? notes : clip.notes,
+          noteSaved: false,
+        };
+        persistDetails(next);
+        clipsRef.current = clipsRef.current.map((item) =>
+          item.id === id ? next : item,
+        );
+        setClips((current) =>
+          current.map((item) => (item.id === id ? next : item)),
+        );
+      },
+    },
+  );
   const busy = recorder.phase !== "idle";
   const labels = {
     idle: "녹음 준비",
-    requesting: "마이크 연결 중",
+    requesting: realtime ? "실시간 전사·마이크 연결 중" : "마이크 연결 중",
     recording: "녹음 중",
     paused: "일시정지",
     finishing: "녹음 정리 중",
@@ -233,6 +278,7 @@ export default function RecordingPage({
       localSaved: false,
     };
     setClips((current) => [clip, ...current]);
+    clipsRef.current = [clip, ...clipsRef.current];
     setSelectedId(clip.id);
     const write = saveLocalRecording(clip)
       .then(() => {
@@ -249,10 +295,16 @@ export default function RecordingPage({
       })
       .finally(() => initialWrites.current.delete(clip.id));
     initialWrites.current.set(clip.id, write);
+    return clip.id;
   }
   function update(key, next) {
     setError("");
     if (selected) {
+      clipsRef.current = clipsRef.current.map((item) =>
+        item.id === selected.id
+          ? { ...item, [key]: next, noteSaved: false }
+          : item,
+      );
       persistDetails({ ...selected, [key]: next, noteSaved: false });
       setClips((current) =>
         current.map((clip) =>
@@ -417,8 +469,8 @@ export default function RecordingPage({
       <div className="recording-capability-note" role="note">
         <FileText size={18} />
         <p>
-          <strong>녹음하고, 중요한 내용은 직접 메모하세요.</strong> 자동 텍스트
-          변환은 준비 중입니다.{" "}
+          <strong>녹음을 다시 듣고, 텍스트로 변환해 메모하세요.</strong> 텍스트
+          변환은 최대 100초 녹음을 지원하며 결과를 확인한 뒤 메모에 추가합니다.{" "}
           {libraryStatus === "unavailable"
             ? "이 브라우저에서 음성을 보관할 수 없어 파일 다운로드가 필요합니다."
             : "음성은 이 브라우저에 보관됩니다. 다른 기기에서 들으려면 파일을 내려받아 옮겨야 합니다."}
@@ -442,6 +494,28 @@ export default function RecordingPage({
             <span className="capture-tag">음성 기록</span>
           </div>
           <div className={`recorder-stage ${recorder.phase}`}>
+            <label className="mb-3 flex items-center justify-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={realtime}
+                disabled={busy}
+                onChange={(event) => setRealtime(event.target.checked)}
+              />
+              말하는 동안 텍스트 표시
+            </label>
+            {realtime && (
+              <select
+                aria-label="실시간 인식 언어"
+                value={liveLanguage}
+                disabled={busy}
+                onChange={(event) => setLiveLanguage(event.target.value)}
+                className="mb-3 rounded-lg border p-2"
+              >
+                <option value="ko">한국어</option>
+                <option value="ko-en">한국어 + 영어</option>
+                <option value="auto">자동 감지</option>
+              </select>
+            )}
             <span className="recorder-status">
               <i />
               {labels[recorder.phase]}
@@ -453,6 +527,27 @@ export default function RecordingPage({
               media={active ? recorder.media : null}
               phase={recorder.phase}
             />
+            {realtime && (
+              <div
+                aria-label="실시간 전사"
+                aria-live="polite"
+                className="my-3 rounded-lg border bg-white p-3 text-left text-sm"
+              >
+                <p className="mb-1 font-semibold">
+                  {recorder.phase === "finishing"
+                    ? "텍스트 확정 중…"
+                    : "실시간 텍스트"}
+                </p>
+                <p>
+                  {recorder.liveText ||
+                    (recorder.phase === "requesting"
+                      ? "연결을 준비하고 있습니다. 녹음 중 표시가 뜨면 말하세요."
+                      : busy
+                        ? "말하면 텍스트가 이곳에 표시됩니다."
+                        : "시작하고 말한 뒤 종료하면 메모에 자동 반영됩니다.")}
+                </p>
+              </div>
+            )}
             <div className="recorder-controls">
               {recorder.phase === "idle" ? (
                 <button
@@ -507,7 +602,9 @@ export default function RecordingPage({
                 ? recorder.phase === "paused"
                   ? "일시정지한 시간은 녹음 길이에 포함되지 않아요."
                   : "다른 메뉴로 이동해도 녹음은 계속됩니다."
-                : "녹음 시작을 누르면 마이크 권한을 요청합니다. · 최대 30분"}
+                : realtime
+                  ? "시작 → 말하기 → 종료 · 최대 100초 · 음성을 OpenAI로 전송합니다."
+                  : "녹음 시작을 누르면 마이크 권한을 요청합니다. · 최대 30분"}
             </p>
           </div>
           {(captureError || recorder.error) && (
@@ -647,20 +744,31 @@ export default function RecordingPage({
           </label>
           {selected && (
             <div className="recording-playback">
-              <audio
+              <RecordingTranscription
                 key={selected.id}
-                ref={player}
-                controls
-                preload="metadata"
-                src={selected.url}
-                aria-label="녹음 재생"
-                onError={() =>
-                  setError(
-                    "이 브라우저에서 재생할 수 없는 파일이에요. 내려받아 다른 플레이어에서 열어주세요.",
+                audioRef={player}
+                blob={selected.blob}
+                fallbackUrl={selected.url}
+                disabled={busy}
+                autoTranscript={selected.transcriptStatus === "completed"}
+                initialResult={
+                  selected.transcriptStatus === "review_required"
+                    ? selected.transcript
+                    : undefined
+                }
+                availableCharacters={Math.max(
+                  0,
+                  2000 -
+                    value.notes.trim().length -
+                    (value.notes.trim() ? 1 : 0),
+                )}
+                onApply={(text) =>
+                  update(
+                    "notes",
+                    [value.notes.trim(), text].filter(Boolean).join("\n"),
                   )
                 }
-                onLoadedMetadata={(e) => {
-                  const duration = e.currentTarget.duration;
+                onDuration={(duration) => {
                   if (selected.duration === null && Number.isFinite(duration))
                     setClips((current) =>
                       current.map((clip) =>
@@ -697,7 +805,7 @@ export default function RecordingPage({
               <FileText size={16} />
               직접 메모
             </span>
-            <small>자동 텍스트 변환 준비 중</small>
+            <small>인식 결과를 확인하고 메모에 추가하세요</small>
           </div>
           <textarea
             aria-label="녹음 메모"
@@ -762,7 +870,8 @@ export default function RecordingPage({
           <p className="recording-storage-note">
             음성은 현재 브라우저에만 보관됩니다. 브라우저 데이터를 지우면 음성도
             사라질 수 있어요. 인맥에 저장한 텍스트 메모는 팀 공유 공간에
-            저장됩니다. 자동 텍스트 변환은 아직 지원하지 않습니다.
+            저장됩니다. 100초 이하 녹음은 텍스트로 변환한 뒤 확인하고 메모에
+            추가할 수 있습니다.
           </p>
           {error && (
             <p className="error-text" role="alert">

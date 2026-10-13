@@ -2,6 +2,7 @@
 import { matchesInferredField } from "../../domain/capture/inferred-fields";
 
 import { useState } from "react";
+import { VoiceInput } from "../speech/voice-input";
 
 import type { CaptureDraftV1 } from "../../domain/capture/capture-draft";
 import type {
@@ -406,6 +407,18 @@ export function TextCaptureWorkspace({
           <label htmlFor="capture-note" className="sr-only">
             관계 맥락
           </label>
+          <VoiceInput
+            disabled={busy !== null}
+            availableCharacters={Math.max(
+              0,
+              5_000 - rawText.trim().length - (rawText.trim() ? 1 : 0),
+            )}
+            onApply={(text) =>
+              setRawText((current) =>
+                [current.trim(), text].filter(Boolean).join("\n"),
+              )
+            }
+          />
           <textarea
             id="capture-note"
             value={rawText}
