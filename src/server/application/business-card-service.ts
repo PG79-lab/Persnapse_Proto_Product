@@ -4,6 +4,9 @@ import { reserveAiCall } from "../db/ai-budget-repository";
 
 import { createHash, randomUUID } from "node:crypto";
 
+import { jpegDimensions } from "../../../card_recognition/jpeg-dimensions";
+import type { CardCorners } from "../../../card_recognition/geometry";
+
 import {
   businessCardDraftV1Schema,
   businessCardExtractionV1Schema,
@@ -38,13 +41,17 @@ import {
   findBusinessCardIdentityCandidates,
   getBusinessCardByIdempotencyKey,
   getBusinessCardCapture,
+  listUncommittedBusinessCards,
   getBusinessCardOcrInput,
   getOriginalAssetForDeletion,
+  getSourceAsset,
   markBusinessCardFailed,
   markOriginalAssetDeleted,
   resetBusinessCardForRetry,
   saveBusinessCardExtraction,
+  saveConfirmedBusinessCardFields,
   saveBusinessCardReview,
+  saveRestoredBusinessCardDisplay,
 } from "../db/business-card-repository";
 import {
   CaptureNotFoundError,
@@ -393,7 +400,8 @@ export async function createAndExtractBusinessCard(input: {
   originalHeight: number;
   displayWidth: number;
   displayHeight: number;
-  processingRecipe: "canvas-card-v1";
+  processingRecipe:
+    "canvas-card-v1" | "docaligner-lc100-card-v1" | "manual-card-v1";
 }): Promise<BusinessCardSessionView> {
   const existing = await getBusinessCardByIdempotencyKey(
     input.workspaceId,
@@ -502,9 +510,18 @@ export async function createAndExtractBusinessCard(input: {
     workspaceId: input.workspaceId,
     captureId,
     filename: input.originalFile.name,
-    bytes: originalImage.bytes,
-    mimeType: originalImage.mimeType,
-    sha256: originalImage.sha256,
+    bytes:
+      input.processingRecipe === "canvas-card-v1"
+        ? originalImage.bytes
+        : displayImage.bytes,
+    mimeType:
+      input.processingRecipe === "canvas-card-v1"
+        ? originalImage.mimeType
+        : displayImage.mimeType,
+    sha256:
+      input.processingRecipe === "canvas-card-v1"
+        ? originalImage.sha256
+        : displayImage.sha256,
     referenceTime: input.referenceTime,
     operationKey: input.idempotencyKey,
   });
@@ -525,6 +542,11 @@ export async function retryBusinessCardExtraction(
   if (capture.state !== "failed") {
     throw new CaptureStateConflictError(
       "Only a failed business card Capture can be retried.",
+    );
+  }
+  if (capture.fieldsConfirmedAt) {
+    throw new CaptureStateConflictError(
+      "Confirmed business card fields cannot be replaced by an OCR retry.",
     );
   }
   const source = await getBusinessCardOcrInput(workspaceId, captureId);
@@ -548,6 +570,95 @@ export async function retryBusinessCardExtraction(
   });
 }
 
+export async function confirmBusinessCardFields(input: {
+  workspaceId: string;
+  captureId: string;
+  draft: unknown;
+}): Promise<BusinessCardSessionView> {
+  const draft = businessCardDraftV1Schema.parse(input.draft);
+  await saveConfirmedBusinessCardFields({ ...input, draft });
+  const card = await getBusinessCardCapture(input.workspaceId, input.captureId);
+  if (!card) throw new CaptureNotFoundError();
+  return card;
+}
+
+export async function replaceBusinessCardDisplay(input: {
+  workspaceId: string;
+  captureId: string;
+  file: File;
+  corners: CardCorners;
+  coverage: number;
+}): Promise<BusinessCardSessionView> {
+  const card = await getBusinessCardCapture(input.workspaceId, input.captureId);
+  if (!card) throw new CaptureNotFoundError();
+  if (
+    !card.fieldsConfirmedAt ||
+    !["draft", "review", "failed", "committed"].includes(card.state)
+  ) {
+    throw new CaptureStateConflictError(
+      "Business card fields must be confirmed before restoration.",
+    );
+  }
+  const display = await getSourceAsset(input.workspaceId, card.displayAssetId);
+  if (!display || display.mimeType !== "image/jpeg") {
+    throw new BusinessCardImageError(
+      "복원할 명함 이미지를 찾지 못했습니다.",
+      "CARD_SOURCE_NOT_FOUND",
+    );
+  }
+  const image = await validatedImage(input.file, 3_200_000);
+  if (image.mimeType !== "image/jpeg") {
+    throw new BusinessCardImageError(
+      "복원 이미지는 JPEG 형식이어야 합니다.",
+      "CARD_IMAGE_TYPE_UNSUPPORTED",
+    );
+  }
+  const dimensions = jpegDimensions(image.bytes);
+  if (
+    !dimensions ||
+    dimensions.width > 4000 ||
+    dimensions.height > 4000 ||
+    dimensions.width < 160 ||
+    dimensions.height < 80
+  ) {
+    throw new BusinessCardImageError(
+      "복원 이미지의 크기를 확인할 수 없습니다.",
+      "CARD_IMAGE_SIZE_INVALID",
+    );
+  }
+  const newPath = `${input.workspaceId}/${input.captureId}/${card.displayAssetId}-display-${randomUUID()}.jpg`;
+  await uploadBusinessCardAsset({
+    path: newPath,
+    bytes: image.bytes,
+    contentType: image.mimeType,
+  });
+  try {
+    await saveRestoredBusinessCardDisplay({
+      workspaceId: input.workspaceId,
+      captureId: input.captureId,
+      assetId: card.displayAssetId,
+      previousPath: display.path,
+      newPath,
+      sha256: image.sha256,
+      byteSize: image.bytes.length,
+      width: dimensions.width,
+      height: dimensions.height,
+      corners: input.corners,
+      coverage: input.coverage,
+    });
+  } catch (error) {
+    await removeBusinessCardAssets([newPath]).catch(() => undefined);
+    throw error;
+  }
+  await removeBusinessCardAssets([display.path]).catch(() => undefined);
+  const restored = await getBusinessCardCapture(
+    input.workspaceId,
+    input.captureId,
+  );
+  if (!restored) throw new CaptureNotFoundError();
+  return restored;
+}
+
 export async function prepareBusinessCardReview(input: {
   workspaceId: string;
   captureId: string;
@@ -565,6 +676,19 @@ export async function prepareBusinessCardReview(input: {
   if (capture.state === "review" || capture.state === "committed") {
     throw new CaptureStateConflictError(
       "Business card must be in draft or failed before context review.",
+    );
+  }
+  if (!capture.fieldsConfirmedAt || !capture.draft) {
+    throw new CaptureStateConflictError(
+      "Business card fields must be confirmed before context review.",
+    );
+  }
+  if (
+    JSON.stringify(capture.draft.identity) !==
+    JSON.stringify(cardDraft.identity)
+  ) {
+    throw new CaptureStateConflictError(
+      "Confirmed business card fields cannot be changed during context review.",
     );
   }
   if (capture.state === "failed") {
@@ -602,7 +726,7 @@ export async function prepareBusinessCardReview(input: {
         schemaVersion: "capture-draft-v1",
       }),
     });
-    const merged = mergeBusinessCardContext(cardDraft, context);
+    const merged = mergeBusinessCardContext(capture.draft, context);
     await saveBusinessCardReview({
       workspaceId: input.workspaceId,
       captureId: input.captureId,
@@ -635,6 +759,23 @@ export async function prepareBusinessCardReview(input: {
     await markBusinessCardFailed(input.workspaceId, input.captureId, code);
     throw new BusinessCardProcessingError(input.captureId, code);
   }
+}
+
+export async function listResumableBusinessCards(
+  workspaceId: string,
+): Promise<BusinessCardSessionView[]> {
+  const cards = await listUncommittedBusinessCards(workspaceId);
+  return Promise.all(
+    cards.map(async (card) => {
+      if (card.state === "review" && card.draft) {
+        card.identityCandidates = await findBusinessCardIdentityCandidates(
+          workspaceId,
+          card.draft,
+        );
+      }
+      return card;
+    }),
+  );
 }
 
 export async function searchBusinessCardCandidates(

@@ -40,3 +40,12 @@ Desktop.ini
 tmp/
 temp/
 /output/
+
+# OpenCV.js is copied from the pinned npm dependency before dev/build.
+/public/vendor/opencv.js
+/public/vendor/opencv-LICENSE.txt
+/public/vendor/ort/
+/public/vendor/card-inference-worker.js
+/public/models/
+/public/card-test/
+/card_test_image/

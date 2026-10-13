@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { evaluateBusinessCardExtraction } from "./extraction-evaluation";
+import {
+  evaluateBusinessCardExtraction,
+  evaluateContactNumberExtraction,
+} from "./extraction-evaluation";
 
 const expected = {
   displayName: "김하늘",
@@ -14,6 +17,27 @@ const expected = {
 };
 
 describe("business card extraction evaluation", () => {
+  it("reports correct digits with a wrong fax/mobile type as a classification error", () => {
+    const result = evaluateContactNumberExtraction(
+      [
+        { type: "fax", value: "02-123-4567", rawLabel: "Fax" },
+        { type: "mobile", value: "010-1234-5678", rawLabel: "HP" },
+      ],
+      [
+        { type: "phone", value: "021234567", rawLabel: "Fax" },
+        { type: "mobile", value: "01012345678", rawLabel: "HP" },
+      ],
+    );
+    expect(result).toEqual({
+      expectedCount: 2,
+      actualCount: 2,
+      exactCount: 1,
+      digitMatchCount: 2,
+      wrongTypeCount: 1,
+      missingCount: 0,
+      unexpectedCount: 1,
+    });
+  });
   it("counts changed critical fields and invented contact details", () => {
     const result = evaluateBusinessCardExtraction(expected, {
       ...expected,

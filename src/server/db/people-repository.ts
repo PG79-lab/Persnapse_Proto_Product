@@ -1,6 +1,6 @@
 import "server-only";
 
-import { businessCardIdentitySchema } from "../../domain/business-card/business-card-draft";
+import { parseBusinessCardIdentity } from "../../domain/business-card/business-card-draft";
 import { getDatabase } from "./client";
 import type {
   MemoryStatement,
@@ -359,21 +359,13 @@ export async function getPersonProfile(
   }));
   const businessCards: PersonBusinessCard[] = businessCardRows.flatMap(
     (row) => {
-      let value = row.card_data;
-      if (typeof value === "string") {
-        try {
-          value = JSON.parse(value) as unknown;
-        } catch {
-          return [];
-        }
-      }
-      const parsed = businessCardIdentitySchema.safeParse(value);
-      return parsed.success
+      const identity = parseBusinessCardIdentity(row.card_data);
+      return identity
         ? [
             {
               id: row.id,
               imageUrl: `/api/source-assets/${row.display_asset_id}`,
-              identity: parsed.data,
+              identity,
               originalRetained: row.original_retained,
               createdAt: toIsoString(row.created_at)!,
             },

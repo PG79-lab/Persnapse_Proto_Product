@@ -1,4 +1,6 @@
 import TaskFields from "./TaskFields.jsx";
+import { CardViewer } from "../../../../../card_recognition/card-viewer";
+import { ContactNumberList } from "../../../../../card_recognition/contact-number-fields";
 import { useEffect, useRef, useState } from "react";
 import {
   Plus,
@@ -736,20 +738,15 @@ export function Profile({
           <section className="profile-business-cards" aria-label="등록한 명함">
             <h3>등록한 명함</h3>
             {person.businessCards.map((card) => (
-              <a
-                key={card.id}
-                href={`/api/source-assets/${card.displayAssetId}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {/* Private authenticated assets must not pass through a public image optimizer. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`/api/source-assets/${card.displayAssetId}`}
-                  alt={`${person.name}님의 등록한 명함`}
-                  loading="lazy"
+              <div key={card.id}>
+                <CardViewer
+                  imageUrl={`/api/source-assets/${card.displayAssetId}`}
+                  label={`${person.name}님의 등록한 명함`}
                 />
-              </a>
+                {card.identity && (
+                  <ContactNumberList identity={card.identity} />
+                )}
+              </div>
             ))}
           </section>
         )}

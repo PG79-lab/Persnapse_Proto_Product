@@ -61,6 +61,12 @@ describe("CLOVA business card response", () => {
         department: "Product",
         emails: ["haneul@example.com"],
         phones: ["010-1234-5678", "02-123-4567"],
+        contactNumbers: [
+          { type: "mobile", value: "010-1234-5678", rawLabel: null },
+          { type: "phone", value: "02-123-4567", rawLabel: null },
+          { type: "phone", value: "010-1234-5678", rawLabel: null },
+          { type: "fax", value: "02-999-9999", rawLabel: null },
+        ],
         websites: ["persnapse.example"],
         address: "서울특별시 강남구 테헤란로 1",
       },
@@ -71,6 +77,7 @@ describe("CLOVA business card response", () => {
         "identity.department",
         "identity.emails",
         "identity.phones",
+        "identity.contactNumbers",
         "identity.websites",
         "identity.address",
       ],
@@ -109,9 +116,52 @@ describe("CLOVA business card response", () => {
       department: "Product Team",
       emails: ["haneul.kim@example.com"],
       phones: ["010-1234-5678"],
+      contactNumbers: [
+        { type: "mobile", value: "010-1234-5678", rawLabel: "M" },
+      ],
       websites: ["www.persnapse.example"],
       address: "서울특별시 강남구 테헤란로 123",
     });
+  });
+
+  it("retains a fax-only card and does not turn it into a phone number", () => {
+    const extraction = extractClovaNameCard({
+      images: [
+        {
+          inferResult: "SUCCESS",
+          nameCard: { result: { fax: [item("02-999-9999")] } },
+        },
+      ],
+    });
+    expect(extraction.identity.phones).toEqual([]);
+    expect(extraction.identity.contactNumbers).toEqual([
+      { type: "fax", value: "02-999-9999", rawLabel: null },
+    ]);
+  });
+
+  it("classifies General OCR labels individually on the same row", () => {
+    const extraction = extractClovaNameCard({
+      images: [
+        {
+          inferResult: "SUCCESS",
+          fields: [
+            field("Tel", false),
+            field("02-111-2222", false),
+            field("Fax", false),
+            field("02-333-4444"),
+            field("H.P.", false),
+            field("010-5555-6666"),
+          ],
+        },
+      ],
+    });
+    expect(
+      extraction.identity.contactNumbers?.map((number) => number.type),
+    ).toEqual(["phone", "fax", "mobile"]);
+    expect(extraction.identity.phones).toEqual([
+      "02-111-2222",
+      "010-5555-6666",
+    ]);
   });
 
   it("classifies provider processing errors as retryable", () => {

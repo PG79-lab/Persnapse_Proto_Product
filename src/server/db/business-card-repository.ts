@@ -3,6 +3,11 @@ import "server-only";
 import type { TransactionSql } from "postgres";
 
 import {
+  getContactNumbers,
+  voicePhoneValues,
+} from "../../../card_recognition/contact-numbers";
+
+import {
   businessCardDraftToExtraction,
   businessCardDraftToCaptureDraft,
   businessCardDraftV1Schema,
@@ -32,6 +37,7 @@ interface BusinessCardRow {
   display_asset_id: string;
   model_draft: unknown;
   structured_draft: unknown;
+  fields_confirmed_at: Date | string | null;
   context_note: string | null;
   ocr_provider: string | null;
   ocr_latency_ms: number | string | null;
@@ -89,9 +95,11 @@ function mapBusinessCardRow(row: BusinessCardRow): BusinessCardSessionView {
         ? "failed"
         : row.state === "review"
           ? "memory_review"
-          : draft || modelDraft
-            ? "card_review"
-            : "extracting";
+          : row.fields_confirmed_at
+            ? "card_result"
+            : draft || modelDraft
+              ? "card_review"
+              : "extracting";
 
   return {
     captureId: row.capture_id,
@@ -102,6 +110,9 @@ function mapBusinessCardRow(row: BusinessCardRow): BusinessCardSessionView {
     imageUrl: `/api/source-assets/${row.display_asset_id}`,
     draft: draft ?? modelDraft,
     modelDraft,
+    fieldsConfirmedAt: row.fields_confirmed_at
+      ? new Date(row.fields_confirmed_at).toISOString()
+      : null,
     contextNote: row.context_note ?? "",
     identityCandidates: [],
     userCorrectionCount: Number(row.user_correction_count),
@@ -139,6 +150,7 @@ const businessCardSelect = `
     draft.display_asset_id,
     draft.model_draft,
     draft.structured_draft,
+    draft.fields_confirmed_at,
     draft.context_note,
     draft.ocr_provider,
     draft.ocr_latency_ms,
@@ -176,6 +188,17 @@ export async function getBusinessCardCapture(
   return rows[0] ? mapBusinessCardRow(rows[0]) : null;
 }
 
+export async function listUncommittedBusinessCards(
+  workspaceId: string,
+): Promise<BusinessCardSessionView[]> {
+  const sql = getDatabase();
+  const rows = await sql.unsafe<BusinessCardRow[]>(
+    `${businessCardSelect} where session.workspace_id = $1 and session.state in ('draft', 'review', 'failed') and draft.fields_confirmed_at is not null order by session.created_at desc limit 20`,
+    [workspaceId],
+  );
+  return rows.map(mapBusinessCardRow);
+}
+
 export async function findReusableBusinessCardExtraction(input: {
   workspaceId: string;
   captureId: string;
@@ -200,7 +223,9 @@ export async function findReusableBusinessCardExtraction(input: {
     limit 1
   `;
   const draft = rows[0] ? optionalDraft(rows[0].model_draft) : null;
-  return draft ? businessCardDraftToExtraction(draft) : null;
+  return draft?.identity.contactNumbers !== undefined
+    ? businessCardDraftToExtraction(draft)
+    : null;
 }
 
 export async function createBusinessCardCapture(input: {
@@ -299,6 +324,105 @@ export async function saveBusinessCardExtraction(input: {
   });
 }
 
+export async function saveConfirmedBusinessCardFields(input: {
+  workspaceId: string;
+  captureId: string;
+  draft: BusinessCardDraftV1;
+}): Promise<void> {
+  const sql = getDatabase();
+  await sql.begin(async (transaction) => {
+    const rows = await transaction<
+      Array<{
+        state: string;
+        model_draft: unknown;
+        structured_draft: unknown;
+        fields_confirmed_at: Date | string | null;
+      }>
+    >`
+      select session.state, draft.model_draft, draft.structured_draft, draft.fields_confirmed_at
+      from public.capture_sessions session
+      join public.business_card_drafts draft
+        on draft.workspace_id = session.workspace_id
+       and draft.capture_session_id = session.id
+      where session.workspace_id = ${input.workspaceId}
+        and session.id = ${input.captureId}
+      for update of session, draft
+    `;
+    if (!rows[0]) throw new CaptureNotFoundError();
+    if (rows[0].state !== "draft" || !optionalDraft(rows[0].model_draft)) {
+      throw new CaptureStateConflictError(
+        "Business card extraction must finish before fields are confirmed.",
+      );
+    }
+    if (rows[0].fields_confirmed_at) {
+      if (
+        JSON.stringify(optionalDraft(rows[0].structured_draft)) ===
+        JSON.stringify(input.draft)
+      )
+        return;
+      throw new CaptureStateConflictError(
+        "Confirmed business card fields cannot be changed.",
+      );
+    }
+    await transaction`
+      update public.business_card_drafts
+      set structured_draft = ${JSON.stringify(input.draft)}::jsonb,
+          fields_confirmed_at = coalesce(fields_confirmed_at, now())
+      where workspace_id = ${input.workspaceId}
+        and capture_session_id = ${input.captureId}
+    `;
+  });
+}
+
+export async function saveRestoredBusinessCardDisplay(input: {
+  workspaceId: string;
+  captureId: string;
+  assetId: string;
+  previousPath: string;
+  newPath: string;
+  sha256: string;
+  byteSize: number;
+  width: number;
+  height: number;
+  corners: Array<{ x: number; y: number }>;
+  coverage: number;
+}): Promise<void> {
+  const sql = getDatabase();
+  const rows = await sql<Array<{ id: string }>>`
+    update public.source_assets asset
+    set storage_path = ${input.newPath},
+        sha256 = ${input.sha256},
+        byte_size = ${input.byteSize},
+        pixel_width = ${input.width},
+        pixel_height = ${input.height},
+        processing_metadata = ${JSON.stringify({
+          recipe: "opencv-card-v1",
+          corners: input.corners,
+          coverage: input.coverage,
+          generative: false,
+        })}::jsonb
+    from public.business_card_drafts draft,
+         public.capture_sessions session
+    where asset.workspace_id = ${input.workspaceId}
+      and asset.id = ${input.assetId}
+      and asset.storage_path = ${input.previousPath}
+      and asset.deleted_at is null
+      and draft.workspace_id = asset.workspace_id
+      and draft.capture_session_id = ${input.captureId}
+      and draft.display_asset_id = asset.id
+      and draft.fields_confirmed_at is not null
+      and session.workspace_id = draft.workspace_id
+      and session.id = draft.capture_session_id
+      and session.state in ('draft', 'review', 'failed', 'committed')
+    returning asset.id
+  `;
+  if (!rows[0]) {
+    throw new CaptureStateConflictError(
+      "Confirmed business card display is no longer available.",
+    );
+  }
+}
+
 export async function markBusinessCardFailed(
   workspaceId: string,
   captureId: string,
@@ -338,12 +462,21 @@ export async function saveBusinessCardReview(input: {
   const contextDraft = businessCardDraftToCaptureDraft(input.draft);
 
   await sql.begin(async (transaction) => {
-    const rows = await transaction<Array<{ state: string }>>`
-      select state
-      from public.capture_sessions
-      where workspace_id = ${input.workspaceId}
-        and id = ${input.captureId}
-      for update
+    const rows = await transaction<
+      Array<{
+        state: string;
+        fields_confirmed_at: Date | string | null;
+        structured_draft: unknown;
+      }>
+    >`
+      select session.state, draft.fields_confirmed_at, draft.structured_draft
+      from public.capture_sessions session
+      join public.business_card_drafts draft
+        on draft.workspace_id = session.workspace_id
+       and draft.capture_session_id = session.id
+      where session.workspace_id = ${input.workspaceId}
+        and session.id = ${input.captureId}
+      for update of session, draft
     `;
 
     if (!rows[0]) {
@@ -353,6 +486,17 @@ export async function saveBusinessCardReview(input: {
     if (rows[0].state !== "draft") {
       throw new CaptureStateConflictError(
         "Business card must be in draft before review.",
+      );
+    }
+    const confirmed = optionalDraft(rows[0].structured_draft);
+    if (
+      !rows[0].fields_confirmed_at ||
+      !confirmed ||
+      JSON.stringify(confirmed.identity) !==
+        JSON.stringify(input.draft.identity)
+    ) {
+      throw new CaptureStateConflictError(
+        "Confirmed business card fields are required before context review.",
       );
     }
 
@@ -392,8 +536,8 @@ export async function findBusinessCardIdentityCandidates(
   const emails = draft.identity.emails.map((value) =>
     normalizeContact("email", value),
   );
-  const phones = draft.identity.phones.map((value) =>
-    normalizeContact("phone", value),
+  const phones = voicePhoneValues(getContactNumbers(draft.identity)).map(
+    (value) => normalizeContact("phone", value),
   );
   const rows = await sql<
     Array<{
@@ -564,9 +708,11 @@ export async function commitBusinessCard(input: {
         original_asset_id: string;
         display_asset_id: string;
         model_draft: unknown;
+        structured_draft: unknown;
+        fields_confirmed_at: Date | string | null;
       }>
     >`
-      select original_asset_id, display_asset_id, model_draft
+      select original_asset_id, display_asset_id, model_draft, structured_draft, fields_confirmed_at
       from public.business_card_drafts
       where workspace_id = ${input.workspaceId}
         and capture_session_id = ${input.captureId}
@@ -575,6 +721,17 @@ export async function commitBusinessCard(input: {
     const cardDraftRow = cardDraftRows[0];
     if (!cardDraftRow) {
       throw new CaptureNotFoundError();
+    }
+    const reviewedDraft = optionalDraft(cardDraftRow.structured_draft);
+    if (
+      !cardDraftRow.fields_confirmed_at ||
+      !reviewedDraft ||
+      JSON.stringify(reviewedDraft.identity) !==
+        JSON.stringify(input.draft.identity)
+    ) {
+      throw new CaptureStateConflictError(
+        "Confirmed business card fields cannot be changed during commit.",
+      );
     }
 
     const correctionIncrement =
@@ -702,7 +859,7 @@ export async function commitBusinessCard(input: {
     const personAttributeIds: string[] = [];
     const contactGroups = [
       ["email", input.draft.identity.emails],
-      ["phone", input.draft.identity.phones],
+      ["phone", voicePhoneValues(getContactNumbers(input.draft.identity))],
       ["website", input.draft.identity.websites],
     ] as const;
 
@@ -985,7 +1142,11 @@ export async function getBusinessCardOcrInput(
     from public.business_card_drafts draft
     join public.source_assets asset
       on asset.workspace_id = draft.workspace_id
-     and asset.id = draft.original_asset_id
+     and asset.id = case
+       when (select processing_metadata->>'recipe' from public.source_assets
+             where id = draft.display_asset_id and workspace_id = draft.workspace_id)
+            in ('docaligner-lc100-card-v1', 'manual-card-v1')
+       then draft.display_asset_id else draft.original_asset_id end
     where draft.workspace_id = ${workspaceId}
       and draft.capture_session_id = ${captureId}
       and asset.deleted_at is null

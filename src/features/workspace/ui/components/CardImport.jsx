@@ -1,16 +1,13 @@
 import { BusinessCardWorkspace } from "../../../capture/business-card-workspace";
 import { useState } from "react";
-import { Modal } from "./ui.jsx";
 export default function CardImport({
   session,
-  embedded = false,
-  onClose,
   onSaved,
   onViewPerson,
   onFindMemory,
 }) {
   const [stage, setStage] = useState(1);
-  const content = (
+  return (
     <div className="connected-capture">
       <ol className="capture-journey" aria-label="명함 등록 순서">
         <li aria-current={stage === 1 ? "step" : undefined}>
@@ -46,12 +43,5 @@ export default function CardImport({
         }}
       />
     </div>
-  );
-  return embedded ? (
-    content
-  ) : (
-    <Modal title="명함 등록" wide onClose={onClose}>
-      {content}
-    </Modal>
   );
 }

@@ -7,61 +7,6 @@ export interface ProcessedCardImage {
   displayHeight: number;
 }
 
-export interface BusinessCardCaptureGeometry {
-  sourceX: number;
-  sourceY: number;
-  sourceWidth: number;
-  sourceHeight: number;
-  guideLeftPercent: number;
-  guideTopPercent: number;
-  guideWidthPercent: number;
-  guideHeightPercent: number;
-}
-
-/** Match the guide to the source pixels visible through `object-cover`. */
-export function businessCardCaptureGeometry(
-  sourceWidth: number,
-  sourceHeight: number,
-  viewportWidth: number,
-  viewportHeight: number,
-): BusinessCardCaptureGeometry {
-  if (
-    [sourceWidth, sourceHeight, viewportWidth, viewportHeight].some(
-      (value) => !Number.isFinite(value) || value <= 0,
-    )
-  ) {
-    throw new Error("카메라 화면이 준비되지 않았습니다.");
-  }
-
-  const scale = Math.max(
-    viewportWidth / sourceWidth,
-    viewportHeight / sourceHeight,
-  );
-  const visibleWidth = viewportWidth / scale;
-  const visibleHeight = viewportHeight / scale;
-  const cardRatio = 1.586;
-  const sourceWidthToCapture = Math.min(
-    visibleWidth * 0.88,
-    visibleHeight * 0.82 * cardRatio,
-  );
-  const sourceHeightToCapture = sourceWidthToCapture / cardRatio;
-  const sourceX = (sourceWidth - sourceWidthToCapture) / 2;
-  const sourceY = (sourceHeight - sourceHeightToCapture) / 2;
-  const displayedX = (sourceX - (sourceWidth - visibleWidth) / 2) * scale;
-  const displayedY = (sourceY - (sourceHeight - visibleHeight) / 2) * scale;
-
-  return {
-    sourceX,
-    sourceY,
-    sourceWidth: sourceWidthToCapture,
-    sourceHeight: sourceHeightToCapture,
-    guideLeftPercent: (displayedX / viewportWidth) * 100,
-    guideTopPercent: (displayedY / viewportHeight) * 100,
-    guideWidthPercent: (sourceWidthToCapture * scale * 100) / viewportWidth,
-    guideHeightPercent: (sourceHeightToCapture * scale * 100) / viewportHeight,
-  };
-}
-
 const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
 const maxOriginalBytes = 10 * 1024 * 1024;
 export const maxBusinessCardRequestBytes = 4 * 1024 * 1024;
@@ -221,28 +166,12 @@ export async function captureBusinessCardFrame(
     throw new Error("카메라 화면이 준비되지 않았습니다.");
   }
 
-  const crop = businessCardCaptureGeometry(
-    videoWidth,
-    videoHeight,
-    video.clientWidth,
-    video.clientHeight,
-  );
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(crop.sourceWidth);
-  canvas.height = Math.round(crop.sourceHeight);
+  canvas.width = videoWidth;
+  canvas.height = videoHeight;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("촬영 이미지를 만들 수 없습니다.");
-  context.drawImage(
-    video,
-    crop.sourceX,
-    crop.sourceY,
-    crop.sourceWidth,
-    crop.sourceHeight,
-    0,
-    0,
-    canvas.width,
-    canvas.height,
-  );
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
   const blob = await canvasBlob(canvas, 0.92);
   return new File([blob], `business-card-${Date.now()}.jpg`, {
     type: "image/jpeg",

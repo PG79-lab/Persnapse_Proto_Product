@@ -18,7 +18,11 @@ export const businessCardUploadMetadataSchema = z
     originalHeight: z.coerce.number().int().positive().max(20_000),
     displayWidth: z.coerce.number().int().positive().max(4_000),
     displayHeight: z.coerce.number().int().positive().max(4_000),
-    processingRecipe: z.literal("canvas-card-v1"),
+    processingRecipe: z.enum([
+      "canvas-card-v1",
+      "docaligner-lc100-card-v1",
+      "manual-card-v1",
+    ]),
   })
   .strict();
 
@@ -42,7 +46,12 @@ export const commitBusinessCardRequestSchema = z
   .strict();
 
 export type BusinessCardStage =
-  "extracting" | "card_review" | "memory_review" | "committed" | "failed";
+  | "extracting"
+  | "card_review"
+  | "card_result"
+  | "memory_review"
+  | "committed"
+  | "failed";
 
 export const businessCardCommitResultSchema = z
   .object({
@@ -75,6 +84,7 @@ export interface BusinessCardSessionView {
   imageUrl: string;
   draft: BusinessCardDraftV1 | null;
   modelDraft: BusinessCardDraftV1 | null;
+  fieldsConfirmedAt?: string | null;
   contextNote: string;
   identityCandidates: IdentityCandidate[];
   userCorrectionCount: number;

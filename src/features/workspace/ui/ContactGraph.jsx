@@ -160,8 +160,13 @@ export default function ContactGraphApp({ mode = "server" }) {
       return navigation.some(([id]) => id === key) ? key : "todos";
     }),
     [query, setQuery] = useState(""),
-    [selectedId, setSelectedId] = useState(null);
-  const [assistant, setAssistant] = useState(false),
+    [selectedId, setSelectedId] = useState(() =>
+      new URLSearchParams(window.location.search).get("person"),
+    );
+  const [assistant, setAssistant] = useState(
+      () =>
+        new URLSearchParams(window.location.search).get("assistant") === "1",
+    ),
     [editor, setEditor] = useState(null),
     [settings, setSettings] = useState(false),
     [help, setHelp] = useState(false);
@@ -173,15 +178,35 @@ export default function ContactGraphApp({ mode = "server" }) {
     [month, setMonth] = useState("all"),
     [category, setCategory] = useState("all");
   const [toast, setToast] = useState("");
+  const [assistantSeed, setAssistantSeed] = useState(() => {
+    const question =
+      new URLSearchParams(window.location.search).get("q")?.slice(0, 500) ?? "";
+    return { question, version: question ? 1 : 0 };
+  });
   function setPage(key) {
-    if (key !== page) window.history.pushState(null, "", `#${key}`);
+    if (key !== page) {
+      const url = new URL(window.location.href);
+      for (const name of ["person", "assistant", "q"])
+        url.searchParams.delete(name);
+      url.hash = key;
+      window.history.pushState(null, "", url);
+    }
     updatePage(key);
     setQuery("");
   }
   useEffect(() => {
     const restore = () => {
       const key = window.location.hash.slice(1);
+      const params = new URLSearchParams(window.location.search);
       updatePage(navigation.some(([id]) => id === key) ? key : "todos");
+      setSelectedId(params.get("person"));
+      setAssistant(params.get("assistant") === "1");
+      const question = params.get("q")?.slice(0, 500) ?? "";
+      if (question)
+        setAssistantSeed((current) => ({
+          question,
+          version: current.version + 1,
+        }));
       setQuery("");
     };
     window.addEventListener("popstate", restore);
@@ -200,13 +225,11 @@ export default function ContactGraphApp({ mode = "server" }) {
   const [stopRecording, setStopRecording] = useState(0);
   const recordingBusy = recordingState.phase !== "idle";
   const [assistantHost, setAssistantHost] = useState(null);
-  const [assistantFocus, setAssistantFocus] = useState(0);
-  const [assistantSeed, setAssistantSeed] = useState({
-    question: "",
-    version: 0,
+  const [assistantFocus, setAssistantFocus] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("assistant") === "1" || params.get("q") ? 1 : 0;
   });
   function findSavedMemory(question) {
-    setCardTab(null);
     setPage("todos");
     setAssistantSeed((current) => ({ question, version: current.version + 1 }));
     setAssistantFocus((current) => current + 1);
@@ -252,12 +275,11 @@ export default function ContactGraphApp({ mode = "server" }) {
       }),
     [state, status, importance, place, year, month, category],
   );
-  const [cardTab, setCardTab] = useState(null),
-    [personaOpen, setPersonaOpen] = useState(false),
+  const [personaOpen, setPersonaOpen] = useState(false),
     [mailId, setMailId] = useState(null);
   const mailPerson = selectPerson(state, mailId);
-  function openCard(tab) {
-    setCardTab(tab);
+  function openCard() {
+    setPage("cards");
   }
   const person = selectPerson(state, selectedId);
   const matches = live.people.filter((p) =>
@@ -669,8 +691,6 @@ export default function ContactGraphApp({ mode = "server" }) {
           </div>
           <div hidden={page !== "cards"} inert={page !== "cards"}>
             <CardImport
-              embedded
-              active={page === "cards"}
               session={session}
               onSaved={() => notify("명함에서 인맥을 등록했어요.")}
               onViewPerson={select}
@@ -855,22 +875,6 @@ export default function ContactGraphApp({ mode = "server" }) {
           personId={editor.personId}
           initialDate={editor.date}
           onClose={() => setEditor(null)}
-        />
-      )}
-      {cardTab && (
-        <CardImport
-          session={session}
-          initialTab={cardTab}
-          onClose={() => setCardTab(null)}
-          onSaved={(id) => {
-            select(id);
-            notify("명함에서 인맥을 등록했어요.");
-          }}
-          onViewPerson={(id) => {
-            setCardTab(null);
-            select(id);
-          }}
-          onFindMemory={findSavedMemory}
         />
       )}
       {mailPerson && (

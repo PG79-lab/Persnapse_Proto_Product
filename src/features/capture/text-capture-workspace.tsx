@@ -1,7 +1,6 @@
 "use client";
 import { matchesInferredField } from "../../domain/capture/inferred-fields";
 
-import Link from "next/link";
 import { useState } from "react";
 
 import type { CaptureDraftV1 } from "../../domain/capture/capture-draft";
@@ -109,10 +108,14 @@ export function TextCaptureWorkspace({
   routingMode,
   initialText = sampleNote,
   onSaved,
+  onViewPerson,
+  onFindMemory,
 }: {
   routingMode: "mock" | "live";
   initialText?: string;
   onSaved?: (personId: string) => void;
+  onViewPerson: (personId: string) => void;
+  onFindMemory: (question: string) => void;
 }) {
   const [processingMs, setProcessingMs] = useState<number | null>(null);
   const [rawText, setRawText] = useState(initialText);
@@ -357,18 +360,20 @@ export function TextCaptureWorkspace({
             : "기억은 저장되었지만 검색 준비를 완료하지 못했습니다. 다시 저장할 필요는 없습니다."}
         </p>
         <div className="mt-7 grid gap-3 sm:grid-cols-3">
-          <Link
-            href={`/people/${commit.personId}`}
+          <button
+            type="button"
+            onClick={() => onViewPerson(commit.personId)}
             className="rounded-2xl bg-[var(--foreground)] px-5 py-4 text-center text-sm font-semibold text-white"
           >
-            Person Context 보기
-          </Link>
-          <Link
-            href={{ pathname: "/recall", query: { q: result.recallQuery } }}
+            인맥 프로필 보기
+          </button>
+          <button
+            type="button"
+            onClick={() => onFindMemory(result.recallQuery)}
             className="rounded-2xl border border-[var(--border-strong)] bg-white px-5 py-4 text-center text-sm font-semibold"
           >
             방금 저장한 기억 찾기
-          </Link>
+          </button>
           <button
             type="button"
             onClick={resetWorkspace}

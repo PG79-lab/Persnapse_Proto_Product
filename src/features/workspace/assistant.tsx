@@ -1,5 +1,11 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   ArrowUp,
@@ -50,7 +56,7 @@ export default function Assistant({
   session: Session;
   onSelect: (id: string) => void;
   onOpenTasks: (id: string) => void;
-  onCard: (tab: string) => void;
+  onCard: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [entries, setEntries] = useState<Entry[]>([]);
@@ -63,6 +69,10 @@ export default function Assistant({
   const input = useRef<HTMLTextAreaElement>(null);
   const controller = useRef<AbortController | null>(null);
   const thread = useRef<HTMLDivElement>(null);
+  const handlePrepared = useCallback(() => {
+    setPreparation(false);
+    setError("검색 준비가 완료됐습니다. 질문을 다시 보내 주세요.");
+  }, []);
   useEffect(() => () => controller.current?.abort(), []);
   useEffect(() => {
     if (focusSignal) input.current?.focus();
@@ -239,7 +249,7 @@ export default function Assistant({
               ))}
             </div>
             {!session.state.people.length && (
-              <button className="text-button" onClick={() => onCard("upload")}>
+              <button className="text-button" onClick={onCard}>
                 먼저 명함을 등록해 보세요 <ArrowUpRight size={15} />
               </button>
             )}
@@ -418,12 +428,7 @@ export default function Assistant({
       )}
       {preparation && (
         <div className="assistant-preparation">
-          <SearchPreparation
-            onPrepared={() => {
-              setPreparation(false);
-              setError("검색 준비가 완료됐습니다. 질문을 다시 보내 주세요.");
-            }}
-          />
+          <SearchPreparation onPrepared={handlePrepared} />
         </div>
       )}
       <form onSubmit={search} className="connected-composer">
@@ -459,11 +464,7 @@ export default function Assistant({
               <Plus size={16} />
               기록 남기기
             </button>
-            <button
-              type="button"
-              className="text-button"
-              onClick={() => onCard("upload")}
-            >
+            <button type="button" className="text-button" onClick={onCard}>
               <ContactRound size={16} />
               명함 등록
             </button>
@@ -510,6 +511,15 @@ export default function Assistant({
             initialText={recordText}
             onSaved={() => {
               session.store.reload();
+            }}
+            onViewPerson={(id) => {
+              setRecording(false);
+              onSelect(id);
+            }}
+            onFindMemory={(question) => {
+              setRecording(false);
+              setQuery(question);
+              input.current?.focus();
             }}
           />
         </Modal>

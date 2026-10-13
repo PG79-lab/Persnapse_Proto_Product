@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 import {
+  contactNumberSchema,
+  normalizeContactNumbers,
+  voicePhoneValues,
+} from "../../../card_recognition/contact-numbers";
+
+import {
   captureDraftSchemaVersion,
   captureDraftV1Schema,
   type CaptureDraftV1,
@@ -26,11 +32,21 @@ export const businessCardIdentitySchema = z
     title: nullableText(180),
     department: nullableText(180),
     emails: uniqueTextArray(320, 3),
-    phones: uniqueTextArray(80, 4),
+    phones: uniqueTextArray(80, 8),
+    contactNumbers: z.array(contactNumberSchema).max(8).optional(),
     websites: uniqueTextArray(500, 3),
     address: nullableText(500),
   })
-  .strict();
+  .strict()
+  .transform((identity) => {
+    if (identity.contactNumbers === undefined) return identity;
+    const contactNumbers = normalizeContactNumbers(identity.contactNumbers);
+    return {
+      ...identity,
+      contactNumbers,
+      phones: voicePhoneValues(contactNumbers),
+    };
+  });
 
 export const businessCardExtractionV1Schema = z
   .object({
@@ -39,6 +55,19 @@ export const businessCardExtractionV1Schema = z
     observedFields: z.array(z.string().trim().min(1).max(160)).max(32),
   })
   .strict();
+
+export function parseBusinessCardIdentity(value: unknown) {
+  let decoded = value;
+  if (typeof decoded === "string") {
+    try {
+      decoded = JSON.parse(decoded) as unknown;
+    } catch {
+      return null;
+    }
+  }
+  const parsed = businessCardIdentitySchema.safeParse(decoded);
+  return parsed.success ? parsed.data : null;
+}
 
 export type BusinessCardExtractionV1 = z.infer<
   typeof businessCardExtractionV1Schema

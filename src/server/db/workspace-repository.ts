@@ -5,7 +5,9 @@ import type {
   WorkspaceMutation,
   WorkspaceOperation,
   WorkspaceState,
+  WorkspacePerson,
 } from "../../domain/workspace/contracts";
+import { parseBusinessCardIdentity } from "../../domain/business-card/business-card-draft";
 import { kstInstant, kstDate } from "../../domain/workspace/dates";
 import { WorkspaceError } from "../http/workspace-response";
 import { getDatabase } from "./client";
@@ -39,7 +41,7 @@ async function snapshot(tx: Tx, workspaceId: string): Promise<WorkspaceState> {
     tx`select p.id,p.version,p.display_name as name,p.headline as job,p.relationship_status as status,
       p.importance,p.relationship_categories as "relationshipCategories",p.archived_at as "deletedAt",
       to_char(p.created_at at time zone 'Asia/Seoul','YYYY-MM-DD') as "createdAt",
-      coalesce((select jsonb_agg(jsonb_build_object('id',c.id,'displayAssetId',c.display_asset_id,'originalRetained',c.original_retained) order by c.created_at desc) from public.business_cards c where c.workspace_id=p.workspace_id and c.person_id=p.id),'[]'::jsonb) as "businessCards",
+      coalesce((select jsonb_agg(jsonb_build_object('id',c.id,'displayAssetId',c.display_asset_id,'originalRetained',c.original_retained,'identity',c.card_data) order by c.created_at desc) from public.business_cards c where c.workspace_id=p.workspace_id and c.person_id=p.id),'[]'::jsonb) as "businessCards",
       (select o.name from public.affiliations a join public.organizations o on o.workspace_id=a.workspace_id and o.id=a.organization_id
         where a.workspace_id=p.workspace_id and a.person_id=p.id and a.is_current and a.verification_status='confirmed' order by a.updated_at desc,a.id limit 1) as company,
       (select value from public.person_attributes a where a.workspace_id=p.workspace_id and a.person_id=p.id and a.kind='email' and a.verification_status='confirmed' order by a.updated_at desc,a.id limit 1) as email,
@@ -80,6 +82,12 @@ async function snapshot(tx: Tx, workspaceId: string): Promise<WorkspaceState> {
     JSON.stringify({
       people: people.map((p) => ({
         ...p,
+        businessCards: (p.businessCards ?? []).map(
+          (card: NonNullable<WorkspacePerson["businessCards"]>[number]) => ({
+            ...card,
+            identity: parseBusinessCardIdentity(card.identity) ?? undefined,
+          }),
+        ),
         history: notes
           .filter((n) => n.personId === p.id)
           .map((note) => ({

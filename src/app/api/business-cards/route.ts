@@ -1,5 +1,8 @@
 import { businessCardUploadMetadataSchema } from "../../../domain/business-card/business-card-workflow";
-import { createAndExtractBusinessCard } from "../../../server/application/business-card-service";
+import {
+  createAndExtractBusinessCard,
+  listResumableBusinessCards,
+} from "../../../server/application/business-card-service";
 import { getServerEnv } from "../../../server/env";
 import { assertPrototypeAccess } from "../../../server/security/prototype-access";
 import {
@@ -14,6 +17,19 @@ import {
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
+
+export async function GET(request: Request) {
+  try {
+    assertPrototypeAccess(request);
+    const environment = getServerEnv();
+    const cards = await listResumableBusinessCards(
+      environment.APP_DEFAULT_WORKSPACE_ID,
+    );
+    return Response.json(cards, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return businessCardErrorResponse(error);
+  }
+}
 
 function requiredFile(formData: FormData, name: string): File {
   const value = formData.get(name);

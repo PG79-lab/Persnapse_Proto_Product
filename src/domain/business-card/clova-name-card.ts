@@ -1,6 +1,12 @@
 import { z } from "zod";
 
 import {
+  extractContactNumbersFromLines,
+  normalizeContactNumbers,
+  voicePhoneValues,
+} from "../../../card_recognition/contact-numbers";
+
+import {
   businessCardExtractionSchemaVersion,
   type BusinessCardExtractionV1,
 } from "./business-card-draft";
@@ -197,7 +203,10 @@ function generalExtraction(
     ),
     3,
   );
-  const phones = unique(matches(text, phonePattern), 4);
+  const contactNumbers = extractContactNumbersFromLines(
+    lines.map((line) => line.text),
+  );
+  const phones = voicePhoneValues(contactNumbers);
   const candidates = lines
     .flatMap((line) =>
       line.text.split(/[|·]/u).map((part) => ({
@@ -262,6 +271,7 @@ function generalExtraction(
     department ? "identity.department" : null,
     emails.length > 0 ? "identity.emails" : null,
     phones.length > 0 ? "identity.phones" : null,
+    contactNumbers.length > 0 ? "identity.contactNumbers" : null,
     websites.length > 0 ? "identity.websites" : null,
     address ? "identity.address" : null,
   ].filter((field): field is string => field !== null);
@@ -279,6 +289,7 @@ function generalExtraction(
       department,
       emails,
       phones,
+      contactNumbers,
       websites,
       address,
     },
@@ -321,9 +332,25 @@ export function extractClovaNameCard(
   const title = first(result.position);
   const department = first(result.department);
   const emails = limited(result.email, 3);
-  const phones = [
-    ...new Set([...values(result.mobile), ...values(result.tel)]),
-  ].slice(0, 4);
+  // Name Card OCR already supplies semantic fields; it does not supply printed labels.
+  const contactNumbers = normalizeContactNumbers([
+    ...values(result.mobile).map((value) => ({
+      type: "mobile" as const,
+      value,
+      rawLabel: null,
+    })),
+    ...values(result.tel).map((value) => ({
+      type: "phone" as const,
+      value,
+      rawLabel: null,
+    })),
+    ...values(result.fax).map((value) => ({
+      type: "fax" as const,
+      value,
+      rawLabel: null,
+    })),
+  ]).slice(0, 8);
+  const phones = voicePhoneValues(contactNumbers);
   const websites = limited(result.homepage, 3);
   const address = joined(result.address);
   const observedFields = [
@@ -333,6 +360,7 @@ export function extractClovaNameCard(
     department ? "identity.department" : null,
     emails.length > 0 ? "identity.emails" : null,
     phones.length > 0 ? "identity.phones" : null,
+    contactNumbers.length > 0 ? "identity.contactNumbers" : null,
     websites.length > 0 ? "identity.websites" : null,
     address ? "identity.address" : null,
   ].filter((field): field is string => field !== null);
@@ -350,6 +378,7 @@ export function extractClovaNameCard(
       department,
       emails,
       phones,
+      contactNumbers,
       websites,
       address,
     },

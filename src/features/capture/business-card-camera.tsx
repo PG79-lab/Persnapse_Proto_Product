@@ -2,11 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import {
-  businessCardCaptureGeometry,
-  captureBusinessCardFrame,
-  type BusinessCardCaptureGeometry,
-} from "./card-image-processing";
+import { captureBusinessCardFrame } from "./card-image-processing";
 
 type PhotoCapture = new (track: MediaStreamTrack) => {
   takePhoto: () => Promise<Blob>;
@@ -46,7 +42,7 @@ export function BusinessCardCamera({
   onCapture,
   onClose,
 }: {
-  onCapture: (file: File) => void;
+  onCapture: (file: File, imageAcceptedAt: number) => void;
   onClose: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -59,7 +55,6 @@ export function BusinessCardCamera({
     "starting" | "ready" | "capturing" | "review"
   >("starting");
   const [error, setError] = useState<string | null>(null);
-  const [guide, setGuide] = useState<BusinessCardCaptureGeometry | null>(null);
   const [actualResolution, setActualResolution] = useState<{
     width: number;
     height: number;
@@ -80,7 +75,6 @@ export function BusinessCardCamera({
       streamRef.current = null;
       setStatus("starting");
       setError(null);
-      setGuide(null);
 
       if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
         setError(
@@ -131,33 +125,6 @@ export function BusinessCardCamera({
     };
   }, [facingMode]);
 
-  useEffect(() => {
-    if (status !== "ready") return;
-    const video = videoRef.current;
-    if (!video) return;
-    const update = () => {
-      if (
-        video.videoWidth > 0 &&
-        video.videoHeight > 0 &&
-        video.clientWidth > 0 &&
-        video.clientHeight > 0
-      ) {
-        setGuide(
-          businessCardCaptureGeometry(
-            video.videoWidth,
-            video.videoHeight,
-            video.clientWidth,
-            video.clientHeight,
-          ),
-        );
-      }
-    };
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, [status]);
-
   async function capture() {
     if (!videoRef.current || status !== "ready" || captureInFlightRef.current)
       return;
@@ -183,7 +150,7 @@ export function BusinessCardCamera({
 
   function usePhoto() {
     if (!shot) return;
-    onCapture(shot.file);
+    onCapture(shot.file, performance.now());
     streamRef.current?.getTracks().forEach((track) => track.stop());
     onClose();
   }
@@ -202,7 +169,7 @@ export function BusinessCardCamera({
             <p className="mt-1 text-xs text-white/55">
               {shot
                 ? "글자가 선명하고 명함 전체가 보이는지 확인해 주세요."
-                : "테두리 안에 한 장의 명함을 맞춰주세요."}
+                : "명함 전체가 화면에 들어오도록 촬영해 주세요."}
             </p>
           </div>
           <button
@@ -218,7 +185,7 @@ export function BusinessCardCamera({
             ref={videoRef}
             muted
             playsInline
-            className={`size-full object-cover ${shot ? "hidden" : ""}`}
+            className={`size-full object-contain ${shot ? "hidden" : ""}`}
           />
           {shot ? (
             // Captured images are private blob URLs and are never sent to an image proxy.
@@ -228,21 +195,6 @@ export function BusinessCardCamera({
               alt="촬영한 명함 확인"
               className="size-full object-contain"
             />
-          ) : null}
-          {!shot && guide ? (
-            <div className="pointer-events-none absolute inset-0">
-              <div
-                className="absolute rounded-2xl border-2 border-white/90 shadow-[0_0_0_999px_rgba(0,0,0,0.26)]"
-                style={{
-                  left: `${guide.guideLeftPercent}%`,
-                  top: `${guide.guideTopPercent}%`,
-                  width: `${guide.guideWidthPercent}%`,
-                  height: `${guide.guideHeightPercent}%`,
-                }}
-              >
-                <span className="sr-only">명함 촬영 가이드</span>
-              </div>
-            </div>
           ) : null}
           {(status === "starting" || status === "capturing") && !error ? (
             <div className="absolute inset-0 grid place-items-center bg-black/50 text-sm">

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { BusinessCardExtractionV1 } from "../business-card/business-card-draft";
+
 export const uuidSchema = z.uuid();
 export const dateSchema = z.iso
   .date()
@@ -183,6 +185,7 @@ export interface WorkspacePerson extends PersonInput, Versioned {
     id: string;
     displayAssetId: string;
     originalRetained: boolean;
+    identity?: BusinessCardExtractionV1["identity"];
   }[];
 }
 export interface WorkspaceMeeting

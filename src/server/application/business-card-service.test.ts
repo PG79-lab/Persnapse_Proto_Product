@@ -12,6 +12,9 @@ const mocks = vi.hoisted(() => ({
   markFailed: vi.fn(),
   saveReview: vi.fn(),
   saveExtraction: vi.fn(),
+  getOcrInput: vi.fn(),
+  download: vi.fn(),
+  resetRetry: vi.fn(),
 }));
 vi.mock("../db/business-card-repository", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -21,11 +24,13 @@ vi.mock("../db/business-card-repository", async (importOriginal) => ({
   markBusinessCardFailed: mocks.markFailed,
   saveBusinessCardReview: mocks.saveReview,
   saveBusinessCardExtraction: mocks.saveExtraction,
+  getBusinessCardOcrInput: mocks.getOcrInput,
+  resetBusinessCardForRetry: mocks.resetRetry,
 }));
 vi.mock("../storage/business-card-storage", () => ({
   uploadBusinessCardAsset: mocks.upload,
   removeBusinessCardAssets: mocks.remove,
-  downloadBusinessCardAsset: vi.fn(),
+  downloadBusinessCardAsset: mocks.download,
 }));
 vi.mock("../ai/runtime-router", async (importOriginal) => ({
   ...(await importOriginal<object>()),
@@ -49,6 +54,7 @@ import {
   createAndExtractBusinessCard,
   prepareBusinessCardReview,
   searchBusinessCardCandidates,
+  retryBusinessCardExtraction,
 } from "./business-card-service";
 import {
   CaptureNotFoundError,
@@ -71,7 +77,7 @@ function input() {
   };
 }
 function winner(
-  options: { pending?: boolean; failed?: boolean } = {},
+  options: { pending?: boolean; failed?: boolean; confirmed?: boolean } = {},
 ): BusinessCardSessionView {
   const draft = options.pending
     ? null
@@ -105,6 +111,7 @@ function winner(
     imageUrl: "/api/source-assets/winning-display",
     draft,
     modelDraft: draft,
+    fieldsConfirmedAt: options.confirmed ? "2026-10-08T00:01:00Z" : null,
     contextNote: "",
     identityCandidates: [],
     userCorrectionCount: 0,
@@ -125,6 +132,60 @@ beforeEach(() => {
 });
 
 describe("business card upload race recovery", () => {
+  it("OCR retry downloads and reads the selected stored rectified asset", async () => {
+    const bytes = Buffer.from("89504e470d0a1a0a02", "hex");
+    mocks.getCapture
+      .mockResolvedValueOnce(winner({ failed: true }))
+      .mockResolvedValue(winner());
+    mocks.getOcrInput.mockResolvedValue({
+      path: "workspace/rectified-display.png",
+      mimeType: "image/png",
+      filename: "rectified.png",
+      sha256: "rectified-sha",
+    });
+    mocks.download.mockResolvedValue(new Blob([bytes]));
+    mocks.execute.mockResolvedValue({
+      schemaVersion: "business-card-extraction-v1",
+      identity: winner().draft!.identity,
+      observedFields: ["identity.displayName"],
+    });
+    await retryBusinessCardExtraction("workspace", "capture", "retry-key");
+    expect(mocks.download).toHaveBeenCalledWith(
+      "workspace/rectified-display.png",
+    );
+    expect(mocks.execute.mock.calls[0][0].input).toMatchObject({
+      bytes: new Uint8Array(bytes),
+      sha256: "rectified-sha",
+    });
+  });
+  it.each(["docaligner-lc100-card-v1", "manual-card-v1"] as const)(
+    "OCR reads the rectified display for %s while retaining the original",
+    async (recipe) => {
+      const source = { ...input(), processingRecipe: recipe };
+      source.displayFile = new File(
+        [Buffer.from("89504e470d0a1a0a02", "hex")],
+        "rectified.png",
+        { type: "image/png" },
+      );
+      mocks.create.mockResolvedValue(true);
+      mocks.execute.mockResolvedValue({
+        schemaVersion: "business-card-extraction-v1",
+        identity: winner().draft!.identity,
+        observedFields: ["identity.displayName"],
+      });
+      mocks.getCapture.mockResolvedValue(winner());
+      await createAndExtractBusinessCard(source);
+      expect(mocks.execute.mock.calls[0][0].input.bytes).toEqual(
+        new Uint8Array(await source.displayFile.arrayBuffer()),
+      );
+      expect(mocks.upload.mock.calls[0][0].bytes).toEqual(
+        new Uint8Array(await source.originalFile.arrayBuffer()),
+      );
+      expect(
+        mocks.create.mock.calls[0][0].display.processingMetadata.recipe,
+      ).toBe(recipe);
+    },
+  );
   it("feeds the higher-resolution original asset to OCR", async () => {
     const source = input();
     source.originalFile = new File(
@@ -247,6 +308,35 @@ describe("business card upload race recovery", () => {
 });
 
 describe("business card review state errors", () => {
+  it("rejects context review before fields are confirmed", async () => {
+    mocks.getCapture.mockResolvedValue(winner());
+    await expect(
+      prepareBusinessCardReview({
+        workspaceId: "workspace",
+        captureId: "capture",
+        cardDraft: winner().draft,
+        contextNote: "명함을 받고 나눈 대화 내용",
+      }),
+    ).rejects.toBeInstanceOf(CaptureStateConflictError);
+    expect(mocks.execute).not.toHaveBeenCalled();
+  });
+  it("rejects changed contact fields after confirmation", async () => {
+    const saved = winner({ confirmed: true });
+    mocks.getCapture.mockResolvedValue(saved);
+    const changed = {
+      ...saved.draft!,
+      identity: { ...saved.draft!.identity, phones: ["010-0000-0000"] },
+    };
+    await expect(
+      prepareBusinessCardReview({
+        workspaceId: "workspace",
+        captureId: "capture",
+        cardDraft: changed,
+        contextNote: "명함을 받고 나눈 대화 내용",
+      }),
+    ).rejects.toBeInstanceOf(CaptureStateConflictError);
+    expect(mocks.execute).not.toHaveBeenCalled();
+  });
   it("reports a missing capture without a provider call", async () => {
     mocks.getCapture.mockResolvedValue(null);
     await expect(
@@ -282,14 +372,14 @@ describe("business card review state errors", () => {
     ).rejects.toBeInstanceOf(CaptureNotFoundError);
   });
   it("rejects candidate search before context review", async () => {
-    mocks.getCapture.mockResolvedValue(winner());
+    mocks.getCapture.mockResolvedValue(winner({ confirmed: true }));
     await expect(
       searchBusinessCardCandidates("workspace", "capture", winner().draft),
     ).rejects.toBeInstanceOf(CaptureStateConflictError);
   });
   it("preserves another worker's completed review when the state changes during structuring", async () => {
     const draft = winner().draft!;
-    mocks.getCapture.mockResolvedValue(winner());
+    mocks.getCapture.mockResolvedValue(winner({ confirmed: true }));
     mocks.execute.mockResolvedValue(businessCardDraftToCaptureDraft(draft));
     mocks.saveReview.mockRejectedValue(
       new CaptureStateConflictError("Another review completed."),

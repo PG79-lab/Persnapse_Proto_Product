@@ -74,6 +74,7 @@ export interface PersonBusinessCard {
     department: string | null;
     emails: string[];
     phones: string[];
+    contactNumbers?: import("../../../card_recognition/contact-numbers").ContactNumber[];
     websites: string[];
     address: string | null;
   };

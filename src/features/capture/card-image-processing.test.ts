@@ -1,32 +1,36 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { businessCardCaptureGeometry } from "./card-image-processing";
+import { captureBusinessCardFrame } from "./card-image-processing";
 
-describe("business card camera guide", () => {
-  it("matches the captured pixels on a 16:9 camera", () => {
-    const crop = businessCardCaptureGeometry(1920, 1080, 960, 540);
+afterEach(() => vi.restoreAllMocks());
 
-    expect(crop.guideWidthPercent).toBeCloseTo(73.18, 1);
-    expect(crop.guideHeightPercent).toBeCloseTo(82, 5);
-    expect(crop.guideLeftPercent).toBeCloseTo((crop.sourceX / 1920) * 100, 5);
-    expect(crop.guideTopPercent).toBeCloseTo((crop.sourceY / 1080) * 100, 5);
+describe("business card camera fallback", () => {
+  it("captures the full camera frame even when the preview has another aspect ratio", async () => {
+    const video = document.createElement("video");
+    Object.defineProperties(video, {
+      videoWidth: { value: 1600 },
+      videoHeight: { value: 1200 },
+      clientWidth: { value: 960 },
+      clientHeight: { value: 540 },
+    });
+    const drawImage = vi.fn();
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      drawImage,
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation(
+      (callback) => callback(new Blob(["photo"], { type: "image/jpeg" })),
+    );
+
+    const photo = await captureBusinessCardFrame(video);
+
+    expect(drawImage).toHaveBeenCalledWith(video, 0, 0, 1600, 1200);
+    expect(photo.type).toBe("image/jpeg");
+    expect(photo.size).toBeGreaterThan(0);
   });
 
-  it("maps object-cover cropping when the camera is 4:3", () => {
-    const crop = businessCardCaptureGeometry(1600, 1200, 960, 540);
-    const scale = Math.max(960 / 1600, 540 / 1200);
-    const offsetX = (960 - 1600 * scale) / 2;
-    const offsetY = (540 - 1200 * scale) / 2;
-
-    expect(crop.guideLeftPercent).toBeCloseTo(
-      ((crop.sourceX * scale + offsetX) / 960) * 100,
-      5,
-    );
-    expect(crop.guideTopPercent).toBeCloseTo(
-      ((crop.sourceY * scale + offsetY) / 540) * 100,
-      5,
-    );
-    expect(crop.sourceX).toBeGreaterThanOrEqual(0);
-    expect(crop.sourceY).toBeGreaterThanOrEqual(0);
+  it("refuses to capture before the camera frame is ready", async () => {
+    await expect(
+      captureBusinessCardFrame(document.createElement("video")),
+    ).rejects.toThrow("카메라 화면이 준비되지 않았습니다.");
   });
 });

@@ -1,10 +1,30 @@
 "use client";
 import { InferenceHint } from "./inference-hint";
+import dynamic from "next/dynamic";
 
-import Link from "next/link";
+const CardRecognitionTestLab = dynamic(
+  () =>
+    import("../../../card_recognition/test-lab").then(
+      (module) => module.CardRecognitionTestLab,
+    ),
+  { ssr: false },
+);
+
 import { useEffect, useRef, useState } from "react";
 
-import { DigitalBusinessCard } from "../../components/digital-business-card";
+import { CardViewer } from "../../../card_recognition/card-viewer";
+import {
+  ContactNumberFields,
+  ContactNumberList,
+} from "../../../card_recognition/contact-number-fields";
+import { CardCornerEditor } from "../../../card_recognition/card-corner-editor";
+import type { CardCorners } from "../../../card_recognition/geometry";
+import { RestorationJobs } from "../../../card_recognition/restoration-jobs";
+import { rectifyCard } from "../../../card_recognition/rectify-card";
+import {
+  restoreBusinessCardImage,
+  type CardRestoration,
+} from "../../../card_recognition/restore-image";
 import type { BusinessCardDraftV1 } from "../../domain/business-card/business-card-draft";
 import type {
   BusinessCardCommitResponse,
@@ -14,15 +34,31 @@ import { BusinessCardCamera } from "./business-card-camera";
 import { processBusinessCardImage } from "./card-image-processing";
 
 type QueueStatus =
-  "preparing" | "card_review" | "memory_review" | "committed" | "error";
+  | "preparing"
+  | "boundary_review"
+  | "card_review"
+  | "card_result"
+  | "memory_review"
+  | "committed"
+  | "error";
 
 interface QueueItem {
+  boundaryCorners?: CardCorners;
+  pipelineTimings?: Record<string, number>;
+  pipelineRecipe?: "docaligner-lc100-card-v1" | "manual-card-v1";
   contextElapsedMs?: number;
+  imageAcceptedAt: number;
   id: string;
   uploadRequestKey: string;
   filename: string;
-  sourceFile: File;
+  sourceFile: File | null;
+  sourcePreviewUrl: string | null;
   previewUrl: string;
+  restoredUrl: string | null;
+  pendingRestoration: Extract<CardRestoration, { kind: "restored" }> | null;
+  restorationState:
+    "idle" | "processing" | "preview" | "restored" | "fallback" | "error";
+  restorationMessage: string | null;
   status: QueueStatus;
   card: BusinessCardSessionView | null;
   draft: BusinessCardDraftV1 | null;
@@ -33,7 +69,7 @@ interface QueueItem {
   result: BusinessCardCommitResponse | null;
   error: string | null;
   slow: boolean;
-  operation: "ocr" | "context" | "commit" | null;
+  operation: "ocr" | "confirm" | "context" | "commit" | null;
 }
 
 interface ApiErrorPayload {
@@ -59,8 +95,12 @@ function queueStatusLabel(status: QueueStatus): string {
   switch (status) {
     case "preparing":
       return "처리 중";
+    case "boundary_review":
+      return "테두리 확인";
     case "card_review":
       return "명함 확인";
+    case "card_result":
+      return "명함 복원";
     case "memory_review":
       return "저장 전 검토";
     case "committed":
@@ -92,25 +132,106 @@ export function BusinessCardWorkspace({
   ocrMode: "mock" | "live";
   onSaved?: (personId: string) => void;
   onStageChange?: (stage: number) => void;
-  onViewPerson?: (personId: string) => void;
-  onFindMemory?: (question: string) => void;
+  onViewPerson: (personId: string) => void;
+  onFindMemory: (question: string) => void;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ocrInFlightRef = useRef(new Set<string>());
+  const restorationJobsRef = useRef(new RestorationJobs());
+  const ownedUrlsRef = useRef(new Set<string>());
   const [items, setItems] = useState<QueueItem[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [testLabOpen, setTestLabOpen] = useState(false);
+  useEffect(() => {
+    setTestLabOpen(
+      ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname) &&
+        new URLSearchParams(window.location.search).get("cardTest") === "1",
+    );
+  }, []);
 
   const activeItem = items.find((item) => item.id === activeId) ?? null;
   const stage =
     !activeItem || activeItem.operation === "ocr"
       ? 1
       : activeItem.status === "card_review" ||
+          activeItem.status === "card_result" ||
           activeItem.operation === "context"
         ? 2
         : 3;
   useEffect(() => onStageChange?.(stage), [onStageChange, stage]);
+  useEffect(() => {
+    const jobs = restorationJobsRef.current;
+    const urls = ownedUrlsRef.current;
+    return () => {
+      jobs.cancelAll();
+      for (const url of urls) URL.revokeObjectURL(url);
+      urls.clear();
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch("/api/business-cards", {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then((response) => responseJson<BusinessCardSessionView[]>(response))
+      .then((cards) => {
+        if (controller.signal.aborted) return;
+        const resumed: QueueItem[] = cards.slice(0, 5).map((card) => ({
+          id: card.captureId,
+          imageAcceptedAt: performance.now(),
+          uploadRequestKey: crypto.randomUUID(),
+          filename: "저장된 명함",
+          sourceFile: null,
+          sourcePreviewUrl: null,
+          previewUrl: card.imageUrl,
+          restoredUrl: null,
+          pendingRestoration: null,
+          restorationState: "idle",
+          restorationMessage: null,
+          status: card.state === "review" ? "memory_review" : "card_result",
+          card,
+          draft: card.draft,
+          contextNote: card.contextNote,
+          identityChoice: null,
+          newDisplayName: card.draft?.identity.displayName ?? "",
+          result: null,
+          error: null,
+          slow: false,
+          operation: null,
+        }));
+        setItems((current) => {
+          const existing = new Set(current.map((item) => item.card?.captureId));
+          return [
+            ...current,
+            ...resumed.filter((item) => !existing.has(item.id)),
+          ].slice(0, 5);
+        });
+        setActiveId((current) => current ?? resumed[0]?.id ?? null);
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setGlobalError(
+          error instanceof Error
+            ? `저장된 명함을 불러오지 못했습니다. ${error.message}`
+            : "저장된 명함을 불러오지 못했습니다.",
+        );
+      });
+    return () => controller.abort();
+  }, []);
+
+  function ownedUrl(blob: Blob) {
+    const url = URL.createObjectURL(blob);
+    ownedUrlsRef.current.add(url);
+    return url;
+  }
+
+  function releaseUrl(url: string) {
+    if (ownedUrlsRef.current.delete(url)) URL.revokeObjectURL(url);
+  }
 
   function updateItem(itemId: string, updater: (item: QueueItem) => QueueItem) {
     setItems((current) =>
@@ -122,9 +243,16 @@ export function BusinessCardWorkspace({
     itemId: string,
     sourceFile: File,
     requestKey: string,
+    options: {
+      corners?: CardCorners;
+      acceptedFile?: File;
+      recipe?: QueueItem["pipelineRecipe"];
+    } = {},
   ) {
     if (ocrInFlightRef.current.has(itemId)) return;
     ocrInFlightRef.current.add(itemId);
+    const job = restorationJobsRef.current.begin(itemId);
+    const active = () => restorationJobsRef.current.owns(itemId, job.revision);
     updateItem(itemId, (item) => ({
       ...item,
       status: "preparing",
@@ -144,13 +272,75 @@ export function BusinessCardWorkspace({
     try {
       const preprocessStartedAt = performance.now();
       const processed = await processBusinessCardImage(sourceFile);
+      if (!active()) return;
+      if (!options.acceptedFile) {
+        try {
+          const result = await rectifyCard(sourceFile, {
+            signal: job.signal,
+            corners: options.corners,
+            progress: (message) =>
+              updateItem(itemId, (item) => ({
+                ...item,
+                restorationMessage: message,
+              })),
+          });
+          if (!active()) return;
+          const url = ownedUrl(result.restored.file);
+          updateItem(itemId, (item) => {
+            if (!active()) {
+              releaseUrl(url);
+              return item;
+            }
+            if (item.restoredUrl) releaseUrl(item.restoredUrl);
+            return {
+              ...item,
+              status: "boundary_review",
+              operation: null,
+              restoredUrl: url,
+              pendingRestoration: result.restored,
+              boundaryCorners: result.corners,
+              pipelineRecipe: result.recipe,
+              pipelineTimings: result.timings,
+              restorationState: "preview",
+              restorationMessage:
+                "테두리와 2D 명함 이미지를 확인한 뒤 OCR을 실행하세요.",
+              slow: false,
+            };
+          });
+        } catch (error) {
+          if (!active()) return;
+          updateItem(itemId, (item) => {
+            if (item.restoredUrl) releaseUrl(item.restoredUrl);
+            return {
+              ...item,
+              status: "boundary_review",
+              operation: null,
+              restoredUrl: null,
+              pendingRestoration: null,
+              restorationState: "fallback",
+              slow: false,
+              restorationMessage:
+                error instanceof Error
+                  ? error.message
+                  : "테두리를 직접 지정하세요.",
+            };
+          });
+        }
+        return;
+      }
+      const rectified = await processBusinessCardImage(options.acceptedFile);
+      if (!active()) return;
+      processed.displayFile = rectified.displayFile;
+      processed.displayWidth = rectified.displayWidth;
+      processed.displayHeight = rectified.displayHeight;
       performance.measure("business-card:preprocess", {
         start: preprocessStartedAt,
         end: performance.now(),
       });
-      const displayUrl = URL.createObjectURL(processed.displayFile);
+      const displayUrl = ownedUrl(processed.displayFile);
       updateItem(itemId, (item) => {
-        URL.revokeObjectURL(item.previewUrl);
+        if (item.previewUrl !== item.sourcePreviewUrl)
+          releaseUrl(item.previewUrl);
         return { ...item, previewUrl: displayUrl };
       });
 
@@ -161,16 +351,22 @@ export function BusinessCardWorkspace({
       formData.append("originalHeight", String(processed.originalHeight));
       formData.append("displayWidth", String(processed.displayWidth));
       formData.append("displayHeight", String(processed.displayHeight));
-      formData.append("processingRecipe", "canvas-card-v1");
+      formData.append("processingRecipe", options.recipe ?? "manual-card-v1");
       formData.append("original", processed.originalFile);
       formData.append("display", processed.displayFile);
 
       const requestStartedAt = performance.now();
+      updateItem(itemId, (item) => ({
+        ...item,
+        restorationMessage: "보정된 2D 명함 이미지에서 정보를 읽고 있습니다.",
+      }));
       const response = await fetch("/api/business-cards", {
         method: "POST",
         body: formData,
+        signal: job.signal,
       });
       const card = await responseJson<BusinessCardSessionView>(response);
+      if (!active()) return;
       performance.measure("business-card:upload-and-ocr", {
         start: requestStartedAt,
         end: performance.now(),
@@ -184,8 +380,16 @@ export function BusinessCardWorkspace({
         error: null,
         slow: false,
         operation: null,
+        pendingRestoration: null,
+        restorationState: "restored",
+        restorationMessage: "2D 명함 이미지로 OCR 처리를 완료했습니다.",
+        pipelineTimings: {
+          ...item.pipelineTimings,
+          ocrRequestMs: performance.now() - requestStartedAt,
+        },
       }));
     } catch (caught) {
+      if (!active()) return;
       const message =
         caught instanceof Error
           ? caught.message
@@ -230,7 +434,10 @@ export function BusinessCardWorkspace({
     }
   }
 
-  async function enqueueFiles(fileList: FileList | File[]) {
+  async function enqueueFiles(
+    fileList: FileList | File[],
+    imageAcceptedAt = performance.now(),
+  ) {
     const files = Array.from(fileList);
     const available = Math.max(0, 5 - items.length);
     if (available === 0) {
@@ -246,28 +453,38 @@ export function BusinessCardWorkspace({
       setGlobalError(null);
     }
 
-    const nextItems: QueueItem[] = accepted.map((file) => ({
-      id: crypto.randomUUID(),
-      uploadRequestKey: crypto.randomUUID(),
-      filename: file.name,
-      sourceFile: file,
-      previewUrl: URL.createObjectURL(file),
-      status: "preparing",
-      card: null,
-      draft: null,
-      contextNote: "",
-      identityChoice: null,
-      newDisplayName: "",
-      result: null,
-      error: null,
-      slow: false,
-      operation: "ocr",
-    }));
+    const nextItems: QueueItem[] = accepted.map((file) => {
+      const sourcePreviewUrl = ownedUrl(file);
+      return {
+        id: crypto.randomUUID(),
+        imageAcceptedAt,
+        uploadRequestKey: crypto.randomUUID(),
+        filename: file.name,
+        sourceFile: file,
+        sourcePreviewUrl,
+        previewUrl: sourcePreviewUrl,
+        restoredUrl: null,
+        pendingRestoration: null,
+        restorationState: "idle",
+        restorationMessage: null,
+        status: "preparing",
+        card: null,
+        draft: null,
+        contextNote: "",
+        identityChoice: null,
+        newDisplayName: "",
+        result: null,
+        error: null,
+        slow: false,
+        operation: "ocr",
+      };
+    });
     setItems((current) => [...current, ...nextItems]);
     if (!activeId && nextItems[0]) setActiveId(nextItems[0].id);
 
     for (const item of nextItems) {
-      await uploadItem(item.id, item.sourceFile, item.uploadRequestKey);
+      if (item.sourceFile)
+        await uploadItem(item.id, item.sourceFile, item.uploadRequestKey);
     }
   }
 
@@ -306,9 +523,208 @@ export function BusinessCardWorkspace({
     );
   }
 
+  async function restoreImage(
+    itemId: string,
+    sourceFile: File,
+    corners?: CardCorners,
+  ) {
+    const job = restorationJobsRef.current.begin(itemId);
+    updateItem(itemId, (current) => {
+      if (current.restoredUrl) releaseUrl(current.restoredUrl);
+      return {
+        ...current,
+        restoredUrl: null,
+        pendingRestoration: null,
+        restorationState: "processing",
+        restorationMessage: null,
+      };
+    });
+    try {
+      const restoration = await restoreBusinessCardImage(sourceFile, corners);
+      if (!restorationJobsRef.current.owns(itemId, job.revision)) return;
+      if (restoration.kind === "fallback") {
+        updateItem(itemId, (current) => ({
+          ...current,
+          restorationState: "fallback",
+          restorationMessage:
+            restoration.reason === "no-card-boundary"
+              ? "명함 테두리를 안전하게 찾지 못해 기존 표시 이미지를 유지했습니다."
+              : "이미지 복원 기능을 불러오지 못해 기존 표시 이미지를 유지했습니다.",
+        }));
+        return;
+      }
+      const restoredUrl = ownedUrl(restoration.file);
+      updateItem(itemId, (current) => {
+        if (!restorationJobsRef.current.owns(itemId, job.revision)) {
+          releaseUrl(restoredUrl);
+          return current;
+        }
+        if (current.restoredUrl) releaseUrl(current.restoredUrl);
+        return {
+          ...current,
+          restoredUrl,
+          pendingRestoration: restoration,
+          restorationState: "preview",
+          restorationMessage: null,
+        };
+      });
+    } catch (caught) {
+      if (!restorationJobsRef.current.owns(itemId, job.revision)) return;
+      updateItem(itemId, (current) => ({
+        ...current,
+        restorationState: "error",
+        restorationMessage:
+          caught instanceof Error
+            ? `복원 결과를 저장하지 못했습니다: ${caught.message}`
+            : "복원 결과를 저장하지 못했습니다.",
+      }));
+    }
+  }
+
+  async function restoreWithManualCorners(
+    item: QueueItem,
+    corners: CardCorners,
+  ) {
+    if (item.sourceFile) {
+      await restoreImage(item.id, item.sourceFile, corners);
+      return;
+    }
+    if (!item.card?.originalAssetId) return;
+    const sourceJob = restorationJobsRef.current.begin(item.id);
+    try {
+      const response = await fetch(
+        `/api/source-assets/${item.card.originalAssetId}`,
+      );
+      if (!response.ok) throw new Error("촬영 원본을 불러오지 못했습니다.");
+      const blob = await response.blob();
+      if (!restorationJobsRef.current.owns(item.id, sourceJob.revision)) return;
+      const file = new File([blob], "business-card-original", {
+        type: blob.type,
+      });
+      await restoreImage(item.id, file, corners);
+    } catch (caught) {
+      if (!restorationJobsRef.current.owns(item.id, sourceJob.revision)) return;
+      updateItem(item.id, (current) => ({
+        ...current,
+        restorationState: current.pendingRestoration ? "preview" : "error",
+        restorationMessage:
+          caught instanceof Error
+            ? caught.message
+            : "수동 보정을 완료하지 못했습니다.",
+      }));
+    }
+  }
+
+  async function acceptRestoration(item: QueueItem) {
+    if (!item.card || !item.pendingRestoration) return;
+    updateItem(item.id, (current) => ({
+      ...current,
+      restorationState: "processing",
+      restorationMessage: "확인한 평면 보정 이미지를 저장하고 있습니다.",
+    }));
+    try {
+      const formData = new FormData();
+      formData.append("image", item.pendingRestoration.file);
+      formData.append(
+        "metadata",
+        JSON.stringify({
+          corners: item.pendingRestoration.corners,
+          coverage: item.pendingRestoration.coverage,
+        }),
+      );
+      const response = await fetch(
+        `/api/business-cards/${item.card.captureId}/restore-display`,
+        { method: "POST", body: formData },
+      );
+      const card = await responseJson<BusinessCardSessionView>(response);
+      updateItem(item.id, (current) => ({
+        ...current,
+        card,
+        pendingRestoration: null,
+        restorationState: "restored",
+        restorationMessage: null,
+      }));
+    } catch (caught) {
+      updateItem(item.id, (current) => ({
+        ...current,
+        restorationState: "preview",
+        restorationMessage:
+          caught instanceof Error
+            ? `복원 이미지를 저장하지 못했습니다. ${caught.message}`
+            : "복원 이미지를 저장하지 못했습니다.",
+      }));
+    }
+  }
+
+  function rejectRestoration(item: QueueItem) {
+    restorationJobsRef.current.cancel(item.id);
+    if (item.restoredUrl) releaseUrl(item.restoredUrl);
+    updateItem(item.id, (current) => ({
+      ...current,
+      restoredUrl: null,
+      pendingRestoration: null,
+      restorationState: "fallback",
+      restorationMessage:
+        "새 보정 결과를 사용하지 않았습니다. 기존 표시 이미지를 유지합니다.",
+    }));
+  }
+
+  async function confirmFields(item: QueueItem) {
+    if (!item.card || !item.draft) return;
+    updateItem(item.id, (current) => ({
+      ...current,
+      status: "preparing",
+      operation: "confirm",
+      error: null,
+    }));
+    try {
+      const response = await fetch(
+        `/api/business-cards/${item.card.captureId}/confirm-fields`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ draft: item.draft }),
+        },
+      );
+      const card = await responseJson<BusinessCardSessionView>(response);
+      updateItem(item.id, (current) => ({
+        ...current,
+        card,
+        draft: card.draft,
+        status: "card_result",
+        operation: null,
+      }));
+      if (item.sourceFile && !item.pipelineRecipe)
+        void restoreImage(item.id, item.sourceFile);
+    } catch (caught) {
+      updateItem(item.id, (current) => ({
+        ...current,
+        status: "card_review",
+        operation: null,
+        error:
+          caught instanceof Error
+            ? caught.message
+            : "명함 정보를 확정하지 못했습니다.",
+      }));
+    }
+  }
+
   async function prepareReview(item: QueueItem) {
     const startedAt = performance.now();
-    if (!item.card || !item.draft || item.contextNote.trim().length < 5) {
+    if (item.pendingRestoration || item.restorationState === "processing") {
+      updateItem(item.id, (current) => ({
+        ...current,
+        error:
+          "평면 보정 결과를 저장하거나 기존 이미지를 유지한 뒤 진행해 주세요.",
+      }));
+      return;
+    }
+    if (
+      !item.card ||
+      !item.card.fieldsConfirmedAt ||
+      !item.draft ||
+      item.contextNote.trim().length < 5
+    ) {
       updateItem(item.id, (current) => ({
         ...current,
         error: "만남의 맥락을 5자 이상 적어주세요.",
@@ -349,7 +765,7 @@ export function BusinessCardWorkspace({
     } catch (caught) {
       updateItem(item.id, (current) => ({
         ...current,
-        status: "card_review",
+        status: "card_result",
         error:
           caught instanceof Error
             ? caught.message
@@ -459,8 +875,14 @@ export function BusinessCardWorkspace({
   }
 
   async function retry(item: QueueItem) {
+    const retryStartedAt = performance.now();
+    updateItem(item.id, (current) => ({
+      ...current,
+      imageAcceptedAt: retryStartedAt,
+    }));
     if (!item.card?.captureId) {
-      await uploadItem(item.id, item.sourceFile, item.uploadRequestKey);
+      if (item.sourceFile)
+        await uploadItem(item.id, item.sourceFile, item.uploadRequestKey);
       return;
     }
     if (ocrInFlightRef.current.has(item.id)) return;
@@ -515,6 +937,7 @@ export function BusinessCardWorkspace({
   }
 
   async function removeItem(item: QueueItem) {
+    restorationJobsRef.current.cancel(item.id);
     if (item.card && item.status !== "committed") {
       const response = await fetch(
         `/api/business-cards/${item.card.captureId}`,
@@ -527,7 +950,9 @@ export function BusinessCardWorkspace({
         return;
       }
     }
-    URL.revokeObjectURL(item.previewUrl);
+    if (item.sourceFile) releaseUrl(item.previewUrl);
+    if (item.sourcePreviewUrl) releaseUrl(item.sourcePreviewUrl);
+    if (item.restoredUrl) releaseUrl(item.restoredUrl);
     setItems((current) =>
       current.filter((candidate) => candidate.id !== item.id),
     );
@@ -546,6 +971,10 @@ export function BusinessCardWorkspace({
     );
     updateItem(item.id, (current) => ({
       ...current,
+      card:
+        response.ok && current.card
+          ? { ...current.card, originalAssetId: "" }
+          : current.card,
       error: response.ok
         ? "원본 사진은 삭제했고, 디지털 명함은 유지됩니다."
         : "원본 이미지를 삭제하지 못했습니다.",
@@ -554,6 +983,7 @@ export function BusinessCardWorkspace({
 
   return (
     <section className="business-card-flow space-y-6">
+      {testLabOpen ? <CardRecognitionTestLab /> : null}
       <div
         className={`grid gap-6 ${items.length ? "lg:grid-cols-[18rem_minmax(0,1fr)]" : ""}`}
       >
@@ -623,12 +1053,44 @@ export function BusinessCardWorkspace({
               onCamera={() => setCameraOpen(true)}
               onUpload={() => fileInputRef.current?.click()}
             />
+          ) : activeItem.status === "boundary_review" &&
+            activeItem.sourceFile ? (
+            <BoundaryReview
+              key={activeItem.id}
+              item={activeItem}
+              onManual={(corners) =>
+                void uploadItem(
+                  activeItem.id,
+                  activeItem.sourceFile!,
+                  activeItem.uploadRequestKey,
+                  { corners },
+                )
+              }
+              onAccept={() =>
+                activeItem.pendingRestoration &&
+                void uploadItem(
+                  activeItem.id,
+                  activeItem.sourceFile!,
+                  activeItem.uploadRequestKey,
+                  {
+                    acceptedFile: activeItem.pendingRestoration.file,
+                    recipe: activeItem.pipelineRecipe,
+                  },
+                )
+              }
+              onRemove={() => void removeItem(activeItem)}
+            />
           ) : (
             <CardWorkItem
+              key={activeItem.id}
               item={activeItem}
               ocrMode={ocrMode}
               updateItem={updateItem}
               updateDraft={updateDraft}
+              confirmFields={confirmFields}
+              acceptRestoration={acceptRestoration}
+              rejectRestoration={rejectRestoration}
+              restoreWithManualCorners={restoreWithManualCorners}
               prepareReview={prepareReview}
               refreshCandidates={refreshCandidates}
               commit={commit}
@@ -667,17 +1129,139 @@ export function BusinessCardWorkspace({
       {cameraOpen ? (
         <BusinessCardCamera
           onClose={() => setCameraOpen(false)}
-          onCapture={(file) => {
-            void enqueueFiles([file]).catch((error: unknown) => {
-              setGlobalError(
-                error instanceof Error
-                  ? error.message
-                  : "명함 등록을 시작하지 못했습니다.",
-              );
-            });
+          onCapture={(file, imageAcceptedAt) => {
+            void enqueueFiles([file], imageAcceptedAt).catch(
+              (error: unknown) => {
+                setGlobalError(
+                  error instanceof Error
+                    ? error.message
+                    : "명함 등록을 시작하지 못했습니다.",
+                );
+              },
+            );
           }}
         />
       ) : null}
+    </section>
+  );
+}
+
+function BoundaryReview({
+  item,
+  onManual,
+  onAccept,
+  onRemove,
+}: {
+  item: QueueItem;
+  onManual: (corners: CardCorners) => void;
+  onAccept: () => void;
+  onRemove: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <section
+      aria-label="명함 테두리·2D 이미지 확인"
+      className="rounded-2xl border border-[var(--border)] bg-white p-6"
+    >
+      <h2 className="text-xl font-semibold">명함 테두리·2D 이미지 확인</h2>
+      <p role="status" className="my-3 text-sm">
+        {item.restorationMessage}
+      </p>
+      <p className="mb-4 text-xs text-[var(--muted)]">
+        촬영 → LC100 외곽 감지 → 원근 보정 → 이미지 확인 → OCR. 가로·세로 비율은
+        추정값입니다.
+      </p>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <h3>촬영 원본·검출 테두리</h3>
+          <div className="relative inline-block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.sourcePreviewUrl!}
+              alt="LC100 검출 촬영 원본"
+              className="max-h-96 max-w-full"
+            />
+            {item.boundaryCorners && (
+              <svg
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                className="absolute inset-0 size-full"
+                aria-label="검출한 명함 테두리"
+              >
+                <polygon
+                  points={item.boundaryCorners
+                    .map((p) => `${p.x * 100},${p.y * 100}`)
+                    .join(" ")}
+                  fill="#00e67622"
+                  stroke="#00b050"
+                  strokeWidth="0.6"
+                />
+              </svg>
+            )}
+          </div>
+        </div>
+        <div>
+          <h3>정면 2D 명함 이미지</h3>
+          {item.restoredUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.restoredUrl}
+                alt="OCR에 사용할 2D 명함 이미지"
+                className="max-h-96 max-w-full"
+              />
+              <a
+                href={item.restoredUrl}
+                download="rectified-business-card.jpg"
+                className="text-sm underline"
+              >
+                2D 명함 JPEG 다운로드
+              </a>
+            </>
+          ) : (
+            <p className="my-4 text-sm">
+              모서리를 직접 지정하면 보정 이미지를 만들 수 있습니다.
+            </p>
+          )}
+        </div>
+      </div>
+      {item.pipelineTimings && (
+        <pre
+          aria-label="명함 단계별 처리 시간"
+          className="my-4 whitespace-pre-wrap text-xs"
+        >
+          {Object.entries(item.pipelineTimings)
+            .map(([key, value]) => `${key}: ${value.toFixed(1)}ms`)
+            .join(" · ")}
+        </pre>
+      )}
+      <div className="my-4 flex flex-wrap gap-3">
+        <button
+          disabled={!item.pendingRestoration}
+          onClick={onAccept}
+          className="rounded-xl bg-[var(--foreground)] px-4 py-3 text-white disabled:opacity-40"
+        >
+          이 2D 이미지로 OCR 실행
+        </button>
+        <button
+          onClick={() => setEditing(true)}
+          className="rounded-xl border px-4 py-3"
+        >
+          OCR 전 모서리 직접 지정
+        </button>
+        <button onClick={onRemove} className="rounded-xl border px-4 py-3">
+          목록에서 제거
+        </button>
+      </div>
+      {(editing || !item.pendingRestoration) && (
+        <CardCornerEditor
+          imageUrl={item.sourcePreviewUrl!}
+          seedCorners={item.boundaryCorners}
+          busy={false}
+          onApply={onManual}
+          onCancel={() => setEditing(false)}
+        />
+      )}
     </section>
   );
 }
@@ -738,14 +1322,21 @@ interface CardWorkItemProps {
     id: string,
     updater: (draft: BusinessCardDraftV1) => BusinessCardDraftV1,
   ) => void;
+  confirmFields: (item: QueueItem) => Promise<void>;
+  acceptRestoration: (item: QueueItem) => Promise<void>;
+  rejectRestoration: (item: QueueItem) => void;
+  restoreWithManualCorners: (
+    item: QueueItem,
+    corners: CardCorners,
+  ) => Promise<void>;
   prepareReview: (item: QueueItem) => Promise<void>;
   refreshCandidates: (item: QueueItem) => Promise<void>;
   commit: (item: QueueItem) => Promise<void>;
   retry: (item: QueueItem) => Promise<void>;
   removeItem: (item: QueueItem) => Promise<void>;
   deleteOriginal: (item: QueueItem) => Promise<void>;
-  onViewPerson?: (personId: string) => void;
-  onFindMemory?: (question: string) => void;
+  onViewPerson: (personId: string) => void;
+  onFindMemory: (question: string) => void;
 }
 
 function CardWorkItem(props: CardWorkItemProps) {
@@ -754,6 +1345,10 @@ function CardWorkItem(props: CardWorkItemProps) {
     ocrMode,
     updateItem,
     updateDraft,
+    confirmFields,
+    acceptRestoration,
+    rejectRestoration,
+    restoreWithManualCorners,
     prepareReview,
     refreshCandidates,
     commit,
@@ -763,7 +1358,36 @@ function CardWorkItem(props: CardWorkItemProps) {
     onViewPerson,
     onFindMemory,
   } = props;
-  const imageUrl = item.card?.imageUrl || item.previewUrl;
+  const imageUrl = item.restoredUrl || item.card?.imageUrl || item.previewUrl;
+  const originalUrl = item.card?.originalAssetId
+    ? `/api/source-assets/${item.card.originalAssetId}`
+    : undefined;
+  const measuredAttempts = useRef(new Set<string>());
+  const [cornerEditorOpen, setCornerEditorOpen] = useState(false);
+
+  useEffect(() => {
+    if (
+      item.status !== "error" &&
+      (item.status !== "card_review" || !item.draft)
+    )
+      return;
+    const attempt = `${item.id}:${item.imageAcceptedAt}`;
+    if (measuredAttempts.current.has(attempt)) return;
+    const frame = requestAnimationFrame(() => {
+      if (measuredAttempts.current.has(attempt)) return;
+      measuredAttempts.current.add(attempt);
+      performance.measure(
+        item.status === "error"
+          ? "business-card:confirm-to-failure"
+          : "business-card:confirm-to-editable",
+        {
+          start: item.imageAcceptedAt,
+          end: performance.now(),
+        },
+      );
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [item.id, item.imageAcceptedAt, item.status, item.draft]);
 
   if (item.status === "error" && !item.draft) {
     return (
@@ -808,19 +1432,28 @@ function CardWorkItem(props: CardWorkItemProps) {
         <div>
           <div className="mx-auto size-10 animate-spin rounded-full border-4 border-[var(--accent-soft)] border-t-[var(--accent)]" />
           <h2 className="mt-5 text-xl font-semibold">
-            {item.operation === "context"
-              ? "만남의 맥락을 구조화하고 있습니다"
-              : item.operation === "commit"
-                ? "인맥과 만남 기록을 저장하고 있습니다"
-                : "명함을 디지털화하고 있습니다"}
+            {item.operation === "confirm"
+              ? "확인한 명함 정보를 저장하고 있습니다"
+              : item.operation === "context"
+                ? "만남의 맥락을 구조화하고 있습니다"
+                : item.operation === "commit"
+                  ? "인맥과 만남 기록을 저장하고 있습니다"
+                  : "명함을 디지털화하고 있습니다"}
           </h2>
+          {item.operation === "ocr" && (
+            <p role="status" className="mt-3 text-sm">
+              {item.restorationMessage ?? "촬영 이미지를 준비하고 있습니다."}
+            </p>
+          )}
           <p className="mt-2 text-sm text-[var(--muted)]">
-            {item.operation === "context"
-              ? "만남 · 관심사 · 기억 · 약속 검토"
-              : item.operation === "commit"
-                ? "인물 확인 · 기억 저장"
-                : "이미지 처리 · 안전하게 저장 · " +
-                  ocrProviderLabel(item.card?.ocrProvider, ocrMode)}
+            {item.operation === "confirm"
+              ? "인식한 필드만 저장하며 관계 기억은 아직 만들지 않습니다."
+              : item.operation === "context"
+                ? "만남 · 관심사 · 기억 · 약속 검토"
+                : item.operation === "commit"
+                  ? "인물 확인 · 기억 저장"
+                  : "이미지 처리 · 안전하게 저장 · " +
+                    ocrProviderLabel(item.card?.ocrProvider, ocrMode)}
           </p>
           {item.slow && item.operation === "ocr" ? (
             <p role="status" className="mt-3 text-xs text-amber-700">
@@ -839,10 +1472,10 @@ function CardWorkItem(props: CardWorkItemProps) {
     return (
       <section className="space-y-6">
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(20rem,0.9fr)]">
-          <DigitalBusinessCard
+          <CardViewer
             imageUrl={imageUrl}
-            draft={item.draft}
-            badge="저장한 디지털 명함"
+            originalUrl={originalUrl}
+            label="저장한 디지털 명함"
           />
           <div className="rounded-[2rem] border border-[var(--border)] bg-white/90 p-6">
             <div className="flex size-12 items-center justify-center rounded-2xl bg-[var(--confirmed-soft)] text-xl text-[var(--confirmed)]">
@@ -861,41 +1494,20 @@ function CardWorkItem(props: CardWorkItemProps) {
                 : ""}
             </p>
             <div className="mt-6 grid gap-2">
-              {onViewPerson ? (
-                <button
-                  type="button"
-                  onClick={() => onViewPerson(commitResult.personId)}
-                  className="rounded-xl bg-[var(--accent)] px-5 py-3 text-center text-sm font-semibold text-white"
-                >
-                  인맥 프로필 보기
-                </button>
-              ) : (
-                <Link
-                  href={`/people/${commitResult.personId}`}
-                  className="rounded-xl bg-[var(--accent)] px-5 py-3 text-center text-sm font-semibold text-white"
-                >
-                  인맥 프로필 보기
-                </Link>
-              )}
-              {onFindMemory ? (
-                <button
-                  type="button"
-                  onClick={() => onFindMemory(result.recallQuery)}
-                  className="rounded-xl border border-[var(--border-strong)] px-5 py-3 text-center text-sm font-semibold"
-                >
-                  방금 저장한 기억 찾아보기
-                </button>
-              ) : (
-                <Link
-                  href={{
-                    pathname: "/recall",
-                    query: { q: result.recallQuery },
-                  }}
-                  className="rounded-xl border border-[var(--border-strong)] px-5 py-3 text-center text-sm font-semibold"
-                >
-                  방금 저장한 기억 찾아보기
-                </Link>
-              )}
+              <button
+                type="button"
+                onClick={() => onViewPerson(commitResult.personId)}
+                className="rounded-xl bg-[var(--accent)] px-5 py-3 text-center text-sm font-semibold text-white"
+              >
+                인맥 프로필 보기
+              </button>
+              <button
+                type="button"
+                onClick={() => onFindMemory(result.recallQuery)}
+                className="rounded-xl border border-[var(--border-strong)] px-5 py-3 text-center text-sm font-semibold"
+              >
+                방금 저장한 기억 찾아보기
+              </button>
               <button
                 type="button"
                 onClick={() => void deleteOriginal(item)}
@@ -922,10 +1534,18 @@ function CardWorkItem(props: CardWorkItemProps) {
     <section className="space-y-6">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(21rem,0.95fr)]">
         <div>
-          <DigitalBusinessCard
+          <CardViewer
             imageUrl={imageUrl}
-            draft={item.draft}
-            badge={`${ocrProviderLabel(item.card?.ocrProvider, ocrMode)} · 디지털 명함`}
+            originalUrl={
+              item.status === "card_review" ? undefined : originalUrl
+            }
+            label={
+              item.status === "card_review"
+                ? item.pipelineRecipe
+                  ? "2D 명함 이미지"
+                  : "촬영한 명함"
+                : "디지털 명함 이미지"
+            }
           />
           <div className="mt-3 flex items-center justify-between gap-3 text-xs text-[var(--muted)]">
             <span>
@@ -941,20 +1561,117 @@ function CardWorkItem(props: CardWorkItemProps) {
             </button>
           </div>
         </div>
-        <CardIdentityEditor
-          draft={item.draft}
-          providerLabel={ocrProviderLabel(item.card?.ocrProvider, ocrMode)}
-          onChange={(updater) => updateDraft(item.id, updater)}
-          onNameChange={(value) =>
-            updateItem(item.id, (current) => ({
-              ...current,
-              newDisplayName: value,
-            }))
-          }
-        />
+        {item.status === "card_review" ? (
+          <CardIdentityEditor
+            draft={item.draft}
+            providerLabel={ocrProviderLabel(item.card?.ocrProvider, ocrMode)}
+            onChange={(updater) => updateDraft(item.id, updater)}
+            onNameChange={(value) =>
+              updateItem(item.id, (current) => ({
+                ...current,
+                newDisplayName: value,
+              }))
+            }
+          />
+        ) : (
+          <section className="rounded-[2rem] border border-[var(--border)] bg-white/90 p-6">
+            <p className="text-sm font-semibold text-[var(--accent)]">
+              확인한 명함 정보
+            </p>
+            <h2 className="mt-2 text-xl font-semibold">
+              {item.draft.identity.displayName ?? "이름 없음"}
+            </h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              {[item.draft.identity.organizationName, item.draft.identity.title]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+            <p className="mt-4 text-xs leading-5 text-[var(--muted)]">
+              확인한 연락처 정보는 명함 이미지와 분리해 보존합니다.
+            </p>
+            <ContactNumberList identity={item.draft.identity} />
+          </section>
+        )}
       </div>
 
       {item.status === "card_review" ? (
+        <section className="rounded-[2rem] border border-[var(--border)] bg-white/90 p-6 sm:p-8">
+          <h2 className="text-xl font-semibold">추출 정보를 확인해 주세요</h2>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            이름과 연락처를 고친 뒤 OK를 누르세요. 인맥과 만남 기록은 다음
+            단계에서 따로 저장합니다.
+          </p>
+          <button
+            type="button"
+            onClick={() => void confirmFields(item)}
+            className="mt-5 rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white"
+          >
+            OK · 추출 정보 확정
+          </button>
+        </section>
+      ) : null}
+
+      {item.status === "card_result" ? (
+        <p
+          role="status"
+          className="rounded-xl bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--accent)]"
+        >
+          {item.restorationState === "processing"
+            ? "평면 보정 이미지를 준비하고 있습니다. 촬영 이미지는 먼저 볼 수 있습니다."
+            : item.restorationState === "preview"
+              ? "평면 보정 미리보기를 확인하세요. 명함 전체가 보일 때만 저장해 주세요."
+              : item.restorationState === "restored"
+                ? "명함 테두리를 보정한 이미지를 저장했습니다. 원본과 전환해 볼 수 있습니다."
+                : (item.restorationMessage ?? "추출 정보를 확인했습니다.")}
+        </p>
+      ) : null}
+
+      {item.status === "card_result" && item.restorationState === "preview" ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => void acceptRestoration(item)}
+            className="rounded-xl bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-white"
+          >
+            이 보정 이미지 저장
+          </button>
+          <button
+            type="button"
+            onClick={() => rejectRestoration(item)}
+            className="rounded-xl border border-[var(--border)] px-5 py-3 text-sm"
+          >
+            기존 이미지 유지
+          </button>
+        </div>
+      ) : null}
+
+      {item.status === "card_result" && item.card?.originalAssetId ? (
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setCornerEditorOpen((open) => !open)}
+            className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm"
+          >
+            {cornerEditorOpen ? "모서리 지정 닫기" : "명함 모서리 직접 지정"}
+          </button>
+          {cornerEditorOpen ? (
+            <CardCornerEditor
+              imageUrl={
+                item.sourcePreviewUrl ??
+                `/api/source-assets/${item.card.originalAssetId}`
+              }
+              busy={item.restorationState === "processing"}
+              onApply={(corners) => {
+                setCornerEditorOpen(false);
+                void restoreWithManualCorners(item, corners);
+              }}
+              onCancel={() => setCornerEditorOpen(false)}
+            />
+          ) : null}
+        </div>
+      ) : null}
+
+      {item.status === "card_result" ? (
         <section className="rounded-[2rem] border border-[var(--border)] bg-white/90 p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
@@ -994,7 +1711,11 @@ function CardWorkItem(props: CardWorkItemProps) {
           />
           <button
             type="button"
-            disabled={item.contextNote.trim().length < 5}
+            disabled={
+              item.contextNote.trim().length < 5 ||
+              item.restorationState === "preview" ||
+              item.restorationState === "processing"
+            }
             onClick={() => void prepareReview(item)}
             className="mt-4 rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white disabled:opacity-40"
           >
@@ -1117,7 +1838,6 @@ function CardIdentityEditor({
         {(
           [
             ["emails", "이메일"],
-            ["phones", "전화번호"],
             ["websites", "웹사이트"],
           ] as const
         )
@@ -1144,6 +1864,15 @@ function CardIdentityEditor({
             </label>
           ))}
       </div>
+      <ContactNumberFields
+        identity={draft.identity}
+        onChange={(contactNumbers, phones) =>
+          onChange((current) => ({
+            ...current,
+            identity: { ...current.identity, contactNumbers, phones },
+          }))
+        }
+      />
       <details className="mt-5 rounded-xl border border-[var(--border)] px-4 py-3">
         <summary className="cursor-pointer text-sm font-semibold text-[var(--foreground)]">
           추가 정보 · 부서, 웹사이트, 주소
