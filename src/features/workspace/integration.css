@@ -1,11 +1,4 @@
 .integrated-workspace {
-  --background: #f8f7fa;
-  --foreground: #282332;
-  --surface: #fff;
-  --border: #e7e3ed;
-  --border-strong: #cfc6df;
-  --accent: #7541d6;
-  --accent-soft: #f2ecfd;
   min-height: 100vh;
   font-family: Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   color: var(--foreground);

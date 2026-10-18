@@ -1,0 +1,26 @@
+[
+  {
+    "path": "src/features/workspace/tokens.css",
+    "sha256": "e7c4025677c885c9e2140626cc0565e267c114ae7f0f70cfe1c7842eb49f4eed"
+  },
+  {
+    "path": "src/features/workspace/graph/graph.css",
+    "sha256": "37bea6407a748652a4b83f276e17482cec4785525435ee4c0c8d78d8bb51606a"
+  },
+  {
+    "path": "src/features/workspace/graph/GraphWorkspace.tsx",
+    "sha256": "d02d94f7be99b3675a3ef8879a7f395649f4729f8186d4e74c9e3207ca743cc6"
+  },
+  {
+    "path": "src/features/workspace/graph/GraphCanvas.jsx",
+    "sha256": "484a3041bf008551f3bfb7bc66101969e68f81d2f1e7b79d2825e944af0c9995"
+  },
+  {
+    "path": "src/features/workspace/graph/layout.js",
+    "sha256": "ceda4145b4872ad29f03699597b72a751f6eeb0eaea7e1946180316a17941955"
+  },
+  {
+    "path": "src/features/workspace/ui/ContactGraph.jsx",
+    "sha256": "347ec5482f057dd87b8499df87f93a06592a8e607a4f0ca3bdb5c988fc7c225e"
+  }
+]

@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-17",
+  "browser": "153.0.8010.12",
+  "errors": [],
+  "screens": [
+    {
+      "file": "final-search-1440.png",
+      "overflow": false
+    },
+    {
+      "file": "final-filter-1440.png",
+      "overflow": false
+    },
+    {
+      "file": "final-cards-1440.png",
+      "overflow": false
+    },
+    {
+      "file": "final-todos-1440.png",
+      "overflow": false
+    },
+    {
+      "file": "final-search-390.png",
+      "overflow": false
+    },
+    {
+      "file": "final-filter-390.png",
+      "overflow": false
+    },
+    {
+      "file": "final-cards-390.png",
+      "overflow": false
+    },
+    {
+      "file": "final-todos-390.png",
+      "overflow": false
+    }
+  ],
+  "fonts": [
+    {
+      "fonts": [
+        {
+          "familyName": "Pretendard Variable",
+          "postScriptName": "PretendardVariable-Medium",
+          "isCustomFont": true,
+          "glyphCount": 7
+        },
+        {
+          "familyName": "Pretendard Variable",
+          "postScriptName": "PretendardVariable-Bold",
+          "isCustomFont": true,
+          "glyphCount": 5
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "path": "src/app/page.tsx",
+      "sha256": "47dbdefc5cf8ba185de6db0cdd563f6a05209a9fe9317cdb2bd38fc824c46591"
+    },
+    {
+      "path": "src/features/workspace/tokens.css",
+      "sha256": "26c7d947d466b8f2777673463329a738f0cf0efb2f53ce293c756d64e0ffd8f1"
+    },
+    {
+      "path": "src/features/workspace/visual-system.css",
+      "sha256": "252ea399f97ab055902fb32910dd49bdf2d303b9ffab765cbd5365f5ef6ddb6b"
+    },
+    {
+      "path": "src/features/workspace/ui/ContactGraph.jsx",
+      "sha256": "ed1c07bb75a759043f17f0d7aa8332e306b3a74e3ce0483fc50619739718bfdd"
+    },
+    {
+      "path": "src/features/workspace/graph/appearance.ts",
+      "sha256": "14d061927d51b40bf269c9bb1d5569c45bed055db2a7f7bfe3d1092a522eafde"
+    },
+    {
+      "path": "src/features/workspace/graph/GraphCanvas.jsx",
+      "sha256": "060fa3ca6668e13946ca21cbc12745cab9b73b60a0d1f376a71af911bdeff72a"
+    },
+    {
+      "path": "src/features/workspace/graph/GraphWorkspace.tsx",
+      "sha256": "7bd92266eeaa31601e159b10805a814803da6fe83c0e0a6f9e270dc5067a4438"
+    },
+    {
+      "path": "src/features/workspace/graph/layout.js",
+      "sha256": "d7a704092bc8842e26f8ba2f61ee51715b843373c851366f770c7c35dd8262e5"
+    },
+    {
+      "path": "src/features/capture/business-card-workspace.tsx",
+      "sha256": "9a2eccc93f8b4cfd1086a41f831e3c849beda65eece82917e83dc6634d4da4c0"
+    },
+    {
+      "path": "public/fonts/pretendard/PretendardVariable.woff2",
+      "sha256": "9599f12fd42fc0bce1cd50b47a0c022e108d7aa64dd0d1bb0ed44f3282d900b4"
+    }
+  ]
+}

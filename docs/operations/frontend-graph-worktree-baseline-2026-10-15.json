@@ -1,0 +1,415 @@
+{
+  "preparedDate": "2026-10-15",
+  "timezone": "Asia/Seoul",
+  "source": "D:/Persnapse/persnapse-mvp",
+  "baseCommit": "9ec83921b5b423625b41472598b167acce8a2535\n",
+  "branch": "feat/frontend-graph-review-20261015",
+  "worktree": "D:/Persnapse/worktrees/persnapse-frontend-graph-review",
+  "sourceStatus": " M AGENTS.md\u0000 M README.md\u0000 M card_recognition/detectors/docaligner.ts\u0000 M docs/PROJECT_BRIEF.md\u0000 M docs/README.md\u0000 M docs/operations/stt-realtime-test-2026-10-13.md\u0000 M next.config.ts\u0000 M scripts/card_recognition/serve-test.ts\u0000 M scripts/db/verify-phase5.ts\u0000 M scripts/deploy/verify-live-memory-preview.mjs\u0000 M scripts/stt/serve-test.ts\u0000 D src/app/people/[personId]/page.tsx\u0000 D src/app/people/error.tsx\u0000 D src/app/people/loading.tsx\u0000 D src/app/people/page.tsx\u0000 D src/app/recall/error.tsx\u0000 D src/app/recall/loading.tsx\u0000 D src/app/recall/page.tsx\u0000 D src/components/app-shell.tsx\u0000 D src/components/digital-business-card.tsx\u0000 D src/components/evidence-badge.tsx\u0000 M src/features/README.md\u0000 M src/features/capture/business-card-workspace.tsx\u0000 D src/features/recall/recall-workspace.tsx\u0000 M src/features/recall/search-preparation.tsx\u0000 M src/features/workspace/ui/components/RecordingPage.jsx\u0000 M src/features/workspace/ui/components/WorkManagement.jsx\u0000 M tests/e2e/assistant-offline.spec.ts\u0000 M tests/e2e/foundation.spec.ts\u0000 M tests/e2e/realtime-input.spec.ts\u0000 M tests/e2e/workspace-experience.spec.ts\u0000?? card_recognition/rotate-card.test.ts\u0000?? card_recognition/rotate-card.ts\u0000?? docs/decisions/0024-card-optimization-quality-and-digital-reproduction-direction.md\u0000?? docs/handoff/ai-assistant-direction-2026-10-13.md\u0000?? docs/operations/card-pipeline-handoff-2026-10-13.md\u0000?? docs/operations/card-quick-optimization-results-2026-10-13.md\u0000?? docs/operations/card-test-ready-2026-10-13.md\u0000?? docs/plans/ai-assistant-context-design-2026-10-13.md\u0000?? docs/plans/assets/\u0000?? docs/plans/card-pipeline-optimization-quality-2026-10-13.md\u0000?? docs/plans/frontend-graph-reference-benchmark-2026-10-14.md\u0000?? docs/plans/frontend-graph-visual-design-2026-10-14.md\u0000?? docs/plans/frontend-graph-work-design-2026-10-14.md\u0000?? scripts/card_recognition/export-quick-pilot.mjs\u0000?? scripts/card_recognition/quick-pilot-browser.ts\u0000?? scripts/card_recognition/quick-pilot.mjs\u0000?? scripts/card_recognition/quick-ui-browser.tsx\u0000?? scripts/card_recognition/verify-card-ready.mjs\u0000?? scripts/card_recognition/verify-quick-ocr.mjs\u0000?? scripts/card_recognition/verify-quick-rotation.mjs\u0000?? tests/e2e/card-rotation.spec.ts\u0000",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "ba8a483c5f9640f9bd1b8304470d0f119630079cc81d10166affecece00cd179",
+      "bytes": 2645
+    },
+    {
+      "path": "README.md",
+      "sha256": "fddd4fd8cd8202abf8a08492b2f1aa5a73c9370facb1062036155e477da43d0a",
+      "bytes": 6161
+    },
+    {
+      "path": "card_recognition/detectors/docaligner.ts",
+      "sha256": "fd7d59cd9d39588be9e0908bf89ce553da995bd52eef290025a715a55353225d",
+      "bytes": 3604
+    },
+    {
+      "path": "card_recognition/rotate-card.test.ts",
+      "sha256": "a5b61c48f879e364081ac8060f68aa81d27de0cb6e538d44e335c622bd3aa2be",
+      "bytes": 2628
+    },
+    {
+      "path": "card_recognition/rotate-card.ts",
+      "sha256": "80c716813a7b744880e99b0e4417bf083080661f5b59300423477d2f6ce82c39",
+      "bytes": 1611
+    },
+    {
+      "path": "docs/PROJECT_BRIEF.md",
+      "sha256": "3e2ad4905be96d390848b480ca4e90f962b45ffda7b1e75e217873ec13672216",
+      "bytes": 6967
+    },
+    {
+      "path": "docs/README.md",
+      "sha256": "ebe7469ec735b9b723b38a9631fad4a7038bc39c5c1dc4569f50135240108fc9",
+      "bytes": 7792
+    },
+    {
+      "path": "docs/decisions/0024-card-optimization-quality-and-digital-reproduction-direction.md",
+      "sha256": "e1525ab1a92a0a32c1a97ca36953b4f0eb7f4327828ca6360c4f944aee5c0b1f",
+      "bytes": 3136
+    },
+    {
+      "path": "docs/handoff/ai-assistant-direction-2026-10-13.md",
+      "sha256": "ffed34a7345307e9401607849ffb4473fdc260a6051a36f12d73c5473d66812f",
+      "bytes": 17315
+    },
+    {
+      "path": "docs/operations/card-pipeline-handoff-2026-10-13.md",
+      "sha256": "84be5f15e0ded6cc4570ec99915cf1b53f8f0ce8cd73007b795b097b480ad1df",
+      "bytes": 15958
+    },
+    {
+      "path": "docs/operations/card-quick-optimization-results-2026-10-13.md",
+      "sha256": "83c7e3de68ff0db2c4ab0d86be585273ceb3b07448f19da3fed42dc05cbdeb37",
+      "bytes": 6658
+    },
+    {
+      "path": "docs/operations/card-test-ready-2026-10-13.md",
+      "sha256": "5089639ddde48b22ba81c1a552de6d773a2928958a3062a1cd94d1cab42b0d53",
+      "bytes": 3971
+    },
+    {
+      "path": "docs/operations/stt-realtime-test-2026-10-13.md",
+      "sha256": "9810b2fdd868f202f8e56e94e3f38f50b96c101dcf1f46cc65a85b1abe7bf0ee",
+      "bytes": 6160
+    },
+    {
+      "path": "docs/plans/ai-assistant-context-design-2026-10-13.md",
+      "sha256": "b4e094c1c6537c70fd107004de012666a1a6cb27e5824a87b4817bed14fae22b",
+      "bytes": 32930
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/attio-create-command-groups-crop.png",
+      "sha256": "146d0c641f9fc37e12dfca2e219a953b7f4692d8c201d5b3f49cf09f5240adac",
+      "bytes": 25474
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/attio-create-full.png",
+      "sha256": "5b7aedb742b63bbd02ac48ff73bc345cb6212c541bcc67844f14064d2e9e813c",
+      "bytes": 66734
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/attio-record-activity-crop.png",
+      "sha256": "40ec94f0858f7235ce7f45fcb0c1e97ea7bd250ac6ef8679cf98c618b5cd4747",
+      "bytes": 81138
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/attio-record-full.png",
+      "sha256": "7d686b026ec97a50d51390b758f2683b3c8952e3b9e9b2e48a9ddc100a9f8b54",
+      "bytes": 185033
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/attio-record-identity-crop.png",
+      "sha256": "6a13459b74f60c2e91cf37abea9734f3d1b3e3b6491a19f591681b7608e03b67",
+      "bytes": 41934
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/dex-command-command-list-crop.png",
+      "sha256": "f931ca2e6b520dd58c436a3279378cc4f0d2ce96afed2df9e54ab2d458e486c6",
+      "bytes": 40178
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/dex-command-full.png",
+      "sha256": "cc038ca282d0e08a69146c38a0082fccdc63453d903dbf7c24f94ec493d41d69",
+      "bytes": 65636
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/dex-followup-followup-rows-crop.png",
+      "sha256": "f7c0b29c6246c7e3580c40f820e008843ce36c9cb4c9ebdf9e6d4cea901e55da",
+      "bytes": 50157
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/dex-followup-full.png",
+      "sha256": "4c65dc1aa688f5a7b57d4805844bfd53016f7abdb6f114a444a3b42154109d00",
+      "bytes": 91833
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/dex-reminder-full.png",
+      "sha256": "83f2a934d8cefcb05113c1b425620e48f0683676313effe337463eff31923d7f",
+      "bytes": 54526
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/dex-reminder-input-fields-crop.png",
+      "sha256": "53202b5f817d4573d3330074b45223d5ceccbf118893159338995c5b065b7023",
+      "bytes": 28767
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/folk-keyboard-full.png",
+      "sha256": "baa4dff94208c9aed55d98392eea30bd935ed0716c52f8d12c92d60b90203d40",
+      "bytes": 931269
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/folk-keyboard-keyboard-composer-crop.png",
+      "sha256": "cf25050d8e4267dcd5012cd9822d00e22943a17d2acb274f0892b76b80a0a2da",
+      "bytes": 135799
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/folk-mobile-detail-fields-crop.png",
+      "sha256": "bf127151340f91ab4d71ae8303f462c759fe695cf3c287a695d0a7ae7c05a1e4",
+      "bytes": 106065
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/folk-mobile-full.png",
+      "sha256": "80579c3af306364c74afc8719b1deb9fe83b94f5db79944bcbf0f2027f06d16c",
+      "bytes": 917547
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/folk-notes-full.png",
+      "sha256": "e6cbbc408aadb89b534fa432a6492276b9657683d72a42301817f0d14ff5a853",
+      "bytes": 994121
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/folk-notes-mobile-notes-crop.png",
+      "sha256": "21979b2724d702df2df8ae0f50fc6ce75714b4721caaf493f71444a2f6910083",
+      "bytes": 188790
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/granola-evidence-full.png",
+      "sha256": "e8b9980b1538c6d3662054c38332a7c7f8500750b0dc633fe628bd7f8db52ed0",
+      "bytes": 216710
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/granola-evidence-source-reading-crop.png",
+      "sha256": "3990441418246785d67563f32ef841f78a259a397e2a254f072f60dcedb9d354",
+      "bytes": 66335
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/granola-notes-full.png",
+      "sha256": "336b20e8e3dc5fd7c811ee2f37577e620df57eeec7924f71364425aa961f9631",
+      "bytes": 292457
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/granola-notes-reading-hierarchy-crop.png",
+      "sha256": "e4c2f3e4f82d64e6ed6428a68500ed6ceb29c00f11eb9c247ea514841cb39147",
+      "bytes": 138722
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linear-header-context-bars-crop.png",
+      "sha256": "2a22b5cbb0593e9422c5a4a9867460b05f2dc870360942e322c369b17fba188b",
+      "bytes": 145818
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linear-header-full.png",
+      "sha256": "ee11cf917076cd6dd3544b5fd24a5cd72596fae3405cb4ed8779bc04e0fefc3b",
+      "bytes": 264875
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linear-sidebar-full.png",
+      "sha256": "2d331eb6c1f7ae52d93b28b7024edc9a0fd6816505427568e388975935f3dc32",
+      "bytes": 391705
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linear-sidebar-refreshed-sidebar-crop.png",
+      "sha256": "36065e56bdbf50cbdc076560724c6cda329028a4005544690646423e2a55053c",
+      "bytes": 77984
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linkurious-expand-expansion-controls-crop.png",
+      "sha256": "476b655d63637757b2e1fccec1bcebcd93df2ef01d2f1e01bff8ce082f489bce",
+      "bytes": 78183
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linkurious-expand-full.png",
+      "sha256": "603abf785f0d0350c2164b21ab6fa21e8442043d501533113d3396b33cde0f74",
+      "bytes": 93092
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linkurious-pin-full.png",
+      "sha256": "801931f3eab59d27fe201ec179e87b0793da6ff4fec4a18b04614ccf608a31ab",
+      "bytes": 74752
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/linkurious-pin-pinned-neighborhood-crop.png",
+      "sha256": "8ccec62ec34cbb76291bdbd5258bfbd58c28ea8098808fdd7179ed1b79f005af",
+      "bytes": 55717
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/manifest.json",
+      "sha256": "0e75d05a1240546fc2251e95b375cb2a18dcc10ada4b69a0cf74541e3ea68c57",
+      "bytes": 22763
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/raycast-search-full.png",
+      "sha256": "efbead2b8a86f61dca00d8d58d47947b773e5c8b0c7afbb846ad676e69c81b1e",
+      "bytes": 215643
+    },
+    {
+      "path": "docs/plans/assets/graph-visual-references-2026-10-14/raycast-search-search-selection-crop.png",
+      "sha256": "ea14d2a0ce3ed0126fb8dc75bec8639530c0be910e6ad63706d0eff2f644468a",
+      "bytes": 49113
+    },
+    {
+      "path": "docs/plans/card-pipeline-optimization-quality-2026-10-13.md",
+      "sha256": "1b84ad5f3e27d0dbc868fab7f000f12a3e4b5b5629192ad5e3f7294eac633e30",
+      "bytes": 9998
+    },
+    {
+      "path": "docs/plans/frontend-graph-reference-benchmark-2026-10-14.md",
+      "sha256": "f79016f988b28ffdc7f7d2c4af6d6e572b3ac34d509d58cb50b91886f9417dab",
+      "bytes": 36085
+    },
+    {
+      "path": "docs/plans/frontend-graph-visual-design-2026-10-14.md",
+      "sha256": "b721af34ab2ce274d338491c7d6b2ef1f2f410ec8923358bbfbafb4870224f87",
+      "bytes": 67300
+    },
+    {
+      "path": "docs/plans/frontend-graph-work-design-2026-10-14.md",
+      "sha256": "47c970e89d1b04ed42984d9bfe3f34faf9530e54a9648f4b06c78a393da8ea52",
+      "bytes": 30693
+    },
+    {
+      "path": "next.config.ts",
+      "sha256": "680bf4509ea6c065aaf6b6d4747f37dc21c19646a4bf65df6aa6901afe344846",
+      "bytes": 591
+    },
+    {
+      "path": "scripts/card_recognition/export-quick-pilot.mjs",
+      "sha256": "f234423f5c63645f5e1d9c51e75942816899d5262fa635ab60f504530623c4c3",
+      "bytes": 2514
+    },
+    {
+      "path": "scripts/card_recognition/quick-pilot-browser.ts",
+      "sha256": "c6155efb58706c44559b3bec11e5bb000a64c6977edf89b9d9c44a9f9a0ed3e1",
+      "bytes": 8280
+    },
+    {
+      "path": "scripts/card_recognition/quick-pilot.mjs",
+      "sha256": "b4968395a92f77509906950f02796bf50f0d3f81ce04d7d4da908bbd353acb4c",
+      "bytes": 6283
+    },
+    {
+      "path": "scripts/card_recognition/quick-ui-browser.tsx",
+      "sha256": "13ef20b2c4ee809fe2556af80baf3cfc3c384ddeb9f5b07b76b0b28375028b54",
+      "bytes": 463
+    },
+    {
+      "path": "scripts/card_recognition/serve-test.ts",
+      "sha256": "2a9972bab5bfc84abcbc42fd8a102d99eb6b85216289559efeda3e62b6f65579",
+      "bytes": 3087
+    },
+    {
+      "path": "scripts/card_recognition/verify-card-ready.mjs",
+      "sha256": "1e8d300d1102c978738e895d940ec83bc88b071cfb4b88b63db6654a734bdcca",
+      "bytes": 2833
+    },
+    {
+      "path": "scripts/card_recognition/verify-quick-ocr.mjs",
+      "sha256": "b56278fa8b245e8a5431c08ec78a6b9c3d1ca40cef65d0954d400c26241785f5",
+      "bytes": 3842
+    },
+    {
+      "path": "scripts/card_recognition/verify-quick-rotation.mjs",
+      "sha256": "148f0b04f5acc0f800fd7e90a30f88b0b2f7bec3a7d2a4254739731291f48063",
+      "bytes": 6475
+    },
+    {
+      "path": "scripts/db/verify-phase5.ts",
+      "sha256": "5e6a0f673fc20720920d81b8085ff71c06888e980a5488f7c51614f365251751",
+      "bytes": 15991
+    },
+    {
+      "path": "scripts/deploy/verify-live-memory-preview.mjs",
+      "sha256": "eb5875dd13d60f33bea8eb5de8c0aa2c3b31c2defe879018f5dddcf7b5275bd4",
+      "bytes": 13144
+    },
+    {
+      "path": "scripts/stt/serve-test.ts",
+      "sha256": "f8f859e2a4a1085ca320c033935ddc12a73175428f70e669e1db636065a4b4fc",
+      "bytes": 4150
+    },
+    {
+      "path": "src/app/people/[personId]/page.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/app/people/error.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/app/people/loading.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/app/people/page.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/app/recall/error.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/app/recall/loading.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/app/recall/page.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/components/app-shell.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/components/digital-business-card.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/components/evidence-badge.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/features/README.md",
+      "sha256": "4a2bd7363eaf7080dcfccb40d9b504ef41d4f94384b81386d2cc8eb7192f3ead",
+      "bytes": 1051
+    },
+    {
+      "path": "src/features/capture/business-card-workspace.tsx",
+      "sha256": "b90b1c44df1563e35114c9bde34fcbac31143f2fc3f53917d08ec1fec50b4fbb",
+      "bytes": 83266
+    },
+    {
+      "path": "src/features/recall/recall-workspace.tsx",
+      "deleted": true
+    },
+    {
+      "path": "src/features/recall/search-preparation.tsx",
+      "sha256": "f7544afcafaaee32b395bb34067f0dfe9a6db644dc56ed5ae3eb120a572fe6e6",
+      "bytes": 6655
+    },
+    {
+      "path": "src/features/workspace/ui/components/RecordingPage.jsx",
+      "sha256": "de77e6b1e2d75a80b02ea7bb99fbf55ebbff7719415945da5cc8d1f1f9a36782",
+      "bytes": 31187
+    },
+    {
+      "path": "src/features/workspace/ui/components/WorkManagement.jsx",
+      "sha256": "cdb76615710c6363fd2e5ab784188e0b3d03924e7f259dc3d4fb296c484be0cc",
+      "bytes": 19629
+    },
+    {
+      "path": "tests/e2e/assistant-offline.spec.ts",
+      "sha256": "455e5748ee0d553c245b781995bc6c463494ded96cf1b805918725345131b6ca",
+      "bytes": 11212
+    },
+    {
+      "path": "tests/e2e/card-rotation.spec.ts",
+      "sha256": "7a194f0afd06e1e35ba50aa55c1696d07349b19695b64ffb44aebd5a3b3bfcf8",
+      "bytes": 3753
+    },
+    {
+      "path": "tests/e2e/foundation.spec.ts",
+      "sha256": "b2bf4ef09a620b9a5bf1e7199377df24eb379eca1c211fa889bc56bcdcf94896",
+      "bytes": 7346
+    },
+    {
+      "path": "tests/e2e/realtime-input.spec.ts",
+      "sha256": "3316fe8dff44dc8424fc2e906375ed9bb0502cc9c2a24bf4b1c375e9d3811117",
+      "bytes": 6870
+    },
+    {
+      "path": "tests/e2e/workspace-experience.spec.ts",
+      "sha256": "6c986c6ac1c260dc1347bd85b35061493078aafdb804b6dcc62d8b3626535e38",
+      "bytes": 16180
+    }
+  ]
+}

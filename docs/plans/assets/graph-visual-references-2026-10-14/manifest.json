@@ -1,0 +1,580 @@
+{
+  "schemaVersion": 1,
+  "observedDate": "2026-10-14",
+  "timezone": "Asia/Seoul",
+  "purpose": "사용자 요청에 따른 Persnapse 설계 문서의 레퍼런스 비교. 제품 런타임 에셋이 아님.",
+  "captureMethod": "공식 공개 페이지에 포함된 이미지 asset 다운로드. 브라우저 실사용 캡처가 아님.",
+  "imageProcessing": "비율 유지 전체 PNG 정규화와 좌표 crop만 수행. UI 재생성·색상 변경·내용 수정 없음.",
+  "cropCoordinates": "각 full PNG의 좌상단을 (0,0)으로 하는 pixel rect",
+  "references": [
+    {
+      "id": "B01",
+      "slug": "linear-header",
+      "pageUrl": "https://linear.app/now/behind-the-latest-design-refresh",
+      "resolvedPageUrl": "https://linear.app/now/behind-the-latest-design-refresh",
+      "assetUrl": "https://webassets.linear.app/images/ornj730p/production/b15d343ed41c5e938c26f9e2f5a61c7b63285caa-3904x2160.png?q=85&auto=format&dpr=1&w=1920",
+      "resolvedAssetUrl": "https://webassets.linear.app/images/ornj730p/production/b15d343ed41c5e938c26f9e2f5a61c7b63285caa-3904x2160.png?q=85&auto=format&dpr=1&w=1920",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1920,
+        "height": 1062
+      },
+      "fetchedSha256": "ee11cf917076cd6dd3544b5fd24a5cd72596fae3405cb4ed8779bc04e0fefc3b",
+      "full": {
+        "file": "linear-header-full.png",
+        "width": 1920,
+        "height": 1062,
+        "bytes": 264875,
+        "sha256": "ee11cf917076cd6dd3544b5fd24a5cd72596fae3405cb4ed8779bc04e0fefc3b"
+      },
+      "crops": [
+        {
+          "name": "context-bars",
+          "file": "linear-header-context-bars-crop.png",
+          "rect": {
+            "left": 40,
+            "top": 350,
+            "width": 1650,
+            "height": 380
+          },
+          "width": 1650,
+          "height": 380,
+          "sha256": "2a22b5cbb0593e9422c5a4a9867460b05f2dc870360942e322c369b17fba188b",
+          "bytes": 145818
+        }
+      ]
+    },
+    {
+      "id": "B02",
+      "slug": "linear-sidebar",
+      "pageUrl": "https://linear.app/now/behind-the-latest-design-refresh",
+      "resolvedPageUrl": "https://linear.app/now/behind-the-latest-design-refresh",
+      "assetUrl": "https://webassets.linear.app/images/ornj730p/production/b6d6be14c96978b10553cfb9205be1065087e793-3904x2720.png?q=85&auto=format&dpr=1&w=1920",
+      "resolvedAssetUrl": "https://webassets.linear.app/images/ornj730p/production/b6d6be14c96978b10553cfb9205be1065087e793-3904x2720.png?q=85&auto=format&dpr=1&w=1920",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1920,
+        "height": 1338
+      },
+      "fetchedSha256": "2d331eb6c1f7ae52d93b28b7024edc9a0fd6816505427568e388975935f3dc32",
+      "full": {
+        "file": "linear-sidebar-full.png",
+        "width": 1920,
+        "height": 1338,
+        "bytes": 391705,
+        "sha256": "2d331eb6c1f7ae52d93b28b7024edc9a0fd6816505427568e388975935f3dc32"
+      },
+      "crops": [
+        {
+          "name": "refreshed-sidebar",
+          "file": "linear-sidebar-refreshed-sidebar-crop.png",
+          "rect": {
+            "left": 738,
+            "top": 150,
+            "width": 450,
+            "height": 900
+          },
+          "width": 450,
+          "height": 900,
+          "sha256": "36065e56bdbf50cbdc076560724c6cda329028a4005544690646423e2a55053c",
+          "bytes": 77984
+        }
+      ]
+    },
+    {
+      "id": "B03",
+      "slug": "attio-record",
+      "pageUrl": "https://attio.com/changelog/2026/record-page-redesign",
+      "resolvedPageUrl": "https://attio.com/changelog/2026/record-page-redesign",
+      "assetUrl": "https://attio.com/_next/image?url=https%3A%2F%2Fa.storyblok.com%2Ff%2F234930%2F7680x4320%2F68fc5a1cc0%2Fnew-record-layout.png&w=1920&q=75",
+      "resolvedAssetUrl": "https://attio.com/_next/image?url=https%3A%2F%2Fa.storyblok.com%2Ff%2F234930%2F7680x4320%2F68fc5a1cc0%2Fnew-record-layout.png&w=1920&q=75",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1920,
+        "height": 1080
+      },
+      "fetchedSha256": "0faf61a59481c5beefabd4a758b4e27c320779f4cf3d5b5baa60f7b05eb48145",
+      "full": {
+        "file": "attio-record-full.png",
+        "width": 1920,
+        "height": 1080,
+        "bytes": 185033,
+        "sha256": "7d686b026ec97a50d51390b758f2683b3c8952e3b9e9b2e48a9ddc100a9f8b54"
+      },
+      "crops": [
+        {
+          "name": "identity",
+          "file": "attio-record-identity-crop.png",
+          "rect": {
+            "left": 225,
+            "top": 205,
+            "width": 430,
+            "height": 570
+          },
+          "width": 430,
+          "height": 570,
+          "sha256": "6a13459b74f60c2e91cf37abea9734f3d1b3e3b6491a19f591681b7608e03b67",
+          "bytes": 41934
+        },
+        {
+          "name": "activity",
+          "file": "attio-record-activity-crop.png",
+          "rect": {
+            "left": 680,
+            "top": 255,
+            "width": 1000,
+            "height": 730
+          },
+          "width": 1000,
+          "height": 730,
+          "sha256": "40ec94f0858f7235ce7f45fcb0c1e97ea7bd250ac6ef8679cf98c618b5cd4747",
+          "bytes": 81138
+        }
+      ]
+    },
+    {
+      "id": "B04",
+      "slug": "granola-notes",
+      "pageUrl": "https://docs.granola.ai/help-center/taking-notes/ai-enhanced-notes",
+      "resolvedPageUrl": "https://docs.granola.ai/help-center/taking-notes/ai-enhanced-notes",
+      "assetUrl": "https://mintcdn.com/granola-c3940166/oWemjRejdeXPUixm/help-center/assets/hca_01JZNN78QP438WTETATY54MXG0/wFile_01K2FJYK1ZMR9K7H4ANPYY8BEP-d2a67019e7.png?fit=max&auto=format&n=oWemjRejdeXPUixm&q=85&s=8441e8e35ef888fd21c0939aca81bf29",
+      "resolvedAssetUrl": "https://mintcdn.com/granola-c3940166/oWemjRejdeXPUixm/help-center/assets/hca_01JZNN78QP438WTETATY54MXG0/wFile_01K2FJYK1ZMR9K7H4ANPYY8BEP-d2a67019e7.png?fit=max&auto=format&n=oWemjRejdeXPUixm&q=85&s=8441e8e35ef888fd21c0939aca81bf29",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1200,
+        "height": 701
+      },
+      "fetchedSha256": "fa40309c3f99b9b53be94ee26ec1b96fd9c6e21111f570d3b13ff946397df1d0",
+      "full": {
+        "file": "granola-notes-full.png",
+        "width": 1200,
+        "height": 701,
+        "bytes": 292457,
+        "sha256": "336b20e8e3dc5fd7c811ee2f37577e620df57eeec7924f71364425aa961f9631"
+      },
+      "crops": [
+        {
+          "name": "reading-hierarchy",
+          "file": "granola-notes-reading-hierarchy-crop.png",
+          "rect": {
+            "left": 180,
+            "top": 50,
+            "width": 980,
+            "height": 580
+          },
+          "width": 980,
+          "height": 580,
+          "sha256": "e4c2f3e4f82d64e6ed6428a68500ed6ceb29c00f11eb9c247ea514841cb39147",
+          "bytes": 138722
+        }
+      ]
+    },
+    {
+      "id": "B05",
+      "slug": "granola-evidence",
+      "pageUrl": "https://docs.granola.ai/help-center/taking-notes/ai-enhanced-notes",
+      "resolvedPageUrl": "https://docs.granola.ai/help-center/taking-notes/ai-enhanced-notes",
+      "assetUrl": "https://mintcdn.com/granola-c3940166/oWemjRejdeXPUixm/help-center/assets/hca_01JZNN78QP438WTETATY54MXG0/wFile_01K2FJY0E0E3HVS7T6S1BV10TQ-569d5596c8.png?fit=max&auto=format&n=oWemjRejdeXPUixm&q=85&s=67b9d7317f0200807eed98461a77a745",
+      "resolvedAssetUrl": "https://mintcdn.com/granola-c3940166/oWemjRejdeXPUixm/help-center/assets/hca_01JZNN78QP438WTETATY54MXG0/wFile_01K2FJY0E0E3HVS7T6S1BV10TQ-569d5596c8.png?fit=max&auto=format&n=oWemjRejdeXPUixm&q=85&s=67b9d7317f0200807eed98461a77a745",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1200,
+        "height": 445
+      },
+      "fetchedSha256": "ab92ef23798a23b46eece87ddbc19d80656cb3356be55825f8971275ef0c47a1",
+      "full": {
+        "file": "granola-evidence-full.png",
+        "width": 1200,
+        "height": 445,
+        "bytes": 216710,
+        "sha256": "e8b9980b1538c6d3662054c38332a7c7f8500750b0dc633fe628bd7f8db52ed0"
+      },
+      "crops": [
+        {
+          "name": "source-reading",
+          "file": "granola-evidence-source-reading-crop.png",
+          "rect": {
+            "left": 300,
+            "top": 60,
+            "width": 800,
+            "height": 350
+          },
+          "width": 800,
+          "height": 350,
+          "sha256": "3990441418246785d67563f32ef841f78a259a397e2a254f072f60dcedb9d354",
+          "bytes": 66335
+        }
+      ]
+    },
+    {
+      "id": "B06",
+      "slug": "raycast-search",
+      "pageUrl": "https://www.raycast.com/",
+      "resolvedPageUrl": "https://www.raycast.com/",
+      "assetUrl": "https://www.raycast.com/_next/image?url=%2F_next%2Fstatic%2Fimmutable%2Fmedia%2Ffile-search.1h2o4dmp-4j8e.png&w=1920&q=90",
+      "resolvedAssetUrl": "https://www.raycast.com/_next/image?url=%2F_next%2Fstatic%2Fimmutable%2Fmedia%2Ffile-search.1h2o4dmp-4j8e.png&w=1920&q=90",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1257,
+        "height": 1256
+      },
+      "fetchedSha256": "034b2060d22838c05ad376feff6432e400797da1bc2ad2b8dd522d696a480251",
+      "full": {
+        "file": "raycast-search-full.png",
+        "width": 1257,
+        "height": 1256,
+        "bytes": 215643,
+        "sha256": "efbead2b8a86f61dca00d8d58d47947b773e5c8b0c7afbb846ad676e69c81b1e"
+      },
+      "crops": [
+        {
+          "name": "search-selection",
+          "file": "raycast-search-search-selection-crop.png",
+          "rect": {
+            "left": 115,
+            "top": 110,
+            "width": 560,
+            "height": 690
+          },
+          "width": 560,
+          "height": 690,
+          "sha256": "ea14d2a0ce3ed0126fb8dc75bec8639530c0be910e6ad63706d0eff2f644468a",
+          "bytes": 49113
+        }
+      ]
+    },
+    {
+      "id": "B07",
+      "slug": "attio-create",
+      "pageUrl": "https://attio.com/help/reference/managing-your-data/records/create-and-view-records",
+      "resolvedPageUrl": "https://attio.com/help/reference/managing-your-data/records/create-and-view-records",
+      "assetUrl": "https://attio.com/_next/image?url=https%3A%2F%2Fa.storyblok.com%2Ff%2F234930%2F1520x1070%2Fc9523fbff5%2Fcreate-record-quick-actions.png&w=1920&q=75",
+      "resolvedAssetUrl": "https://attio.com/_next/image?url=https%3A%2F%2Fa.storyblok.com%2Ff%2F234930%2F1520x1070%2Fc9523fbff5%2Fcreate-record-quick-actions.png&w=1920&q=75",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1520,
+        "height": 1070
+      },
+      "fetchedSha256": "72bb50ca426998b804f001ec64c365ee8f1b82d947b8d8a7c21fe6dc22075a7b",
+      "full": {
+        "file": "attio-create-full.png",
+        "width": 1520,
+        "height": 1070,
+        "bytes": 66734,
+        "sha256": "5b7aedb742b63bbd02ac48ff73bc345cb6212c541bcc67844f14064d2e9e813c"
+      },
+      "crops": [
+        {
+          "name": "command-groups",
+          "file": "attio-create-command-groups-crop.png",
+          "rect": {
+            "left": 40,
+            "top": 20,
+            "width": 1410,
+            "height": 630
+          },
+          "width": 1410,
+          "height": 630,
+          "sha256": "146d0c641f9fc37e12dfca2e219a953b7f4692d8c201d5b3f49cf09f5240adac",
+          "bytes": 25474
+        }
+      ]
+    },
+    {
+      "id": "B08",
+      "slug": "folk-mobile",
+      "pageUrl": "https://help.folk.app/en/articles/15179426-people-company-profiles-on-mobile",
+      "resolvedPageUrl": "https://help.folk.app/en/articles/15179426-people-company-profiles-on-mobile",
+      "assetUrl": "https://downloads.intercomcdn.com/i/o/rn8e78eq/2533037227/88a0482397b941887e9792a9205e/Thumbnail+-2-.png?expires=1791982800&signature=f9f8c0de56897f45a35bf0070b8d947014204f316f4dadcf81a3452ef0cf389f&req=diUkFcl9moNdXvMW1HO4zYT9tGKFal0CQRtqPg6J6d%2FY7GZZGyri%2F9vDmTPB%0AFiEHFVqgUJYpPoikDEQ%3D%0A",
+      "resolvedAssetUrl": "https://downloads.intercomcdn.com/i/o/rn8e78eq/2533037227/88a0482397b941887e9792a9205e/Thumbnail+-2-.png?expires=1791982800&signature=f9f8c0de56897f45a35bf0070b8d947014204f316f4dadcf81a3452ef0cf389f&req=diUkFcl9moNdXvMW1HO4zYT9tGKFal0CQRtqPg6J6d%2FY7GZZGyri%2F9vDmTPB%0AFiEHFVqgUJYpPoikDEQ%3D%0A",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1600,
+        "height": 1104
+      },
+      "fetchedSha256": "9561f2004b4aa7a2f2d782ea5d35d5629e0b80476a8891e129e050a7c9f80124",
+      "full": {
+        "file": "folk-mobile-full.png",
+        "width": 1600,
+        "height": 1104,
+        "bytes": 917547,
+        "sha256": "80579c3af306364c74afc8719b1deb9fe83b94f5db79944bcbf0f2027f06d16c"
+      },
+      "crops": [
+        {
+          "name": "detail-fields",
+          "file": "folk-mobile-detail-fields-crop.png",
+          "rect": {
+            "left": 590,
+            "top": 104,
+            "width": 430,
+            "height": 902
+          },
+          "width": 430,
+          "height": 902,
+          "sha256": "bf127151340f91ab4d71ae8303f462c759fe695cf3c287a695d0a7ae7c05a1e4",
+          "bytes": 106065
+        }
+      ]
+    },
+    {
+      "id": "B09",
+      "slug": "dex-followup",
+      "pageUrl": "https://getdex.com/product-overview/",
+      "resolvedPageUrl": "https://getdex.com/product-overview/",
+      "assetUrl": "https://getdex.com/assets/keep-in-touch-Z6P5z-H_.webp",
+      "resolvedAssetUrl": "https://getdex.com/assets/keep-in-touch-Z6P5z-H_.webp",
+      "fetchedMime": "image/webp",
+      "fetchedSize": {
+        "width": 692,
+        "height": 640
+      },
+      "fetchedSha256": "9b16b52c23096eaf990c0449a171b63a76c409a948ca31e3b1d5474b00753638",
+      "full": {
+        "file": "dex-followup-full.png",
+        "width": 692,
+        "height": 640,
+        "bytes": 91833,
+        "sha256": "4c65dc1aa688f5a7b57d4805844bfd53016f7abdb6f114a444a3b42154109d00"
+      },
+      "crops": [
+        {
+          "name": "followup-rows",
+          "file": "dex-followup-followup-rows-crop.png",
+          "rect": {
+            "left": 175,
+            "top": 140,
+            "width": 500,
+            "height": 325
+          },
+          "width": 500,
+          "height": 325,
+          "sha256": "f7c0b29c6246c7e3580c40f820e008843ce36c9cb4c9ebdf9e6d4cea901e55da",
+          "bytes": 50157
+        }
+      ]
+    },
+    {
+      "id": "B10",
+      "slug": "dex-command",
+      "pageUrl": "https://getdex.com/product-overview/",
+      "resolvedPageUrl": "https://getdex.com/product-overview/",
+      "assetUrl": "https://getdex.com/assets/shortcuts-DXKzbTcD.webp",
+      "resolvedAssetUrl": "https://getdex.com/assets/shortcuts-DXKzbTcD.webp",
+      "fetchedMime": "image/webp",
+      "fetchedSize": {
+        "width": 692,
+        "height": 640
+      },
+      "fetchedSha256": "65664242fddc837c3352e876ade639021ef1f1e6c57360de4ee8d7cb3220949f",
+      "full": {
+        "file": "dex-command-full.png",
+        "width": 692,
+        "height": 640,
+        "bytes": 65636,
+        "sha256": "cc038ca282d0e08a69146c38a0082fccdc63453d903dbf7c24f94ec493d41d69"
+      },
+      "crops": [
+        {
+          "name": "command-list",
+          "file": "dex-command-command-list-crop.png",
+          "rect": {
+            "left": 140,
+            "top": 90,
+            "width": 540,
+            "height": 380
+          },
+          "width": 540,
+          "height": 380,
+          "sha256": "f931ca2e6b520dd58c436a3279378cc4f0d2ce96afed2df9e54ab2d458e486c6",
+          "bytes": 40178
+        }
+      ]
+    },
+    {
+      "id": "B11",
+      "slug": "linkurious-expand",
+      "pageUrl": "https://doc.linkurious.com/user-manual/latest/expand/",
+      "resolvedPageUrl": "https://doc.linkurious.com/user-manual/latest/expand/",
+      "assetUrl": "https://doc.linkurious.com/user-manual/latest/images/expand__expand_selective_modal.png",
+      "resolvedAssetUrl": "https://doc.linkurious.com/user-manual/latest/images/expand__expand_selective_modal.png",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1024,
+        "height": 705
+      },
+      "fetchedSha256": "5c18d5e663b0f0930b6361e124b79d9951dc3c11e98617269f1127e3cda3e5f0",
+      "full": {
+        "file": "linkurious-expand-full.png",
+        "width": 1024,
+        "height": 705,
+        "bytes": 93092,
+        "sha256": "603abf785f0d0350c2164b21ab6fa21e8442043d501533113d3396b33cde0f74"
+      },
+      "crops": [
+        {
+          "name": "expansion-controls",
+          "file": "linkurious-expand-expansion-controls-crop.png",
+          "rect": {
+            "left": 20,
+            "top": 95,
+            "width": 975,
+            "height": 500
+          },
+          "width": 975,
+          "height": 500,
+          "sha256": "476b655d63637757b2e1fccec1bcebcd93df2ef01d2f1e01bff8ce082f489bce",
+          "bytes": 78183
+        }
+      ]
+    },
+    {
+      "id": "B12",
+      "slug": "linkurious-pin",
+      "pageUrl": "https://doc.linkurious.com/user-manual/latest/pinning/",
+      "resolvedPageUrl": "https://doc.linkurious.com/user-manual/latest/pinning/",
+      "assetUrl": "https://doc.linkurious.com/user-manual/latest/images/pinning__pinning_layout.png",
+      "resolvedAssetUrl": "https://doc.linkurious.com/user-manual/latest/images/pinning__pinning_layout.png",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1200,
+        "height": 572
+      },
+      "fetchedSha256": "90feeb139bf5be23743d53ab8b265817b13f1e8074eec8940a4846929815e4f6",
+      "full": {
+        "file": "linkurious-pin-full.png",
+        "width": 1200,
+        "height": 572,
+        "bytes": 74752,
+        "sha256": "801931f3eab59d27fe201ec179e87b0793da6ff4fec4a18b04614ccf608a31ab"
+      },
+      "crops": [
+        {
+          "name": "pinned-neighborhood",
+          "file": "linkurious-pin-pinned-neighborhood-crop.png",
+          "rect": {
+            "left": 270,
+            "top": 48,
+            "width": 750,
+            "height": 477
+          },
+          "width": 750,
+          "height": 477,
+          "sha256": "8ccec62ec34cbb76291bdbd5258bfbd58c28ea8098808fdd7179ed1b79f005af",
+          "bytes": 55717
+        }
+      ]
+    },
+    {
+      "id": "B13",
+      "slug": "folk-notes",
+      "pageUrl": "https://help.folk.app/en/articles/15179426-people-company-profiles-on-mobile",
+      "resolvedPageUrl": "https://help.folk.app/en/articles/15179426-people-company-profiles-on-mobile",
+      "assetUrl": "https://downloads.intercomcdn.com/i/o/rn8e78eq/2533039087/f8b69b2858ac898c38b212092832/Thumbnail+-5-.png?expires=1791982800&signature=a386f28f48eff99d42fde86aeb5c6034aaf9a6c40e7092c6284e9ce0811831ce&req=diUkFcl9lIFXXvMW1HO4zT04vmYMah6TG22JnEdn4dlcd4ihmHfojUyrzX2c%0AFwFVz19bhECYmR%2Bancg%3D%0A",
+      "resolvedAssetUrl": "https://downloads.intercomcdn.com/i/o/rn8e78eq/2533039087/f8b69b2858ac898c38b212092832/Thumbnail+-5-.png?expires=1791982800&signature=a386f28f48eff99d42fde86aeb5c6034aaf9a6c40e7092c6284e9ce0811831ce&req=diUkFcl9lIFXXvMW1HO4zT04vmYMah6TG22JnEdn4dlcd4ihmHfojUyrzX2c%0AFwFVz19bhECYmR%2Bancg%3D%0A",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1600,
+        "height": 1104
+      },
+      "fetchedSha256": "81a32f9dcd4af89ff92291112dd3866e34fe45f1ad63374a47bee74ee95d751d",
+      "full": {
+        "file": "folk-notes-full.png",
+        "width": 1600,
+        "height": 1104,
+        "bytes": 994121,
+        "sha256": "e6cbbc408aadb89b534fa432a6492276b9657683d72a42301817f0d14ff5a853"
+      },
+      "crops": [
+        {
+          "name": "mobile-notes",
+          "file": "folk-notes-mobile-notes-crop.png",
+          "rect": {
+            "left": 580,
+            "top": 104,
+            "width": 440,
+            "height": 900
+          },
+          "width": 440,
+          "height": 900,
+          "sha256": "21979b2724d702df2df8ae0f50fc6ce75714b4721caaf493f71444a2f6910083",
+          "bytes": 188790
+        }
+      ]
+    },
+    {
+      "id": "B14",
+      "slug": "folk-keyboard",
+      "pageUrl": "https://help.folk.app/en/articles/15179426-people-company-profiles-on-mobile",
+      "resolvedPageUrl": "https://help.folk.app/en/articles/15179426-people-company-profiles-on-mobile",
+      "assetUrl": "https://downloads.intercomcdn.com/i/o/rn8e78eq/2533037678/62600285ba3b128882ae167b33ee/Thumbnail+-3-.png?expires=1791982800&signature=056d9ff870ab5778cdb1402e64ac64cd8538d8bee6aa67aacfde90c23ae22b0d&req=diUkFcl9modYUfMW1HO4za9mHPsTzXAXR6bbXZfbkbENS2mCxtU3QwdevAbo%0AHSGRTwCaoxkKpct%2Beb8%3D%0A",
+      "resolvedAssetUrl": "https://downloads.intercomcdn.com/i/o/rn8e78eq/2533037678/62600285ba3b128882ae167b33ee/Thumbnail+-3-.png?expires=1791982800&signature=056d9ff870ab5778cdb1402e64ac64cd8538d8bee6aa67aacfde90c23ae22b0d&req=diUkFcl9modYUfMW1HO4za9mHPsTzXAXR6bbXZfbkbENS2mCxtU3QwdevAbo%0AHSGRTwCaoxkKpct%2Beb8%3D%0A",
+      "fetchedMime": "image/png",
+      "fetchedSize": {
+        "width": 1600,
+        "height": 1104
+      },
+      "fetchedSha256": "388f05b5679d2a3491a5e95043df5197db25cb3f0b627041a57402f2722034ce",
+      "full": {
+        "file": "folk-keyboard-full.png",
+        "width": 1600,
+        "height": 1104,
+        "bytes": 931269,
+        "sha256": "baa4dff94208c9aed55d98392eea30bd935ed0716c52f8d12c92d60b90203d40"
+      },
+      "crops": [
+        {
+          "name": "keyboard-composer",
+          "file": "folk-keyboard-keyboard-composer-crop.png",
+          "rect": {
+            "left": 582,
+            "top": 104,
+            "width": 440,
+            "height": 900
+          },
+          "width": 440,
+          "height": 900,
+          "sha256": "cf25050d8e4267dcd5012cd9822d00e22943a17d2acb274f0892b76b80a0a2da",
+          "bytes": 135799
+        }
+      ]
+    },
+    {
+      "id": "B15",
+      "slug": "dex-reminder",
+      "pageUrl": "https://getdex.com/product-overview/",
+      "resolvedPageUrl": "https://getdex.com/product-overview/",
+      "assetUrl": "https://getdex.com/assets/reminders-BaFqxJBJ.webp",
+      "resolvedAssetUrl": "https://getdex.com/assets/reminders-BaFqxJBJ.webp",
+      "fetchedMime": "image/webp",
+      "fetchedSize": {
+        "width": 692,
+        "height": 640
+      },
+      "fetchedSha256": "336b85f62779b7adc0c4e015c68f002d20f7d7b44bc7373ebfce4fa6527d6bf7",
+      "full": {
+        "file": "dex-reminder-full.png",
+        "width": 692,
+        "height": 640,
+        "bytes": 54526,
+        "sha256": "83f2a934d8cefcb05113c1b425620e48f0683676313effe337463eff31923d7f"
+      },
+      "crops": [
+        {
+          "name": "input-fields",
+          "file": "dex-reminder-input-fields-crop.png",
+          "rect": {
+            "left": 125,
+            "top": 112,
+            "width": 550,
+            "height": 245
+          },
+          "width": 550,
+          "height": 245,
+          "sha256": "53202b5f817d4573d3330074b45223d5ceccbf118893159338995c5b065b7023",
+          "bytes": 28767
+        }
+      ]
+    }
+  ]
+}

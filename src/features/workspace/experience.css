@@ -26,18 +26,6 @@
   animation: workspace-spin 1s linear infinite;
 }
 .integrated-workspace {
-  --text: #262332;
-  --foreground: #262332;
-  --secondary: #625e70;
-  --muted: #625e70;
-  --line: #e5e3eb;
-  --border: #e5e3eb;
-  --surface-subtle: #f7f7fa;
-  --background: #f7f7fa;
-  --accent: #7040ca;
-  --primary: #7040ca;
-  --accent-hover: #5b2eaf;
-  --soft: #f0eafb;
   font-family: "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   font-size: 14px;
   line-height: 1.5;

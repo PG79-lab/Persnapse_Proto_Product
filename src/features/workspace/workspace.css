@@ -14,15 +14,6 @@
   color: var(--text);
   background: var(--surface-subtle);
   font-synthesis: none;
-  --accent: #7541d6;
-  --primary: #7541d6;
-  --accent-hover: #6330be;
-  --text: #282332;
-  --secondary: #696273;
-  --surface-subtle: #f8f7fa;
-  --line: #e7e3ed;
-  --muted: #696273;
-  --soft: #f2ecfd;
 }
 @layer base {
   .integrated-workspace * {

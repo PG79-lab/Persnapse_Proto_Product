@@ -69,7 +69,7 @@ test("summary filters pending work and restores the full list", async ({
   page,
 }) => {
   await mockWorkspace(page);
-  await page.goto("/");
+  await page.goto("/#todos");
   const overview = page.getByRole("region", { name: "오늘의 업무 요약" });
   await overview.getByRole("button", { name: /날짜 미정/ }).click();
   await expect(page.locator(".work-todo-items .todo-item")).toHaveCount(1);
@@ -182,15 +182,18 @@ test("map filtering explains hidden people and offers a reset", async ({
 }) => {
   await mockWorkspace(page);
   await page.goto("/#map");
-  await expect(page.getByText("연결은 준비됐어요")).toBeVisible();
-  await expect(page.locator(".relationship-category-card")).toHaveCount(0);
+  await expect(page.locator(".graph-context")).toContainText("한지민");
   await page.getByRole("button", { name: /필터/ }).click();
   await page
-    .locator(".filter-panel")
+    .getByRole("group", { name: "지도 필터", exact: true })
     .getByLabel("상태")
     .selectOption("success");
   await expect(page.getByText("조건에 맞는 연결이 없어요")).toBeVisible();
-  await page.getByRole("button", { name: "필터 초기화", exact: true }).click();
+  await page
+    .getByRole("group", { name: "지도 필터", exact: true })
+    .getByRole("button", { name: "필터 초기화", exact: true })
+    .click();
+  await page.getByRole("button", { name: "필터 닫기" }).click();
   await expect(
     page.getByRole("button", { name: "인맥 한지민", exact: true }),
   ).toBeVisible();
@@ -200,10 +203,13 @@ test("map filtering explains hidden people and offers a reset", async ({
   await expect(page.locator(".graph-focus-caption")).toHaveText(
     "제품 연구 모임",
   );
-  await page.getByRole("button", { name: "인맥 정리하기" }).click();
+  await page
+    .getByRole("navigation", { name: "주요 메뉴", exact: true })
+    .getByRole("button", { name: "인맥 관리", exact: true })
+    .click();
   await expect(page).toHaveURL(/#people$/);
 });
-test("dense relationship map starts with people and reveals meetings on demand", async ({
+test("dense relationship map limits the initial slice and exposes remaining meetings through expansion", async ({
   page,
 }) => {
   const state = fixture();
@@ -212,22 +218,32 @@ test("dense relationship map starts with people and reveals meetings on demand",
     id: `30000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
     name: `제품 모임 ${index + 1}`,
   }));
+  state.edges = state.meetings.map((meeting, index) => ({
+    id: `edge-${index}`,
+    personId: state.people[0].id,
+    meetingId: meeting.id,
+    deletedAt: null,
+  }));
   await mockWorkspace(page, state);
   await page.goto("/#map");
   await expect(
     page.getByRole("button", { name: /^만남 제품 모임/ }),
-  ).toHaveCount(0);
-  await page.getByRole("button", { name: "만남 12개 표시" }).click();
+  ).toHaveCount(11);
+  await expect(page.locator(".graph-statusbar")).toContainText(
+    "목록에서 접근 가능",
+  );
+  await page.getByRole("button", { name: "관련 기록 펼치기" }).click();
+  await page.getByRole("button", { name: /참석 만남/ }).click();
   await expect(
     page.getByRole("button", { name: /^만남 제품 모임/ }),
   ).toHaveCount(12);
-  await page.getByRole("button", { name: "인맥 중심으로 보기" }).click();
+  await page.getByRole("button", { name: /한지민.*접기/ }).click();
   await expect(
     page.getByRole("button", { name: /^만남 제품 모임/ }),
-  ).toHaveCount(0);
+  ).toHaveCount(11);
 });
 
-test("large relationship map pages people before offering the full view", async ({
+test("large relationship map keeps omitted people accessible in the list and explicit full view", async ({
   page,
 }) => {
   const state = fixture();
@@ -238,18 +254,20 @@ test("large relationship map pages people before offering the full view", async 
   }));
   await mockWorkspace(page, state);
   await page.goto("/#map");
-  await expect(page.locator(".graph-people-controls")).toContainText(
-    "1–8 / 17명",
+  await expect(page.locator(".graph-archive-row")).toHaveCount(17);
+  await expect(page.locator('.graph-node[role="button"]')).toHaveCount(2);
+  await expect(page.locator(".graph-statusbar")).toContainText(
+    "16개는 목록에서 접근 가능",
   );
-  await expect(page.locator('.graph-node[role="button"]')).toHaveCount(9);
-  await page.getByRole("button", { name: "다음" }).click();
-  await expect(page.locator(".graph-people-controls")).toContainText(
-    "9–16 / 17명",
-  );
-  await page.getByRole("button", { name: "전체 보기" }).click();
-  await expect(page.locator(".graph-people-controls")).toContainText(
-    "인맥 전체 17명",
-  );
+  await page
+    .getByRole("textbox", { name: "지도 목록 검색" })
+    .fill("테스트 인맥 17");
+  await page.locator(".graph-archive-row").click();
+  await expect(
+    page.getByRole("complementary", { name: "선택 기록 상세" }),
+  ).toContainText("테스트 인맥 17");
+  await page.getByRole("button", { name: "상세 닫기", exact: true }).click();
+  await page.getByRole("button", { name: "전체 보기", exact: true }).click();
   await expect(page.locator('.graph-node[role="button"]')).toHaveCount(18);
 });
 
@@ -258,13 +276,15 @@ test("mobile AI tab opens the composer and examples remain actionable", async ({
 }) => {
   await mockWorkspace(page);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/#todos");
   await page.getByRole("tab", { name: "AI 어시스턴트", exact: true }).click();
   await expect(
     page.getByRole("region", { name: "오늘의 업무 요약" }),
   ).not.toBeVisible();
   const examples = page.locator(".assistant-examples button");
   await expect(examples).toHaveCount(3);
+  // The adopted layout scrolls the welcome examples inside the conversation.
+  await examples.last().scrollIntoViewIfNeeded();
   const lastExample = await examples.last().boundingBox();
   const composer = await page.locator(".connected-composer").boundingBox();
   expect(
@@ -319,7 +339,7 @@ test("recorded audio stays in this browser after reload and can be removed", asy
 
 test("empty workspace offers a working first-card path", async ({ page }) => {
   await mockWorkspace(page, emptyWorkspace());
-  await page.goto("/");
+  await page.goto("/#todos");
   await page
     .getByRole("button", { name: "명함 등록하기", exact: true })
     .click();
@@ -343,7 +363,7 @@ test("AI no-result recovery edits the query without repeating a paid request", a
       },
     });
   });
-  await page.goto("/");
+  await page.goto("/#todos");
   await page.getByRole("textbox", { name: "AI에게 질문" }).fill("물류 담당자");
   await page.getByRole("button", { name: "질문 보내기" }).click();
   await page.getByRole("button", { name: "질문 수정하기" }).click();
@@ -394,7 +414,7 @@ test("AI recall shows its evidence and opens the person's pending work", async (
       },
     }),
   );
-  await page.goto("/");
+  await page.goto("/#todos");
   await page
     .getByRole("textbox", { name: "AI에게 질문" })
     .fill("제안서를 보내기로 한 사람");
@@ -435,7 +455,7 @@ for (const width of [390, 768, 1440])
       ).toBe(true);
       if (section === "recordings")
         await expect(page.locator(".recording-capability-note")).toContainText(
-          "자동 텍스트 변환은 준비 중",
+          "결과를 확인한 뒤 메모에 추가합니다",
         );
     }
     expect(errors).toEqual([]);

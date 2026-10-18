@@ -217,6 +217,7 @@ export interface WorkspaceSnapshot {
   loadedAt: string;
   capabilities: {
     assistantContext?: boolean;
+    preview?: string;
     aiMode: "mock" | "live";
     ocrMode: "mock" | "live";
     storage: "server";

@@ -99,7 +99,7 @@ test("shows the integrated workspace and all six task menus", async ({
 }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "일정/업무관리",
+    "관계 지도",
   );
   for (const name of [
     "일정/업무관리",

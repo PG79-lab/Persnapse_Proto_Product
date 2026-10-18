@@ -4,6 +4,7 @@ import { mockWorkspace } from "./workspace-fixture";
 test("real STT gateway accepts same-origin browser uploads", async ({
   page,
 }) => {
+  await mockWorkspace(page);
   await page.goto("/#todos");
   const status = await page.evaluate(async () => {
     const form = new FormData();

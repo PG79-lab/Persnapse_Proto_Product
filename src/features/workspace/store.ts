@@ -91,7 +91,9 @@ export function createWorkspaceStore(fetcher: typeof fetch = fetch) {
       ...value,
       ready: true,
       busy: false,
-      status: "저장됨",
+      status: value.capabilities.preview
+        ? "합성 데이터 · 저장 안 함"
+        : "저장됨",
       error: null,
       generation: current.generation + 1,
     });

@@ -1,0 +1,2060 @@
+{
+  "generatedAt": "2026-10-15T20:41:49.280Z",
+  "baseURL": "http://127.0.0.1:4316",
+  "cwd": "D:\\Persnapse\\worktrees\\persnapse-frontend-graph-review",
+  "branch": "feat/frontend-graph-review-20261015",
+  "head": "9ec83921b5b423625b41472598b167acce8a2535",
+  "trackedDiffSha256": "f5471f898eab99faa4259c54f901355ca0af702e9232a903bf05bec057ad48c5",
+  "sourceManifestSha256": "42e08ddacdc2964e546f816813fe40708ab80c27a76d8abab932b95d9d7d88c4",
+  "files": [
+    {
+      "path": "next.config.ts",
+      "sha256": "ee0ce64f8005cec7da2f53a73c7cf85c89591067189747164ed6bcfa96b2217a"
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "f4c686688ffa7397c8f722aaf20bcf0e8e11d4fe9fccaf6900cf103f12d35944"
+    },
+    {
+      "path": "package.json",
+      "sha256": "b81a76cfa869ea3be563b0f080637b9add64eb15a5d68c45019a187441b29f3e"
+    },
+    {
+      "path": "playwright.graph.config.ts",
+      "sha256": "899840262eaeaa5733ae589ac4362068c57d37b15b847a7058814dc1b03c1941"
+    },
+    {
+      "path": "scripts/ai/compare-business-card-extractors.ts",
+      "sha256": "2db358587651c2e8e420696038f8e2a27de1cd3cdb54aba7215da6ea6c53f1a4"
+    },
+    {
+      "path": "scripts/ai/index-memory.ts",
+      "sha256": "89ae20d9570e3c4a56f261da0a1384e0f452ff965f13f46458d7d26a4d1c1ad6"
+    },
+    {
+      "path": "scripts/ai/synthetic-business-card-image.ts",
+      "sha256": "33bdbc4405d6c18d84a624441ba0b27542f7a1ed092f4684348e0789ee437ac5"
+    },
+    {
+      "path": "scripts/ai/verify-business-card-number-types.ts",
+      "sha256": "76d497ed33152e427f71f5ad89e4db1f57e52006b5f5f9913a7b20a4e47f30af"
+    },
+    {
+      "path": "scripts/ai/verify-capture-recall-readiness.ts",
+      "sha256": "7f5d94be29fa34550bd3217bc332df84420938e71cf4052c6da4ba3e1995d37b"
+    },
+    {
+      "path": "scripts/ai/verify-clova-ocr.ts",
+      "sha256": "02815c26e85b77b526375f20f80812f681abf07b9053afa880b26602ac83e100"
+    },
+    {
+      "path": "scripts/ai/verify-live-recall.ts",
+      "sha256": "b884d5715a74ea051a36c021d613cd22a5ccafb2ce5709554bbcfaf64916b0dc"
+    },
+    {
+      "path": "scripts/ai/verify-live.ts",
+      "sha256": "10b887f6d23da5056ac3c6b1c58ae6ca0c0478261b2088a2de4fc2c3e984b851"
+    },
+    {
+      "path": "scripts/ai/verify-memory-assistant.ts",
+      "sha256": "b52b45c16dfd4ec232c5bcb2de14ab523a80e1acc13da703d21958132293bc2c"
+    },
+    {
+      "path": "scripts/ai/verify-recall-readiness.ts",
+      "sha256": "1962e009d67a1c122943a55e3add72ca098a6b780412a34ce88a7fd1046895a3"
+    },
+    {
+      "path": "scripts/ai/verify-search-recovery.ts",
+      "sha256": "882f473196eb5227f4c8af1534348ab1e10755a349be4430080dedc8c04ff29b"
+    },
+    {
+      "path": "scripts/ai/verify-workspace-live.ts",
+      "sha256": "a4992cecd798654208aa3c4478e3cc76a11dac1821c1a52681cbd3bbc4c1babf"
+    },
+    {
+      "path": "scripts/card_recognition/README.md",
+      "sha256": "22a0dbf6b74d995108a199fc191f0b16e5e49822b9e31730532883ec800ceeb8"
+    },
+    {
+      "path": "scripts/card_recognition/benchmark-photos.ts",
+      "sha256": "1cdf05fcf832bf2da4b936c35cf48d220fe49fc9147ff172a1712c482e21ccba"
+    },
+    {
+      "path": "scripts/card_recognition/benchmark.ts",
+      "sha256": "1b90251f30e2c7089c989ce66566aff3b939a605b51cca645f5a1625e9872f9b"
+    },
+    {
+      "path": "scripts/card_recognition/browser-entry.ts",
+      "sha256": "6ac5d59ad634a60cf5c53067bfa5b4c2c9aa8839eb368265a3849a41bdd46a4a"
+    },
+    {
+      "path": "scripts/card_recognition/compatibility.ts",
+      "sha256": "6fda6440a0fd832f6bc6fcb1aa624be3fc9de00aa09f6ea7fac9ca090e191c0e"
+    },
+    {
+      "path": "scripts/card_recognition/dataset.ts",
+      "sha256": "2b74593d1e6df303abd3142be8911a9e229092db9f920350a3202757a03cfc29"
+    },
+    {
+      "path": "scripts/card_recognition/download-models.ts",
+      "sha256": "84d48cff4e178bfbb1482389bb4f42245883799507dc432d0487f7ed243e6896"
+    },
+    {
+      "path": "scripts/card_recognition/export-quick-pilot.mjs",
+      "sha256": "f234423f5c63645f5e1d9c51e75942816899d5262fa635ab60f504530623c4c3"
+    },
+    {
+      "path": "scripts/card_recognition/export_photo_html.py",
+      "sha256": "60e5e576381dbcc2e8df0feee546565b7944dee6d31e00f722c68cffe8cbf6e9"
+    },
+    {
+      "path": "scripts/card_recognition/generate_dataset.py",
+      "sha256": "77eb16a63e3cb1c37aa9b28934ccc78f121ae22dd9073177c942395bffa8cadd"
+    },
+    {
+      "path": "scripts/card_recognition/image_metrics.py",
+      "sha256": "169bc3359a200f24c700c90f4a8e9623d414966b420735a55ff8c6a3d2ac12e1"
+    },
+    {
+      "path": "scripts/card_recognition/inspect_models.py",
+      "sha256": "9874a25651397367b5ee4d0a96c15ebc3171060e15d286bfc303109c05d420c2"
+    },
+    {
+      "path": "scripts/card_recognition/mock-card-api.ts",
+      "sha256": "b1cc4bb59e2f76ac72fe383bc4d9640b7736418df9f3f9af8a66852f088408d3"
+    },
+    {
+      "path": "scripts/card_recognition/overlay_photos.py",
+      "sha256": "27e2d8cb25eeae97330ba6819b098d28dccf84a2dc640464b759fc73ea836515"
+    },
+    {
+      "path": "scripts/card_recognition/photo-report.html",
+      "sha256": "222f7e5e65309946b036d1adecd4021c2ece9c9b37ef8bb05700d13243cf4708"
+    },
+    {
+      "path": "scripts/card_recognition/photos-browser.ts",
+      "sha256": "ca9ff03e7591a5284a90dda778d24bba7b96d2dbbb3310f8ad3c205faa9227af"
+    },
+    {
+      "path": "scripts/card_recognition/prepare_photos.py",
+      "sha256": "6fd9cfb4fc68105fa1c3c4a68234a9bd6eeb5eeda758b46ef0026f1270c9e87c"
+    },
+    {
+      "path": "scripts/card_recognition/python.mjs",
+      "sha256": "a7367d69df81ac15a2a8b129a6627673ffd0898a1cecef04123d26903694a142"
+    },
+    {
+      "path": "scripts/card_recognition/quick-pilot-browser.ts",
+      "sha256": "c6155efb58706c44559b3bec11e5bb000a64c6977edf89b9d9c44a9f9a0ed3e1"
+    },
+    {
+      "path": "scripts/card_recognition/quick-pilot.mjs",
+      "sha256": "b4968395a92f77509906950f02796bf50f0d3f81ce04d7d4da908bbd353acb4c"
+    },
+    {
+      "path": "scripts/card_recognition/quick-ui-browser.tsx",
+      "sha256": "13ef20b2c4ee809fe2556af80baf3cfc3c384ddeb9f5b07b76b0b28375028b54"
+    },
+    {
+      "path": "scripts/card_recognition/reference_preprocessing.py",
+      "sha256": "5d39a44a96067a0231eaf184fb0c7edde9fd9dd6e7828227712971470023fcb2"
+    },
+    {
+      "path": "scripts/card_recognition/report-photos.ts",
+      "sha256": "bc407d96ca8ae0a60e9137bedbdd02859a79afdf88b6d4ccbe11129f936a59d1"
+    },
+    {
+      "path": "scripts/card_recognition/report.py",
+      "sha256": "7b1f614be5db7ebae2b3412f90b7641f32ad5e4174915b358deaae21a0c01af9"
+    },
+    {
+      "path": "scripts/card_recognition/report_pipeline.py",
+      "sha256": "b112e0dfd13f942c47660eb65050958f8b429c3a736adcac77a540944a470ac1"
+    },
+    {
+      "path": "scripts/card_recognition/requirements.txt",
+      "sha256": "b404de289cecf125d2354f0393000a39c62b56a3bc09e632a1a41643750f0279"
+    },
+    {
+      "path": "scripts/card_recognition/run-e2e.mjs",
+      "sha256": "edcb36da1d7d40260d109ba276161f7705c3a46b554e2459aaff8e8e5f476406"
+    },
+    {
+      "path": "scripts/card_recognition/serve-photo-report.ts",
+      "sha256": "6a5602299039a1ecab40c31b1aeaf4075fef11fdc8f11cac305162a8cd51c2ce"
+    },
+    {
+      "path": "scripts/card_recognition/serve-test.ts",
+      "sha256": "2a9972bab5bfc84abcbc42fd8a102d99eb6b85216289559efeda3e62b6f65579"
+    },
+    {
+      "path": "scripts/card_recognition/validate_dataset.py",
+      "sha256": "43c235ecb319f38e0b5675dbd9138bae72afc681b5c3c05beff262b50d870687"
+    },
+    {
+      "path": "scripts/card_recognition/verify-card-ready.mjs",
+      "sha256": "1e8d300d1102c978738e895d940ec83bc88b071cfb4b88b63db6654a734bdcca"
+    },
+    {
+      "path": "scripts/card_recognition/verify-photo-html.mjs",
+      "sha256": "947f14e8385728d1624ce6746558173532cc470b63bbeb71a044c8c3892d3da3"
+    },
+    {
+      "path": "scripts/card_recognition/verify-pipeline-photos.mjs",
+      "sha256": "5769093379f74a6f6c8f93d148d3fa47ec98cceb493ec68e234b2a70a65d9589"
+    },
+    {
+      "path": "scripts/card_recognition/verify-quick-ocr.mjs",
+      "sha256": "b56278fa8b245e8a5431c08ec78a6b9c3d1ca40cef65d0954d400c26241785f5"
+    },
+    {
+      "path": "scripts/card_recognition/verify-quick-rotation.mjs",
+      "sha256": "148f0b04f5acc0f800fd7e90a30f88b0b2f7bec3a7d2a4254739731291f48063"
+    },
+    {
+      "path": "scripts/copy-card-runtime.mjs",
+      "sha256": "5465e9734031cd0ab42cb4b4a42fb26a7d478090b7e3abc72302730230f0aa1a"
+    },
+    {
+      "path": "scripts/copy-card-test.mjs",
+      "sha256": "7f8929874eaea7a296149aa3ab7a9ab15e6baa5d02e1738b436a542f2887bed6"
+    },
+    {
+      "path": "scripts/copy-opencv.mjs",
+      "sha256": "7c4d35e5110af583d8e221a3f287eeb6bc3e902a77849ca9a8b5ad074ffd32e4"
+    },
+    {
+      "path": "scripts/db/check.mjs",
+      "sha256": "fd208097fdc036eb98dfb6969b592c9770959dab5ae09c925861c760b7d5bf10"
+    },
+    {
+      "path": "scripts/db/connection.mjs",
+      "sha256": "12663bdef45b3d32233632a6cb02b109b20b9100dad8b9ec97e6c7ab5cb9aeeb"
+    },
+    {
+      "path": "scripts/db/preflight.mjs",
+      "sha256": "c165a78f0c6cdf27e6d91a37da4685f243dea442acf340636fff18670dc435ba"
+    },
+    {
+      "path": "scripts/db/push.mjs",
+      "sha256": "f6b91f987acfc27278d11e43d921627571a0fb7fd7a5266e7ac88f108a892199"
+    },
+    {
+      "path": "scripts/db/report-ocr-cost-usage.ts",
+      "sha256": "aaf06d1c4c03815561f77aba1f502a714486bf550e40aa03afa0c9410db2a137"
+    },
+    {
+      "path": "scripts/db/seed.mjs",
+      "sha256": "ec47e89c4273c04d437b32d5c078b4b109f014204c357fd50a11d467fd087794"
+    },
+    {
+      "path": "scripts/db/verify-burst-guards.ts",
+      "sha256": "41506170a158d9de2e50d7111d18b2cee1180e74eee26d3995b60df918b8c24c"
+    },
+    {
+      "path": "scripts/db/verify-capture-storage.ts",
+      "sha256": "3a4eac5359e3302442f4414a17393c2fd472092a14be411ad79f411ac2e5a41e"
+    },
+    {
+      "path": "scripts/db/verify-ocr-cost-guard.ts",
+      "sha256": "f34e281c78b86ec0bab3eebbe2427696173d8b089a4ddf872900b0b05aafdf0d"
+    },
+    {
+      "path": "scripts/db/verify-phase4.ts",
+      "sha256": "1bafcbbfb63f5376619e87167a17e6990e328502a95bc8b38ae001a9beae0edb"
+    },
+    {
+      "path": "scripts/db/verify-phase5.ts",
+      "sha256": "5e6a0f673fc20720920d81b8085ff71c06888e980a5488f7c51614f365251751"
+    },
+    {
+      "path": "scripts/db/verify-recall-storage.ts",
+      "sha256": "32f1241dd89d86e13bb0c6650422b02dda09bc3fe76f26660cf7319a1df8c245"
+    },
+    {
+      "path": "scripts/db/verify-workspace-browser.ts",
+      "sha256": "458694fe684faf5ad7ab2cf500e279b8927ba878655c171badeb1ad1ed391a37"
+    },
+    {
+      "path": "scripts/db/verify-workspace-integration.ts",
+      "sha256": "fc7ee769135afad324d4d4cd8ca1ec69f920db95bd400ad353bd235bc8186800"
+    },
+    {
+      "path": "scripts/db/verify.mjs",
+      "sha256": "afa0f0c47802753ec1b671acb2bc2c55e7904e38eda1d969077c85fb8a02de59"
+    },
+    {
+      "path": "scripts/deploy/bootstrap-vercel-project.mjs",
+      "sha256": "1ea9873e2f55c2de6b155edd716b1e34d271f04cae69c8ad26059abaa814c2f2"
+    },
+    {
+      "path": "scripts/deploy/deploy-vercel-preview.mjs",
+      "sha256": "abb8f30430c2fe2a87e84cfaf2950c22b22855adeda8527f96f3725c2c510387"
+    },
+    {
+      "path": "scripts/deploy/set-vercel-all-deployments-protection.mjs",
+      "sha256": "bcbde7e16765ed29ec93a186fac739eb4fe34ccc5936a1e2b4f71ee67102f65d"
+    },
+    {
+      "path": "scripts/deploy/sync-vercel-preview-env.mjs",
+      "sha256": "35357f1d4ed93cad3d93c30adb442cc45a26f4ea657a4c975c5c2adec5c8159c"
+    },
+    {
+      "path": "scripts/deploy/vercel-cli-environment.mjs",
+      "sha256": "6fdb9f88e670a2ac67f12815c16040659d061620d59b595c1a2f5cae9d05c288"
+    },
+    {
+      "path": "scripts/deploy/vercel-cli-environment.test.mjs",
+      "sha256": "9bfb771e73e67b98e64656db4e7bf239b9aa8e078b8948d24389b902db730143"
+    },
+    {
+      "path": "scripts/deploy/vercel-preview-environment-policy.mjs",
+      "sha256": "44ec81db64cbaa1789a8fbb9d8937ca39415b2e9e1394459d81978a9a3b93018"
+    },
+    {
+      "path": "scripts/deploy/vercel-preview-environment-policy.test.mjs",
+      "sha256": "de3947b54e0680efa0f71f25c863941cfd120edc6ed93d8ae425c7e259d46991"
+    },
+    {
+      "path": "scripts/deploy/vercel-project-guard.mjs",
+      "sha256": "f7cf5a04b4c800815d8264f0b862c92ac5c1cf90fb0489f4e586c275559d56b3"
+    },
+    {
+      "path": "scripts/deploy/vercel-project-guard.test.mjs",
+      "sha256": "695ebfabd3c92add2815144632156977ca792c6af9fefcc610400c6dbe23c043"
+    },
+    {
+      "path": "scripts/deploy/verify-live-memory-preview.mjs",
+      "sha256": "eb5875dd13d60f33bea8eb5de8c0aa2c3b31c2defe879018f5dddcf7b5275bd4"
+    },
+    {
+      "path": "scripts/deploy/verify-vercel-preview-readiness.mjs",
+      "sha256": "eef4bef0e1bf6e01dfb1bcc646ee535ed14e41157f30979fc1026004e319c2d3"
+    },
+    {
+      "path": "scripts/deploy/verify-vercel-preview.mjs",
+      "sha256": "34d3900f1256a6575c7b56c9218dd93138a585a11e18b2bb0cddb903a89cb27e"
+    },
+    {
+      "path": "scripts/deploy/verify-workspace-preview.mjs",
+      "sha256": "97faf8b525fd1b0bd262f424e04d1c39a01f53aeeb208e89a033edc1d95ab398"
+    },
+    {
+      "path": "scripts/evals/recall.ts",
+      "sha256": "7c6add2dc6692621e8e3d7c0f53cc1ccf62508ef0a71974b0f8f89e0a11a06ea"
+    },
+    {
+      "path": "scripts/security/audit-secret-residue.mjs",
+      "sha256": "4fbe97b69f22370d973f8d0c9a1e51da0a98e4f8e99ea8a5c0731134e8dc4a11"
+    },
+    {
+      "path": "scripts/security/clean-local-secret-cache.mjs",
+      "sha256": "270dbcc223464f9bb206b150417e3b3f29436daf0ffa61b865d8f9c6fe54522f"
+    },
+    {
+      "path": "scripts/stt/build-test.mjs",
+      "sha256": "5752524775c1e2ff7eb3cf94feef97b156f6e696a12a0da009e9a59ed1a83c15"
+    },
+    {
+      "path": "scripts/stt/serve-test.ts",
+      "sha256": "f8f859e2a4a1085ca320c033935ddc12a73175428f70e669e1db636065a4b4fc"
+    },
+    {
+      "path": "scripts/stt/start-test.ps1",
+      "sha256": "c5a041fdaf9c9cb4293f6661734f9ed36485f1d7e7637e77d05e807a6222feef"
+    },
+    {
+      "path": "scripts/stt/stop-test.ps1",
+      "sha256": "dd009398d046eb83bac2b5f6dc80626f9bf032c9ce0b966842a7d2674e67a225"
+    },
+    {
+      "path": "src/app/api/briefing/route.ts",
+      "sha256": "1fe25a7dfdf5ecdd42d759de5bfe4b62b46a37ad0e094cca15989d37ad69aa7a"
+    },
+    {
+      "path": "src/app/api/business-cards/[captureId]/candidates/route.ts",
+      "sha256": "3009268091fdf5753c492011402eb14a28a11455b1d3bb1030c60027e640837d"
+    },
+    {
+      "path": "src/app/api/business-cards/[captureId]/commit/route.ts",
+      "sha256": "29cecd8981c6934e61b33486f350204caf221cf2707b379b0d11a0beab1bab44"
+    },
+    {
+      "path": "src/app/api/business-cards/[captureId]/confirm-fields/route.ts",
+      "sha256": "93ee949f2d05764f37990b041c687926cb47658ae136f7a5ea2de2250767e773"
+    },
+    {
+      "path": "src/app/api/business-cards/[captureId]/prepare-review/route.ts",
+      "sha256": "76d99682cfd02cb5735f88fe687f8a8a23dc45f782cdb5af48ccb559e69ce328"
+    },
+    {
+      "path": "src/app/api/business-cards/[captureId]/restore-display/route.ts",
+      "sha256": "6f885f8650da55d1a7726ae7d124673c66887ea661019be2aa12eb5cf96517c8"
+    },
+    {
+      "path": "src/app/api/business-cards/[captureId]/retry/route.ts",
+      "sha256": "623759740afa63d00304b901df2c2042abbbd28707a1257d90d5cc5fe9e8073c"
+    },
+    {
+      "path": "src/app/api/business-cards/[captureId]/route.ts",
+      "sha256": "318bb0b26dba48d66cc6f5d425dd9d4a71b1e85f765d8b8ef266c856557c48ca"
+    },
+    {
+      "path": "src/app/api/business-cards/card/[businessCardId]/original/route.ts",
+      "sha256": "9cb4037703b9e6e151cb567ac0554f5b6ee476c344c2f237d3c281291f1a32cd"
+    },
+    {
+      "path": "src/app/api/business-cards/response.test.ts",
+      "sha256": "d79769ae31333c7745ee5880578db19277618d59adcf4cb4fa1991872db6b4e5"
+    },
+    {
+      "path": "src/app/api/business-cards/response.ts",
+      "sha256": "a94a32c1966076ee8a3e419bff1e2e19fb5e08107546106e8e13e947383c068e"
+    },
+    {
+      "path": "src/app/api/business-cards/route.ts",
+      "sha256": "750b0ba6ef4e8c29566055fefa9c026addd4530c5f914159b82ed30927e2732b"
+    },
+    {
+      "path": "src/app/api/captures/[captureId]/candidates/route.ts",
+      "sha256": "fe7e618dcf0c2c079e23ef9a445556e6eecc141a3f745e59989687490479884d"
+    },
+    {
+      "path": "src/app/api/captures/[captureId]/commit/route.ts",
+      "sha256": "bec2854cea5c4d7874d863f9bd72fdd1cab3c5ab33dee6fa51c6d67b4a0824ef"
+    },
+    {
+      "path": "src/app/api/captures/[captureId]/route.ts",
+      "sha256": "d9a66f8b084c787f65163f9cfac88b3c8699320189c92428657347e0a8523a20"
+    },
+    {
+      "path": "src/app/api/captures/[captureId]/structure/route.ts",
+      "sha256": "e887cfcf4012251487b9a9b20f5bf75874498ae7e5c036c4e05db0a9733e1841"
+    },
+    {
+      "path": "src/app/api/captures/response.ts",
+      "sha256": "358270b29a7bd931e3e446a3938fcafd89f9ecb58f9bef7965a2a940767b526c"
+    },
+    {
+      "path": "src/app/api/captures/route.ts",
+      "sha256": "6d873a220737337048ab26f410c901f1bf40e66c3d48070edd13ba682dd580f7"
+    },
+    {
+      "path": "src/app/api/event-metadata/route.ts",
+      "sha256": "df4849ba1f99e27be4c3756ea1a9bbf20caefde12249199c8dc5acac1795f078"
+    },
+    {
+      "path": "src/app/api/feedback/route.ts",
+      "sha256": "9b6377b9be6ac79ee0876283d7de27c734bc400781d97309b990179d318ac739"
+    },
+    {
+      "path": "src/app/api/recall/observation/route.ts",
+      "sha256": "c1544072324858b0dccdd97045ba492704c31574f33d639d586f53e629a32bf5"
+    },
+    {
+      "path": "src/app/api/recall/preparation/route.test.ts",
+      "sha256": "80abf46d20d4a38ae487a83031fc2d8d95a5ce4a33f1aa1a9fcbadea543be7b4"
+    },
+    {
+      "path": "src/app/api/recall/preparation/route.ts",
+      "sha256": "b35847239f92f69b502867f05ab9afbaf37177716355d3c94a65fb55acedd1e5"
+    },
+    {
+      "path": "src/app/api/recall/route.ts",
+      "sha256": "24fd03d4f3628abf60b87d3a0b1d901261a199621c14ab2aee3adf4c7df15ef0"
+    },
+    {
+      "path": "src/app/api/source-assets/[assetId]/route.ts",
+      "sha256": "1182a4a6f092a11a1da7c7800abf4293632648eed50505c86b6008a5f26c7cd4"
+    },
+    {
+      "path": "src/app/api/stt/realtime-session/route.test.ts",
+      "sha256": "50e4603fc85937bd48c197fcc94a94e084397d6c0a1ff31a7e54a753f7d1ecb5"
+    },
+    {
+      "path": "src/app/api/stt/realtime-session/route.ts",
+      "sha256": "4f0a8e4cdda62409e434c84da6a4a25c89f8e44bcac7c2687c3cdf8518af4f58"
+    },
+    {
+      "path": "src/app/api/stt/transcribe/route.test.ts",
+      "sha256": "c20dc61743553e0d5514999f2115dc9aceec890ef375fe2e3ed14868cbe6fffe"
+    },
+    {
+      "path": "src/app/api/stt/transcribe/route.ts",
+      "sha256": "d4bf8bc86984122d6f9b4e19817f2c542c7d4b6606450e6b0b64bed946448121"
+    },
+    {
+      "path": "src/app/api/workspace/route.ts",
+      "sha256": "c107db3ba7569229b23a9ef90a6de24b7c9639ac409591f1c98b4071c8f4330c"
+    },
+    {
+      "path": "src/app/error.tsx",
+      "sha256": "e2ea39caed70db3a3c040deae3129c7284a101b44d1654b0cdcb231605736033"
+    },
+    {
+      "path": "src/app/globals.css",
+      "sha256": "769c58232a81cf7231c72a2bf2408c1b86d2a2812901a9eabab87cde517a074b"
+    },
+    {
+      "path": "src/app/layout.tsx",
+      "sha256": "915e389984cfa9d3f9f21a2134cab86d821326e02ca4b0bff7d9828203f1d836"
+    },
+    {
+      "path": "src/app/loading.tsx",
+      "sha256": "3ff60cd639aa5fa6aa2d4063b8fb198aa537a8d59ba8be867c914a9d4f691002"
+    },
+    {
+      "path": "src/app/not-found.tsx",
+      "sha256": "261c8df91c09adea9dae53a819a65b805f0c579d2baf5b6881800aca42066e49"
+    },
+    {
+      "path": "src/app/page.tsx",
+      "sha256": "93ba171bb7cb9160f2debba9ed3e2b56439cb4300190832cb6f3746278c6b5f3"
+    },
+    {
+      "path": "src/domain/README.md",
+      "sha256": "d1e4cb0d30849219a88455adb91c0469d3baa167a06ad32e66bc93d61395a77b"
+    },
+    {
+      "path": "src/domain/business-card/business-card-draft.test.ts",
+      "sha256": "ba9a8ca77f4a2c82675f86c1b61fb18030e11b24802111afcb25b423644a9566"
+    },
+    {
+      "path": "src/domain/business-card/business-card-draft.ts",
+      "sha256": "6c1d26a0cd479f0aba3ddd2bf4f01bc7e0d06cf8d0886e8406b9cc85fdd0405d"
+    },
+    {
+      "path": "src/domain/business-card/business-card-workflow.ts",
+      "sha256": "6ba068eff4ac6465e69e4fb17689c019f37049b0c513da02cf9e1e3a994fd5e2"
+    },
+    {
+      "path": "src/domain/business-card/clova-name-card.test.ts",
+      "sha256": "15049ab408c49a924ca7906da7232fedc14de9660ea1279f30b4dd30a0d9c21e"
+    },
+    {
+      "path": "src/domain/business-card/clova-name-card.ts",
+      "sha256": "3870dae3ab8887518b0629b7f442fc42b0495fa0aca86caa355c4851e1799d2d"
+    },
+    {
+      "path": "src/domain/business-card/extraction-evaluation.test.ts",
+      "sha256": "5ec36e9dd4b33bef841f720184f82f033864a49acf6b5d928f69d472fbd9c033"
+    },
+    {
+      "path": "src/domain/business-card/extraction-evaluation.ts",
+      "sha256": "d5c449a832058da2c78f1f2d5a66b0e7030472bfad8a2567f96733f1527ee3a2"
+    },
+    {
+      "path": "src/domain/business-card/mock-ocr.ts",
+      "sha256": "2296c8a83f98d22075e7a2c102168dcac975d64cc4789532ab08fe68c57567a7"
+    },
+    {
+      "path": "src/domain/capture/capture-draft.test.ts",
+      "sha256": "5907eec81053809ce84322d2b079c0d3ca4f50e19e95181cc3d6ae8879e9360c"
+    },
+    {
+      "path": "src/domain/capture/capture-draft.ts",
+      "sha256": "65e0445d2567a1a053819c268321f5409d03ecbda5b0394468c0e692b3baafa1"
+    },
+    {
+      "path": "src/domain/capture/capture-state.test.ts",
+      "sha256": "f5e452df55054b270d6a04107aff1f06f29a234b4007531dd03a2d39bc2d8695"
+    },
+    {
+      "path": "src/domain/capture/capture-state.ts",
+      "sha256": "c670db02fb10d5afd4771efe93eeb230354119ab1cb24f25021c37e1ad2db21a"
+    },
+    {
+      "path": "src/domain/capture/capture-workflow.test.ts",
+      "sha256": "70686e47f0bbaa513a1f023cb68a09856cc32d94d8e27052d5659181a6b4fa0c"
+    },
+    {
+      "path": "src/domain/capture/capture-workflow.ts",
+      "sha256": "8d48925790b4565c30d1be86276e8d087cec31b53b0cb379ca9af8e5dd0f4542"
+    },
+    {
+      "path": "src/domain/capture/date-regressions.test.ts",
+      "sha256": "ab14545a39ffd2b843ebfb8769396ac5a782f818d63873e9cec5ffd206f37af8"
+    },
+    {
+      "path": "src/domain/capture/inferred-fields.test.ts",
+      "sha256": "7674343019fa17995ff5df3609fd212262719934e2e6f68763943f5035395076"
+    },
+    {
+      "path": "src/domain/capture/inferred-fields.ts",
+      "sha256": "4c5c5047e29c886967385035afb38a64d3322e9dbbefaf78f31576aacb6d2c5a"
+    },
+    {
+      "path": "src/domain/capture/mock-structurer.test.ts",
+      "sha256": "24f66d7c0260f92db3e4f5f992728641871e7d678202ed0e1dcc978efbf9ca2e"
+    },
+    {
+      "path": "src/domain/capture/mock-structurer.ts",
+      "sha256": "d127088a1e9154530d2fb91479f2820eca12292914fd991a8b4f6eb5bd019c9c"
+    },
+    {
+      "path": "src/domain/profile-timeline.test.ts",
+      "sha256": "2abacff4c8118bdbc61693853c552aca0431b45f2d8026cbf8b634bbc03acf02"
+    },
+    {
+      "path": "src/domain/profile-timeline.ts",
+      "sha256": "8b26e6a78577cfbe1e44ea537c92c1173e43855c83bb39b4ccbbd75ad456f3e8"
+    },
+    {
+      "path": "src/domain/recall/assistant-contract.test.ts",
+      "sha256": "5aaa8ffa863b6d9ae76d11c677daae8a301cff2d9d64c1b8a4dc68b9fde5aaec"
+    },
+    {
+      "path": "src/domain/recall/assistant-contract.ts",
+      "sha256": "0c6dbe35677b8df53250fb379744c6b76a69a41d17735a8ed413b5f5231f8916"
+    },
+    {
+      "path": "src/domain/recall/date-display.test.ts",
+      "sha256": "81ecee540e77bfa32a62ca2111a0b1c8b293c2d522561732405da5bebae0ea5c"
+    },
+    {
+      "path": "src/domain/recall/date-range.ts",
+      "sha256": "6925926da67d268038b8688d747f04e79208d5acb6fc08d72f7335f44d302b81"
+    },
+    {
+      "path": "src/domain/recall/local-semantic.ts",
+      "sha256": "aa633fb57c3e15a3ebdfb26ab1c44da6600022c7132ebd5dc43971d8ae6b44a6"
+    },
+    {
+      "path": "src/domain/recall/query-parser.test.ts",
+      "sha256": "981cc48998f3d94396ccab293674b223ddb8eac3148d7f651842d56e8cef54be"
+    },
+    {
+      "path": "src/domain/recall/query-parser.ts",
+      "sha256": "dc4327e6643dd5c2af3c84746f5f7a207e449937ba48621b009498fcfa7a6495"
+    },
+    {
+      "path": "src/domain/recall/ranker.test.ts",
+      "sha256": "f1cada2b31d0fbf5cc3f9a9277f161d31e71acc06bc95eb259127664889f6838"
+    },
+    {
+      "path": "src/domain/recall/ranker.ts",
+      "sha256": "7e25a11333990753c479bc365213d15d951d3f209a99c6962177d2b86c5bd629"
+    },
+    {
+      "path": "src/domain/recall/regressions.test.ts",
+      "sha256": "5691ecb194085ca2f645af995c857a1fb532506437784653e0e7e6a46f0d8eaa"
+    },
+    {
+      "path": "src/domain/recall/search-preparation.ts",
+      "sha256": "84ffe4ec601a286796a82d7f7c80778f3f80d5ae9c32a87118464e95ba2353af"
+    },
+    {
+      "path": "src/domain/recall/types.ts",
+      "sha256": "4e1bf2d6b93fd861d3a6ba09ff8c32ea90ad140c1e6a18ea69d3f02c6514f020"
+    },
+    {
+      "path": "src/domain/workspace/contracts.test.ts",
+      "sha256": "b09664b23998ec0e2118893d524b3ccd9f77c2366bee949e9f016c37f7cf12d1"
+    },
+    {
+      "path": "src/domain/workspace/contracts.ts",
+      "sha256": "0f8df9a91b7f96f6c9794d98631df8ce664bb9ffa8edcaba8a0b2a305c1dc393"
+    },
+    {
+      "path": "src/domain/workspace/dates.ts",
+      "sha256": "02f562dd1175b6fb6f36dad024fb911477980116bae99f6df1c0a8b01732fd6d"
+    },
+    {
+      "path": "src/features/README.md",
+      "sha256": "4a2bd7363eaf7080dcfccb40d9b504ef41d4f94384b81386d2cc8eb7192f3ead"
+    },
+    {
+      "path": "src/features/capture/business-card-camera.tsx",
+      "sha256": "6c2ee7a1687940d2664d28e19a2b694aa57a27822a433bb10f2f5278071f5db1"
+    },
+    {
+      "path": "src/features/capture/business-card-workspace.tsx",
+      "sha256": "b90b1c44df1563e35114c9bde34fcbac31143f2fc3f53917d08ec1fec50b4fbb"
+    },
+    {
+      "path": "src/features/capture/card-image-processing.test.ts",
+      "sha256": "27c35b28619e249373803e0b858d3761493b585de8755fab924f192e1b7ece94"
+    },
+    {
+      "path": "src/features/capture/card-image-processing.ts",
+      "sha256": "19de20b9c50b0cbf4667bf74e872b624647fa1c5cb95516d41b3a5c04787b689"
+    },
+    {
+      "path": "src/features/capture/inference-hint.tsx",
+      "sha256": "67709a3ece6fb57869d540cdb302d0134c48b28b8736c5b07cf5ab302391f938"
+    },
+    {
+      "path": "src/features/capture/text-capture-workspace.tsx",
+      "sha256": "c08198f27ac98898823b208252331593d4ec9e3b884b7c980bb217e69436a14e"
+    },
+    {
+      "path": "src/features/recall/search-preparation.tsx",
+      "sha256": "f7544afcafaaee32b395bb34067f0dfe9a6db644dc56ed5ae3eb120a572fe6e6"
+    },
+    {
+      "path": "src/features/speech/pcm-recorder.test.ts",
+      "sha256": "01c9ef89122d13aa25dc123d03a7062ec8e21872dc7a1d7a49ccf9e4b92cd135"
+    },
+    {
+      "path": "src/features/speech/pcm-recorder.ts",
+      "sha256": "8e14fce571d544be892979ba79cb7935c53f58465ec3894c83ccea6bba4c0d3c"
+    },
+    {
+      "path": "src/features/speech/prepare-recording.test.ts",
+      "sha256": "5c7ffe893f2601538aec0b7f404243a70e9ad800d177a232128b9e6f8e795d5a"
+    },
+    {
+      "path": "src/features/speech/prepare-recording.ts",
+      "sha256": "0bde876b0323785bce2f173d758c5b777a7db35fcd5349c6f9a448b6ad8dfb1e"
+    },
+    {
+      "path": "src/features/speech/realtime-transcription.test.ts",
+      "sha256": "226850e35dcccf0a247279a5d0abea3dc4493acc5ab2a79841de4303ab2e1a45"
+    },
+    {
+      "path": "src/features/speech/realtime-transcription.ts",
+      "sha256": "b8a487586901a7ebb64231dbbdff273fb6c40a0da094126830e82074b397b0f6"
+    },
+    {
+      "path": "src/features/speech/recording-transcription.test.tsx",
+      "sha256": "4e6edc173e6e0ff851eb430a1e3ffb1dc23adabbce40d0397a9c4084f61235c7"
+    },
+    {
+      "path": "src/features/speech/recording-transcription.tsx",
+      "sha256": "7299623fcdc18efaa72ff4f39a82a3e0ff31a7ffb02996309669f8ed561e2d4a"
+    },
+    {
+      "path": "src/features/speech/voice-input.test.tsx",
+      "sha256": "6b8f3c5a42a744d3eca5ec641c861b1f826549c94ca0b468932a724feb29e0e5"
+    },
+    {
+      "path": "src/features/speech/voice-input.tsx",
+      "sha256": "40bccd22739c582da639b733a75a54771216e7bb6ad785b4273b390b91ebf152"
+    },
+    {
+      "path": "src/features/workspace/assistant.tsx",
+      "sha256": "032373362c68a81b24fe63adfe82f0cba91b9ffd723ad7b356468c2a0530b604"
+    },
+    {
+      "path": "src/features/workspace/experience.css",
+      "sha256": "dd8fa816bf8189a99a3d4c0bda0777075c4420558d2b4b815779ee1bccbdd628"
+    },
+    {
+      "path": "src/features/workspace/graph/GraphCanvas.jsx",
+      "sha256": "484a3041bf008551f3bfb7bc66101969e68f81d2f1e7b79d2825e944af0c9995"
+    },
+    {
+      "path": "src/features/workspace/graph/GraphWorkspace.tsx",
+      "sha256": "d02d94f7be99b3675a3ef8879a7f395649f4729f8186d4e74c9e3207ca743cc6"
+    },
+    {
+      "path": "src/features/workspace/graph/graph.css",
+      "sha256": "37bea6407a748652a4b83f276e17482cec4785525435ee4c0c8d78d8bb51606a"
+    },
+    {
+      "path": "src/features/workspace/graph/layout.js",
+      "sha256": "ceda4145b4872ad29f03699597b72a751f6eeb0eaea7e1946180316a17941955"
+    },
+    {
+      "path": "src/features/workspace/graph/model.test.ts",
+      "sha256": "42be8304e31929baf2bfcab2afa4ba194ab5f2ace074c62d7da7654246db4c8c"
+    },
+    {
+      "path": "src/features/workspace/graph/model.ts",
+      "sha256": "bf350b1de63d768f5ae6f13196d66b2a4beae1e726a326d680fea5f7fb8bdef7"
+    },
+    {
+      "path": "src/features/workspace/integration.css",
+      "sha256": "c5ff13371a8dc8af1c52aa704de64403802a1b7e8ce0e2ccc18691cb51aea68c"
+    },
+    {
+      "path": "src/features/workspace/mutations.ts",
+      "sha256": "2f3bd8bb26ccfdc6f18c87a964f00057eae6791de7abd9e2f88777e3eb192225"
+    },
+    {
+      "path": "src/features/workspace/preview/fixture.ts",
+      "sha256": "0aaa2451667d8d73e5c9b163a90c27c6d834ba9389b525d08aa6ccb02a36628f"
+    },
+    {
+      "path": "src/features/workspace/store.test.ts",
+      "sha256": "fd612bd1d769d83fa81cfe0c2f468f480b2b3e032fbdb624deafcfff365b502f"
+    },
+    {
+      "path": "src/features/workspace/store.ts",
+      "sha256": "7fac96bf79552973ae48486d8fe54e5284a913e6f8a04317e948be7eb0a730eb"
+    },
+    {
+      "path": "src/features/workspace/tokens.css",
+      "sha256": "e7c4025677c885c9e2140626cc0565e267c114ae7f0f70cfe1c7842eb49f4eed"
+    },
+    {
+      "path": "src/features/workspace/ui/ContactGraph.jsx",
+      "sha256": "347ec5482f057dd87b8499df87f93a06592a8e607a4f0ca3bdb5c988fc7c225e"
+    },
+    {
+      "path": "src/features/workspace/ui/app/StorageControls.jsx",
+      "sha256": "332ffe1bba52c396eb05be9da4162f2ebf9cb7435063698d3f74dfb867901c0b"
+    },
+    {
+      "path": "src/features/workspace/ui/app/useContactStore.js",
+      "sha256": "154f91bdf2cacb72b97a9f03e436991ca7844443d9cdb6e8064d9cbd5e130543"
+    },
+    {
+      "path": "src/features/workspace/ui/components/Assistant.jsx",
+      "sha256": "1d01e796be789b055d2670f91d2afc8cff548aeeb745cc47bb0a3b6d18f35a61"
+    },
+    {
+      "path": "src/features/workspace/ui/components/CardImport.jsx",
+      "sha256": "7b605b019539ef252f9c57ba6935dfb585b508c2a5e9cf9d023346f1d1006e36"
+    },
+    {
+      "path": "src/features/workspace/ui/components/Editors.jsx",
+      "sha256": "a1b09166cae30bc39ac6a38fcca197c7fc41080960fd80afad3901a13fec45f3"
+    },
+    {
+      "path": "src/features/workspace/ui/components/MeetingRecords.jsx",
+      "sha256": "2723f1a7970019a8d084fd4c01012600290817f8e23aa9de538c317ede3e5535"
+    },
+    {
+      "path": "src/features/workspace/ui/components/NetworkMap.jsx",
+      "sha256": "c50758acf3fe60b49d4edc0b1feb9386531ebcd810c82b977ce4a779da2dd6a2"
+    },
+    {
+      "path": "src/features/workspace/ui/components/PeopleManagement.jsx",
+      "sha256": "c2b51cafe5c85144e611feff6e0a4e2da5f553e3cc06c58505e969471815c7f8"
+    },
+    {
+      "path": "src/features/workspace/ui/components/PersonaMail.jsx",
+      "sha256": "0cc1ecad24875f24b1fbf7894d62cafdea9cca50cc92f337715ce4eff1109ee6"
+    },
+    {
+      "path": "src/features/workspace/ui/components/RecordingPage.jsx",
+      "sha256": "de77e6b1e2d75a80b02ea7bb99fbf55ebbff7719415945da5cc8d1f1f9a36782"
+    },
+    {
+      "path": "src/features/workspace/ui/components/RelationshipView.jsx",
+      "sha256": "7ae89783ffc8f62cf7d11fb193375394b89eb5ab8f024ef1243023df292cc673"
+    },
+    {
+      "path": "src/features/workspace/ui/components/TaskFields.jsx",
+      "sha256": "b8abe42e0f6ee2aacc236ae1518a8ba30274ba0db318cb2ef8e280c9f5458476"
+    },
+    {
+      "path": "src/features/workspace/ui/components/WorkManagement.jsx",
+      "sha256": "cdb76615710c6363fd2e5ab784188e0b3d03924e7f259dc3d4fb296c484be0cc"
+    },
+    {
+      "path": "src/features/workspace/ui/components/ui.jsx",
+      "sha256": "b300867b39b79c3faf1f19320fc1c2c7a19d0e19955b462b30f4ad3bdbaa428e"
+    },
+    {
+      "path": "src/features/workspace/ui/domain/dates.js",
+      "sha256": "4093b1c02e7aeb9c575256b15def10c958cbd3d908da411d582b93cfb2ac8283"
+    },
+    {
+      "path": "src/features/workspace/ui/domain/editing.js",
+      "sha256": "e58b7a6590adde34783b1d3bdd8be87d1f29f49fe5a8fd08f7c983448ac721fe"
+    },
+    {
+      "path": "src/features/workspace/ui/domain/model.js",
+      "sha256": "c37867663190975792393cde39a5cd7f02b8a4c029e98d7b212751cb78710377"
+    },
+    {
+      "path": "src/features/workspace/ui/domain/relationship-categories.js",
+      "sha256": "abef4d714d5bc1cdb06a14963ef5d9db958c155faefc9e0b452247cc20c55f4c"
+    },
+    {
+      "path": "src/features/workspace/ui/domain/task-options.js",
+      "sha256": "29a8410aaf78c7c90b69854550d4ca6f7974f639ccbb074d9e3515bca1906f2d"
+    },
+    {
+      "path": "src/features/workspace/ui/domain/workspace.js",
+      "sha256": "41e1ced91e8994b69e101e507502eb52d3da161972625625dfd3c2fe952514f2"
+    },
+    {
+      "path": "src/features/workspace/ui/hooks/useAudioRecorder.js",
+      "sha256": "03f339af05ec10c351ad901c0cd7e0c6a9ae26eb1f3999b6d77b7d1d9a538753"
+    },
+    {
+      "path": "src/features/workspace/ui/services/ai.js",
+      "sha256": "05c5f1bc49ba8ee7b0d925796a8840f94b54c025dabd39c801d2aa88024dd662"
+    },
+    {
+      "path": "src/features/workspace/ui/services/recording-library.js",
+      "sha256": "1405de0b0ba7a3e4d22ebf0dadadadf98a8e873fd57df6d1cbdfafc359ac7bc8"
+    },
+    {
+      "path": "src/features/workspace/workspace-client.tsx",
+      "sha256": "162b04c281bf79212b74726a73e097a1f7c245ebec9b0f5875855d6ba925dd46"
+    },
+    {
+      "path": "src/features/workspace/workspace.css",
+      "sha256": "1fddd0361dfb312bbc81848d473c85ae7c63bbd8e8d250c51472987e3335b953"
+    },
+    {
+      "path": "src/proxy.ts",
+      "sha256": "07ed734c01bd11e7f3e3f28bb0065c052785d45c06dd765a496a0f358bfd493c"
+    },
+    {
+      "path": "src/server/README.md",
+      "sha256": "21c3cbf0c3254f766bd687c7f6326964c61d04f40f3efd13107c43992afff06f"
+    },
+    {
+      "path": "src/server/ai/assistant-provider.test.ts",
+      "sha256": "2c9fd9a90348f6429227c5defc40742e7de2d2a4447d46e05999a30c79f8f66e"
+    },
+    {
+      "path": "src/server/ai/assistant-provider.ts",
+      "sha256": "0d011cd6742ecc08e9133e00ce6653f3e5b963bc0b819e8f5e7060a07d687694"
+    },
+    {
+      "path": "src/server/ai/clova-business-card-adapter.test.ts",
+      "sha256": "12d47ae7af83f570312bf177ceff0fdf913a43b3ce80fd77445a3b8ff0db58f6"
+    },
+    {
+      "path": "src/server/ai/clova-business-card-adapter.ts",
+      "sha256": "ca0a2cd0775b8bc6ca9fc784647fab217ddbc2c51c1db4a2aa43ccd835526249"
+    },
+    {
+      "path": "src/server/ai/model-routing.test.ts",
+      "sha256": "c211a3a7e63bdce76a549f3d5196ee54a5405c895ac787cdf47456c846278de9"
+    },
+    {
+      "path": "src/server/ai/model-routing.ts",
+      "sha256": "d1c4a6113d3498d3f7cef45ef0aa03594bef35b3ed0e830f3066e5a54521bdcf"
+    },
+    {
+      "path": "src/server/ai/ocr-cost-policy.test.ts",
+      "sha256": "45e67ceece7053579898679a25aaf36f41a9866832da34cccedc2aaa7e77675c"
+    },
+    {
+      "path": "src/server/ai/ocr-cost-policy.ts",
+      "sha256": "906134ad7d4c0c83ceb082d4c2ea763c9d3ea70eea81bb8b0df1688cde8cfd81"
+    },
+    {
+      "path": "src/server/ai/openai-business-card-adapter.test.ts",
+      "sha256": "42411b584adeac900628b0308e999260d11c4e5eb20e8b8fda97e84821dee09d"
+    },
+    {
+      "path": "src/server/ai/openai-business-card-adapter.ts",
+      "sha256": "5c78e15faea7bb600a388eff9ea6af8eafc51f7a37d6c075aaea8d6e84d484b9"
+    },
+    {
+      "path": "src/server/ai/openai-capture-adapter.ts",
+      "sha256": "c60988160dcb56864ea392d7bdd878c56c74e2d193b5883535a61bea8b5ecc5d"
+    },
+    {
+      "path": "src/server/ai/openai-transcription-adapter.test.ts",
+      "sha256": "f45a198d32ad30af096deb734d219c7f778c4106f39eefc043de6afe31f17eb1"
+    },
+    {
+      "path": "src/server/ai/openai-transcription-adapter.ts",
+      "sha256": "93fc152da530c57c46bf3dfa199b6b029dd8920675d833f00b8f83eaf4332d5b"
+    },
+    {
+      "path": "src/server/ai/rate-limit-response.test.ts",
+      "sha256": "4f884462a779530aa79758d81e8ca921aa47ae9da8457e44846a5785a0071581"
+    },
+    {
+      "path": "src/server/ai/rate-limit-response.ts",
+      "sha256": "65406627cda72cd2f36eb30723437c68895f8ab13bbff2305fb9f8b6da4fda60"
+    },
+    {
+      "path": "src/server/ai/runtime-router.test.ts",
+      "sha256": "6fb331bcb575fe436f1d4154965c28e375958de2b6eb48de1cd17b3a2c3a66a8"
+    },
+    {
+      "path": "src/server/ai/runtime-router.ts",
+      "sha256": "dabf2abc864be5dce63f695dea7534f386b6badc4525ada2307f0fb981031639"
+    },
+    {
+      "path": "src/server/application/business-card-service.test.ts",
+      "sha256": "41165e57ce58cd6d9f3e4ff9bd03a8562c2fe8947c0b4141539b7980135abcc6"
+    },
+    {
+      "path": "src/server/application/business-card-service.ts",
+      "sha256": "b588a273615f3de9dc317d9fe397bcfa2af49c8f8def987f05789a254d620a8a"
+    },
+    {
+      "path": "src/server/application/capture-service.ts",
+      "sha256": "77256f8527e653697f5ab4c82d7b559fd8f7406c91a3600c4267dbd3e8fc9833"
+    },
+    {
+      "path": "src/server/application/event-metadata.js",
+      "sha256": "ba0eb5565deb1cdf2f0c0ad66c1d62339aa8caf048090e27edfa4765156e87b4"
+    },
+    {
+      "path": "src/server/application/live-recall-service.test.ts",
+      "sha256": "51e751e782bebaad598cc325a9dd8c4e112beee31031bc64d753c01fe5874c29"
+    },
+    {
+      "path": "src/server/application/live-recall-service.ts",
+      "sha256": "21636087e1b15dfd54efc164138480339b9069a7e562ced97f6df778fb6cedc3"
+    },
+    {
+      "path": "src/server/application/recall-service.ts",
+      "sha256": "1426081d37506a4e1518b581eeead11d8ffdb78fbdd27b27eb0b90c33e385422"
+    },
+    {
+      "path": "src/server/application/search-preparation-service.test.ts",
+      "sha256": "4effd24a92a7e10cdaafbc16f037bc5f777a71629fdad04af70218c09b828b90"
+    },
+    {
+      "path": "src/server/application/search-preparation-service.ts",
+      "sha256": "4f6da28a6774696ef7855e0d8c24cf06f733a0b265680e8fa5e482cdfc507fd9"
+    },
+    {
+      "path": "src/server/application/workspace-briefing.ts",
+      "sha256": "381d0d1d8dea573d1a3e7f0cd76c6be0b7d6b3372ecc113c6ba3d6c5e30306d2"
+    },
+    {
+      "path": "src/server/db/ai-budget-repository.test.ts",
+      "sha256": "e6b264e613631f7c7a3af66065b52023051d6bd91b45d82d8cbee5e14ea1f415"
+    },
+    {
+      "path": "src/server/db/ai-budget-repository.ts",
+      "sha256": "c767b8e67de99ddc2256ebc7abed642e297da2e52024a274bd5095ca81e87e47"
+    },
+    {
+      "path": "src/server/db/ai-run-repository.ts",
+      "sha256": "d1a5b3db52dc324ef48b36af3aea137ecfea3daa8594b6f93505311dd75af3cf"
+    },
+    {
+      "path": "src/server/db/business-card-repository.test.ts",
+      "sha256": "e68dc1116915a52265fc5d3152dbcb02442b43976adf0f9dc9c1304535e535a8"
+    },
+    {
+      "path": "src/server/db/business-card-repository.ts",
+      "sha256": "9622cd5831d90ddd022d5a1cad3db5e64f01fa589b92842855912fa77fa3d422"
+    },
+    {
+      "path": "src/server/db/capture-repository.ts",
+      "sha256": "b16f9622b92ce9a6a1ea0bcc483abebe1a6d1898a4e37b5af601b7b3edc31cd3"
+    },
+    {
+      "path": "src/server/db/client.ts",
+      "sha256": "0a6ea034fb5ffebf5ffb92972a1287b2d555bedb7823c733df985d913fa85668"
+    },
+    {
+      "path": "src/server/db/memory-search-repository.test.ts",
+      "sha256": "31fe7ed37ca5d83e270e10aaa107eb29435600ff46d329ba150c0dde15531ece"
+    },
+    {
+      "path": "src/server/db/memory-search-repository.ts",
+      "sha256": "18270d9f1464e7520358919761e59347bd6bd20e9fd8621c6f006411320ef83f"
+    },
+    {
+      "path": "src/server/db/ocr-cost-guard-repository.ts",
+      "sha256": "5c61df3a95cd8543058276c17570e7cbc00ade38bbe830acae1c5b7ce6a00d08"
+    },
+    {
+      "path": "src/server/db/people-repository.ts",
+      "sha256": "ff2723bb197bcb29c18c591fd44bf5ffdddd78ac5a4c763097784d07494c2e4b"
+    },
+    {
+      "path": "src/server/db/recall-repository.ts",
+      "sha256": "db7485ab6906b4249322d7720d4287a6f85488a3dec5ae71641fa7235e4a510a"
+    },
+    {
+      "path": "src/server/db/types.ts",
+      "sha256": "800c8ecbc8420afebd440f54e0cd9bd724b3b2bd4a8fe0df9deb58218f2728e7"
+    },
+    {
+      "path": "src/server/db/workspace-repository.ts",
+      "sha256": "38ac4518a5ff847ba02d004daed769839b8a7f00986f2e04bb5c8ebb2d31daf5"
+    },
+    {
+      "path": "src/server/env.test.ts",
+      "sha256": "3329d2dfe40590028da276b05a98933f6c6d21eb884f7ae8e97b2c494b97c0a4"
+    },
+    {
+      "path": "src/server/env.ts",
+      "sha256": "fc7e311f3f383db1136ba757bf601d8c287ffebc365c0e7c300602ea518ccbd2"
+    },
+    {
+      "path": "src/server/http/request-body.ts",
+      "sha256": "db6d7c7efe991e0379b7621df17bc0d1af151bf602bab973c7f017916af32919"
+    },
+    {
+      "path": "src/server/http/workspace-response.ts",
+      "sha256": "413763859ffe9f3d9f0e68d48bb643a6af9076328b7e97b8e4a8d527c654652c"
+    },
+    {
+      "path": "src/server/preview/frontend-graph.test.ts",
+      "sha256": "a526be8072b4e29a8e8bfe96b0b3438bfdac5cb0cc8249ac0ed773e715a4b1de"
+    },
+    {
+      "path": "src/server/preview/frontend-graph.ts",
+      "sha256": "d413e3f590d0ec616488c7ce0ad13261dc7e65ffeba5c530b39288366b6619d2"
+    },
+    {
+      "path": "src/server/security/prototype-access-policy.ts",
+      "sha256": "8536959244d92a7b4c6bf1adff941ef192b19771d58eb4b70b154abf2c0854fe"
+    },
+    {
+      "path": "src/server/security/prototype-access.test.ts",
+      "sha256": "e8cf7346e07daf2bbd1d719eaeca6403b984b2d0bbba48aaa4f139ca379e3287"
+    },
+    {
+      "path": "src/server/security/prototype-access.ts",
+      "sha256": "2467ede75163706678530ea16bbac48db5a822cc0e514105aace73a3c728cfcf"
+    },
+    {
+      "path": "src/server/security/request-body-limit.test.ts",
+      "sha256": "a502e56648af2f130850dea51c249cd51949aa1f01aefa984695cc228cd6ec06"
+    },
+    {
+      "path": "src/server/security/request-body-limit.ts",
+      "sha256": "f331eadb0276a83ccdf2e3eb664e749434977a653949a24b86c9f83ead98a64b"
+    },
+    {
+      "path": "src/server/storage/business-card-storage.ts",
+      "sha256": "a779b554c6f95034f42ae8dce6a4d02b6a33974a147a21b022573a5fb00fda00"
+    },
+    {
+      "path": "tests/backend/api-input-contract.test.ts",
+      "sha256": "87a7c254246de7270821f3d30f76e641dac54096f55420aee7be4e8d7c550a77"
+    },
+    {
+      "path": "tests/e2e/assistant-offline.spec.ts",
+      "sha256": "455e5748ee0d553c245b781995bc6c463494ded96cf1b805918725345131b6ca"
+    },
+    {
+      "path": "tests/e2e/capture.spec.ts",
+      "sha256": "4635f6474394f7c3f5016087b06c046672d83d52682b36ac419a19358d3fdc61"
+    },
+    {
+      "path": "tests/e2e/card-pipeline.spec.ts",
+      "sha256": "119d2b81af79562706069060ca77154bc38bfa4ec3bc1768913a1c9cb12403ba"
+    },
+    {
+      "path": "tests/e2e/card-rotation.spec.ts",
+      "sha256": "7a194f0afd06e1e35ba50aa55c1696d07349b19695b64ffb44aebd5a3b3bfcf8"
+    },
+    {
+      "path": "tests/e2e/card-runtime.spec.ts",
+      "sha256": "a77a70c7f7da84988f1f28b88e50ee7d396cd78f338a33e280fb5885a4e8fd22"
+    },
+    {
+      "path": "tests/e2e/card-test-lab.spec.ts",
+      "sha256": "0a50d3d8298d361b2fc64cc00d81720d251718ceb490d9e5b8c075729cc9bc20"
+    },
+    {
+      "path": "tests/e2e/foundation.spec.ts",
+      "sha256": "3039e3099296df8231e95143dc9f4fd6c36432ec1dd86894739e4281f21918ea"
+    },
+    {
+      "path": "tests/e2e/graph-visual.spec.ts",
+      "sha256": "accfb1d58506947efcb2ba44a1a8be4611f6509167db802945a8def4cb761daf"
+    },
+    {
+      "path": "tests/e2e/realtime-input.spec.ts",
+      "sha256": "3316fe8dff44dc8424fc2e906375ed9bb0502cc9c2a24bf4b1c375e9d3811117"
+    },
+    {
+      "path": "tests/e2e/stt-integration.spec.ts",
+      "sha256": "0fff291f31fbc1b7ed5410bd12239ba606671935538948095a7c120a296fd4c9"
+    },
+    {
+      "path": "tests/e2e/workspace-experience.spec.ts",
+      "sha256": "6dedd93f9befaa3ee23bbbbb60ab65fd52c3e966899fb9f29e5d487edc89ce60"
+    },
+    {
+      "path": "tests/e2e/workspace-fixture.ts",
+      "sha256": "90f8c8b0e16c8af8de99d407dd18694e138369463f57fdd5fd064ac4b7b2981c"
+    },
+    {
+      "path": "tests/fixtures/card_recognition/lab/sample.png",
+      "sha256": "dc7b3fc0f16d1b35e6eefba00679fef5561d1135dbbd0de4867c661391b48da2"
+    },
+    {
+      "path": "tests/fixtures/frontend-graph.ts",
+      "sha256": "6dded3d7c29df2b671db97e8bc5a5294ac20de0c2c3d04d134f4aab3f0f849a9"
+    },
+    {
+      "path": "tests/setup.ts",
+      "sha256": "60aa525f7ffa6bfd3045d22710d4eeef3a5ff2074ecc3dbcef99374badebad17"
+    },
+    {
+      "path": "tests/stt-live/realtime-recording.spec.ts",
+      "sha256": "2af1aadb861424fd9144d115bc2396f459a967318be55084567f3e94a03aefa6"
+    },
+    {
+      "path": "tests/stt-live/recorded-audio.spec.ts",
+      "sha256": "8c8b87263bd8b861a7bdb629f66a07ae74ca9ee0defbcdb5abccbe36387485da"
+    },
+    {
+      "path": "tests/stt-media-playwright.config.ts",
+      "sha256": "30f3cab4615f38005345a753c194c3559c960322e39c772d8ebdeb427ee995f1"
+    },
+    {
+      "path": "tests/stt-playwright.config.ts",
+      "sha256": "f09502fc9ef6f02c0a175837fafb268d7154c99eae49baffefd3af2890aa31db"
+    },
+    {
+      "path": "tsconfig.json",
+      "sha256": "dab974a7ef3da373a65ab6057538c77f178d62f313ff9bd87893d7af2c1c6e10"
+    }
+  ],
+  "baselineManifestSha256": "b5678659eca74abcf582ed272b70d4619903785f26d714e5fd9d1ef2189c0c8a",
+  "diffIncludesPreexistingChanges": true,
+  "fixture": "FG-FIXTURE-01",
+  "fixtureSha256": "0aaa2451667d8d73e5c9b163a90c27c6d834ba9389b525d08aa6ccb02a36628f",
+  "clock": "2026-10-13T03:00:00Z",
+  "timezone": "Asia/Seoul",
+  "locale": "ko-KR",
+  "dpr": 1,
+  "baselineLimitation": "Before images predate implementation; no exact before diff hash was recorded. Do not treat this as a pixel regression baseline.",
+  "states": [
+    {
+      "file": "after-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "769.6674019118159",
+          "y": "328.37961052540504",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "488.92157456502423",
+          "y": "455.11559870152627",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "604.7914701492509",
+          "y": "288.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "657.3173762002417",
+          "y": "454.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "436.50953725411244",
+          "y": "299.93311775319876",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "1182cfd6aabd5aeb163ee04940f432d818c8410f4d7df2739f1e0245c332f6e3"
+    },
+    {
+      "file": "selected-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "769.6674019118159",
+          "y": "328.37961052540504",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "488.92157456502423",
+          "y": "455.11559870152627",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "604.7914701492509",
+          "y": "288.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "657.3173762002417",
+          "y": "454.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "436.50953725411244",
+          "y": "299.93311775319876",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "de8232936f37a2263fff45512225ff8079ad7d4ed6fb6f595dbc70ee36bc225d"
+    },
+    {
+      "file": "sidebar-crop-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "crop": {
+        "x": 12,
+        "y": 336.5,
+        "width": 215,
+        "height": 415.5
+      },
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "769.6674019118159",
+          "y": "328.37961052540504",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "488.92157456502423",
+          "y": "455.11559870152627",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "604.7914701492509",
+          "y": "288.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "657.3173762002417",
+          "y": "454.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "436.50953725411244",
+          "y": "299.93311775319876",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "5f3d3189cfee016a57d478f19dcd8f3b785e538cee1febcd783f7af9a2c23ed5"
+    },
+    {
+      "file": "inspector-crop-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "crop": {
+        "x": 1080,
+        "y": 136,
+        "width": 360,
+        "height": 730
+      },
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "769.6674019118159",
+          "y": "328.37961052540504",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "488.92157456502423",
+          "y": "455.11559870152627",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "604.7914701492509",
+          "y": "288.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "657.3173762002417",
+          "y": "454.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "436.50953725411244",
+          "y": "299.93311775319876",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "4988cf539c826dfac1201e344307189357fce3e5c5dbbb303248cf19bf652cbf"
+    },
+    {
+      "file": "source-crop-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "crop": {
+        "x": 1080,
+        "y": 136,
+        "width": 360,
+        "height": 730
+      },
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "769.6674019118159",
+          "y": "328.37961052540504",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "488.92157456502423",
+          "y": "455.11559870152627",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "604.7914701492509",
+          "y": "288.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "657.3173762002417",
+          "y": "454.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "436.50953725411244",
+          "y": "299.93311775319876",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "c668efc4cd6bb7c47e83c249a5929266de2edb7be9fe3729ac381802ef2f6dc0"
+    },
+    {
+      "file": "after-all-1440.png",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(-4.650852056615378,-36.93394724114937) scale(1.048487739561407)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "769.6674019118159",
+          "y": "328.37961052540504",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "488.92157456502423",
+          "y": "455.11559870152627",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000003",
+          "x": "388.7730736906263",
+          "y": "143.48709832622686",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000004",
+          "x": "890.2762344325241",
+          "y": "217.79408839513584",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "604.7914701492509",
+          "y": "288.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000006",
+          "x": "552.2484404902195",
+          "y": "133.37610573618306",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000007",
+          "x": "588.6312744706053",
+          "y": "603.3165928532776",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000008",
+          "x": "263.1008232897663",
+          "y": "248.52059496372314",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "657.3173762002417",
+          "y": "454.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000002",
+          "x": "311.32309068852214",
+          "y": "405.1726068882749",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000003",
+          "x": "712.9127614390453",
+          "y": "165.47639843634263",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "436.50953725411244",
+          "y": "299.93311775319876",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "e5c27dfa15e461d30f5a0cf2784350f93555d69a747f21c1e4e0a2ff0f77abe4"
+    },
+    {
+      "file": "after-1280.png",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "697.6674019118159",
+          "y": "278.3796105254051",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "416.9215745650241",
+          "y": "405.11559870152644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "532.7914701492509",
+          "y": "238.53351260940647",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "585.3173762002417",
+          "y": "404.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "364.50953725411244",
+          "y": "249.9331177531989",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "95031923577e7790d946dfdacdf88c166b328cfd8aa0de10e9d6bcbd010ff5f7"
+    },
+    {
+      "file": "selected-1280.png",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "697.6674019118159",
+          "y": "278.3796105254051",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "416.9215745650241",
+          "y": "405.11559870152644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "532.7914701492509",
+          "y": "238.53351260940647",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "585.3173762002417",
+          "y": "404.69893005883415",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "364.50953725411244",
+          "y": "249.9331177531989",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "fb53d6fc160a7ee9bd804159ae952620571a4c2e44c067d22e848568084726a4"
+    },
+    {
+      "file": "after-1024.png",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "653.667401911816",
+          "y": "262.37961052540527",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "372.921574565024",
+          "y": "389.1155987015263",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "488.7914701492513",
+          "y": "222.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "541.3173762002415",
+          "y": "388.6989300588341",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "320.50953725411256",
+          "y": "233.9331177531987",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "fbd74adeed9611e89be9e6f5c2df03a97962f06afaa3d64207c596c42805f519"
+    },
+    {
+      "file": "selected-1024.png",
+      "viewport": {
+        "width": 1024,
+        "height": 768
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "653.667401911816",
+          "y": "262.37961052540527",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "372.921574565024",
+          "y": "389.1155987015263",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "488.7914701492513",
+          "y": "222.53351260940644",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "541.3173762002415",
+          "y": "388.6989300588341",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "320.50953725411256",
+          "y": "233.9331177531987",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "c0bd87b311d88610a50a869e5058469355bafe7c23b573a8f8cf30af3ed8b6c5"
+    },
+    {
+      "file": "after-768.png",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "553.6674019118159",
+          "y": "184.57961052540517",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "272.9215745650243",
+          "y": "311.3155987015262",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "388.7914701492512",
+          "y": "144.73351260940652",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "441.3173762002419",
+          "y": "310.8989300588343",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "220.50953725411244",
+          "y": "156.13311775319872",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "7667ce1a5bb0355254432fe5ad1e072ca5d43ded38ef3100fa1edc5c30902441"
+    },
+    {
+      "file": "selected-768.png",
+      "viewport": {
+        "width": 768,
+        "height": 1024
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "553.6674019118159",
+          "y": "184.57961052540517",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "272.9215745650243",
+          "y": "311.3155987015262",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "388.7914701492512",
+          "y": "144.73351260940652",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "441.3173762002419",
+          "y": "310.8989300588343",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "220.50953725411244",
+          "y": "156.13311775319872",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "b25c0ce9b0fb47faa367b2740168234f8c71a0c5572e2ec47de13bf452da5557"
+    },
+    {
+      "file": "after-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "300",
+          "y": "160.46315013407136",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "123.03697436829216",
+          "y": "480",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "196.0734554301689",
+          "y": "60",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "229.1822048875504",
+          "y": "478.9494618897146",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "90",
+          "y": "88.74159084395868",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "bb98e3109c351ec78b113e649e4f33006fae2cb5c73c130b45a8375cf6e1be58"
+    },
+    {
+      "file": "selected-390.png",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "300",
+          "y": "160.46315013407136",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "123.03697436829216",
+          "y": "480",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "196.0734554301689",
+          "y": "60",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "229.1822048875504",
+          "y": "478.9494618897146",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "90",
+          "y": "88.74159084395868",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "67096c835f6cb785a55a87e824652d7012a3de80c0ab8ecf9c7fa6db7f4bb3be"
+    },
+    {
+      "file": "after-360.png",
+      "viewport": {
+        "width": 360,
+        "height": 780
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "270",
+          "y": "145.1544796374512",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "118.31740660139324",
+          "y": "416",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "180.92010465443047",
+          "y": "60",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "209.29903276075743",
+          "y": "415.10954388747285",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "90",
+          "y": "84.36191985821242",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "8fec95b622ab88c9ac0ef96212851357dc55a7df586652623db51239e5fc5fdd"
+    },
+    {
+      "file": "selected-360.png",
+      "viewport": {
+        "width": 360,
+        "height": 780
+      },
+      "crop": null,
+      "overflow": false,
+      "font": "\"Segoe UI\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", sans-serif",
+      "camera": "translate(0,0) scale(1)",
+      "nodes": [
+        {
+          "key": "person:10000000-0000-4000-8000-000000000001",
+          "x": "270",
+          "y": "145.1544796374512",
+          "selected": "true",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000002",
+          "x": "118.31740660139324",
+          "y": "416",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "person:10000000-0000-4000-8000-000000000005",
+          "x": "180.92010465443047",
+          "y": "60",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000001",
+          "x": "209.29903276075743",
+          "y": "415.10954388747285",
+          "selected": "false",
+          "pinned": false
+        },
+        {
+          "key": "interaction:20000000-0000-4000-8000-000000000004",
+          "x": "90",
+          "y": "84.36191985821242",
+          "selected": "false",
+          "pinned": false
+        }
+      ],
+      "sha256": "38e268423ef0b00e658a42cb51bbe7b799e7bec2ae972dad6b6c20e972f2a93a"
+    }
+  ],
+  "errors": [],
+  "browser": "153.0.8010.12"
+}

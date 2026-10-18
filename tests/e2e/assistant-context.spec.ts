@@ -169,6 +169,8 @@ async function setup(page: Page, loseFirst = false) {
     await route.fulfill({ json: response });
   });
   await page.goto("/#todos");
+  if ((page.viewportSize()?.width ?? 1280) < 960)
+    await page.getByRole("tab", { name: "AI 어시스턴트", exact: true }).click();
   await expect(
     page.getByRole("textbox", { name: "AI에게 질문" }),
   ).toBeVisible();
@@ -230,3 +232,26 @@ test("explicit person and independent calendar conditions are submitted for the 
     dueRange: { from: "2026-10-16", toExclusive: "2026-10-17" },
   });
 });
+
+for (const width of [390, 1280]) {
+  test(`assistant composer remains separate from briefing at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await setup(page);
+    if (width < 960)
+      await page
+        .getByRole("tab", { name: "AI 어시스턴트", exact: true })
+        .click();
+    const panel = await page.locator(".connected-assistant").boundingBox();
+    const briefing = await page.locator(".work-briefing-details").boundingBox();
+    expect(briefing!.y).toBeGreaterThanOrEqual(panel!.y + panel!.height);
+    await send(page, "민수 다음 만남 준비");
+    await expect(page.locator(".chat-exchange")).toHaveCount(1);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  });
+}

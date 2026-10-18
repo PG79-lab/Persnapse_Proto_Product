@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  ...(process.env.PERSNAPSE_GRAPH_PREVIEW === "1"
+    ? { devIndicators: false as const }
+    : {}),
   async redirects() {
     return [
       { source: "/capture", destination: "/#cards", permanent: false },

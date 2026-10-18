@@ -11,6 +11,14 @@ const CardRecognitionTestLab = dynamic(
 );
 
 import { useEffect, useRef, useState } from "react";
+import {
+  Camera,
+  Upload,
+  ContactRound,
+  Check,
+  ScanLine,
+  ArrowRight,
+} from "lucide-react";
 
 import { CardViewer } from "../../../card_recognition/card-viewer";
 import {
@@ -1359,40 +1367,92 @@ function EmptyCardCapture({
   onUpload: () => void;
 }) {
   return (
-    <section className="card-capture-empty grid min-h-[31rem] place-items-center rounded-[2rem] border border-dashed border-[var(--border-strong)] bg-white/65 p-8 text-center">
-      <div>
-        <div className="mx-auto flex size-16 items-center justify-center rounded-3xl bg-[var(--accent-soft)] text-2xl">
-          ◫
+    <section className="card-capture-empty capture-start">
+      <div className="capture-upload-panel">
+        <div className="capture-card-illustration" aria-hidden="true">
+          <div className="capture-paper back" />
+          <div className="capture-paper front">
+            <ContactRound size={27} strokeWidth={1.2} />
+            <i />
+            <i />
+            <span />
+          </div>
+          <span className="capture-scan-badge">
+            <ScanLine size={19} />
+          </span>
         </div>
-        <h2 className="mt-5 text-2xl font-semibold tracking-[-0.03em]">
-          첫 명함을 디지털 카드로
-        </h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[var(--muted)]">
-          명함 한 장을 촬영하거나 업로드하세요. 이름과 연락처를 확인하고, 어디서
-          만났는지 함께 남길 수 있어요.
+        <h2>명함 한 장에서 시작하는 연결</h2>
+        <p className="capture-upload-copy">
+          촬영하거나 이미지를 선택해 주세요.
+          <br />
+          이름과 연락처를 읽고, 함께한 만남을 더할 수 있어요.
         </p>
-        <div className="mt-7 flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            onClick={onCamera}
-            className="rounded-full bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-white"
-          >
+        <div className="capture-upload-actions">
+          <button type="button" onClick={onCamera} className="primary-button">
+            <Camera size={16} />
             명함 촬영
           </button>
-          <button
-            type="button"
-            onClick={onUpload}
-            className="rounded-full border border-[var(--border-strong)] bg-white px-6 py-3 text-sm font-semibold"
-          >
+          <button type="button" onClick={onUpload} className="secondary-button">
+            <Upload size={16} />
             이미지 업로드
           </button>
         </div>
-        <p className="mt-6 text-xs text-[var(--draft)]">
+        <p className="capture-provider-note">
           {ocrMode === "live"
             ? "AI가 명함을 읽고 정보를 정리합니다. 직접 확인한 뒤에만 인맥으로 저장됩니다."
             : "현재 Mock OCR이며, 추출값은 실제 이미지와 다를 수 있습니다."}
         </p>
       </div>
+      <aside className="capture-reading-panel">
+        <span className="capture-reading-eyebrow">
+          새로운 만남을 기억하는 방법
+        </span>
+        <h3>
+          연락처를 넘어,
+          <br />
+          만남의 맥락까지.
+        </h3>
+        <ol>
+          <li>
+            <span>01</span>
+            <div>
+              <strong>명함을 선명하게</strong>
+              <p>
+                네 모서리가 보이도록 촬영하면
+                <br />
+                이름과 연락처를 읽기 좋아요.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>02</span>
+            <div>
+              <strong>내가 한 번 더 확인</strong>
+              <p>
+                추출된 정보를 확인하고
+                <br />
+                필요한 내용을 직접 수정하세요.
+              </p>
+            </div>
+          </li>
+          <li>
+            <span>03</span>
+            <div>
+              <strong>만남을 함께 남기기</strong>
+              <p>
+                어디서 만났는지, 무슨 이야기를
+                <br />
+                나눴는지 기억을 이어 두세요.
+              </p>
+            </div>
+          </li>
+        </ol>
+        <div className="capture-review-promise">
+          <Check size={14} />
+          직접 확인한 뒤에만 인맥으로 저장
+          <ArrowRight size={14} />
+        </div>
+      </aside>
     </section>
   );
 }

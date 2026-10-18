@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import {
   Network,
   Users,
@@ -29,13 +29,13 @@ import { useContactStore } from "./app/useContactStore.js";
 import StorageControls from "./app/StorageControls.jsx";
 import {
   activeState,
-  selectGraph,
   selectPerson,
   setDeleted,
   toggleTodo,
 } from "./domain/model.js";
 import { todayStr } from "./domain/dates.js";
-import { statuses, places, Modal, PersonLine } from "./components/ui.jsx";
+import { Modal } from "./components/ui.jsx";
+import { identityTone } from "../graph/appearance";
 import {
   PersonEditor,
   MeetingEditor,
@@ -45,7 +45,8 @@ import {
 import Assistant from "./components/Assistant.jsx";
 import WorkManagement from "./components/WorkManagement.jsx";
 import MeetingRecords from "./components/MeetingRecords.jsx";
-import RelationshipView from "./components/RelationshipView.jsx";
+import GraphWorkspace from "../graph/GraphWorkspace";
+import { graphReducer, initialNavigation } from "../graph/model";
 import PeopleManagement from "./components/PeopleManagement.jsx";
 import { PersonaEditor, MailComposer } from "./components/PersonaMail.jsx";
 import CardImport from "./components/CardImport.jsx";
@@ -53,10 +54,10 @@ import RecordingPage from "./components/RecordingPage.jsx";
 import { taskTypes } from "./domain/task-options.js";
 
 const navigation = [
-  ["todos", "일정/업무관리", CalendarDays],
   ["map", "관계 지도", Network],
   ["people", "인맥 관리", Users],
   ["meetings", "만남 기록", Coffee],
+  ["todos", "일정/업무관리", CalendarDays],
   ["cards", "명함 등록", ContactRound],
   ["recordings", "녹음", Mic],
 ];
@@ -155,9 +156,24 @@ export default function ContactGraphApp({ mode = "server" }) {
   const session = useContactStore(mode),
     { store, state } = session;
   const live = useMemo(() => activeState(state), [state]);
+  const [graphNav, graphDispatch] = useReducer(
+    graphReducer,
+    undefined,
+    initialNavigation,
+  );
+  const [graphSidebar, setGraphSidebar] = useState(null);
+  const [fullProfile, setFullProfile] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  useEffect(() => {
+    if (session.ready && !graphNav.initialized)
+      graphDispatch({
+        type: "initialize",
+        key: live.people[0] ? `person:${live.people[0].id}` : null,
+      });
+  }, [session.ready, graphNav.initialized, live.people]);
   const [page, updatePage] = useState(() => {
       const key = window.location.hash.slice(1);
-      return navigation.some(([id]) => id === key) ? key : "todos";
+      return navigation.some(([id]) => id === key) ? key : "map";
     }),
     [query, setQuery] = useState(""),
     [selectedId, setSelectedId] = useState(() =>
@@ -170,13 +186,6 @@ export default function ContactGraphApp({ mode = "server" }) {
     [editor, setEditor] = useState(null),
     [settings, setSettings] = useState(false),
     [help, setHelp] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false),
-    [status, setStatus] = useState("all"),
-    [importance, setImportance] = useState("all"),
-    [place, setPlace] = useState("all"),
-    [year, setYear] = useState("all"),
-    [month, setMonth] = useState("all"),
-    [category, setCategory] = useState("all");
   const [toast, setToast] = useState("");
   const [assistantSeed, setAssistantSeed] = useState(() => {
     const question =
@@ -198,7 +207,7 @@ export default function ContactGraphApp({ mode = "server" }) {
     const restore = () => {
       const key = window.location.hash.slice(1);
       const params = new URLSearchParams(window.location.search);
-      updatePage(navigation.some(([id]) => id === key) ? key : "todos");
+      updatePage(navigation.some(([id]) => id === key) ? key : "map");
       setSelectedId(params.get("person"));
       setAssistant(params.get("assistant") === "1");
       const question = params.get("q")?.slice(0, 500) ?? "";
@@ -251,30 +260,6 @@ export default function ContactGraphApp({ mode = "server" }) {
       // A display preference must not interrupt recording when browser storage is unavailable.
     }
   }, [sidebarCollapsed]);
-  const graph = useMemo(
-    () =>
-      selectGraph(state, {
-        categoryFilter: category,
-        statusFilter: Object.fromEntries(
-          Object.keys(statuses).map((k) => [
-            k,
-            status === "all" || k === status,
-          ]),
-        ),
-        importanceFilter: Object.fromEntries(
-          [1, 2, 3, 4, 5].map((k) => [
-            k,
-            importance === "all" || k === Number(importance),
-          ]),
-        ),
-        placeFilter: Object.fromEntries(
-          Object.keys(places).map((k) => [k, place === "all" || k === place]),
-        ),
-        year: year === "all" ? null : Number(year),
-        month: month === "all" ? null : Number(month),
-      }),
-    [state, status, importance, place, year, month, category],
-  );
   const [personaOpen, setPersonaOpen] = useState(false),
     [mailId, setMailId] = useState(null);
   const mailPerson = selectPerson(state, mailId);
@@ -283,18 +268,13 @@ export default function ContactGraphApp({ mode = "server" }) {
   }
   const person = selectPerson(state, selectedId);
   const matches = live.people.filter((p) =>
-    `${p.name} ${p.company || ""} ${p.job || ""}`
+    `${p.name} ${p.company || ""} ${p.job || ""} ${p.email || ""} ${p.phone || ""}`
       .toLowerCase()
       .includes(query.trim().toLowerCase()),
   );
   const upcoming = live.todos
     .filter((t) => !t.done)
     .sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
-  const years = [
-    ...new Set(live.meetings.map((m) => m.date?.slice(0, 4)).filter(Boolean)),
-  ]
-    .sort()
-    .reverse();
   function notify(text) {
     setToast(text);
   }
@@ -314,6 +294,11 @@ export default function ContactGraphApp({ mode = "server" }) {
     setSelectedId(id);
     setProfileTab(tab);
     setQuery("");
+    setFullProfile(tab === "tasks");
+    graphDispatch({
+      type: "select",
+      selection: id ? { kind: "node", key: `person:${id}` } : null,
+    });
   }
   function editTodoFor(id) {
     setSelectedId(null);
@@ -336,7 +321,9 @@ export default function ContactGraphApp({ mode = "server" }) {
     );
   }
   return (
-    <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+    <div
+      className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""} ${page === "map" ? "graph-page" : ""}`}
+    >
       <aside
         className="sidebar"
         id="workspace-sidebar"
@@ -349,11 +336,26 @@ export default function ContactGraphApp({ mode = "server" }) {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              setPage("todos");
+              setPage("map");
             }}
           >
             <span className="brand-symbol">
-              <Network size={22} />
+              <svg
+                width="23"
+                height="23"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M7 6.5 17 12 7 17.5M7 6.5v11"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+                <circle cx="7" cy="6.5" r="3" fill="currentColor" />
+                <circle cx="17" cy="12" r="3" fill="currentColor" />
+                <circle cx="7" cy="17.5" r="3" fill="currentColor" />
+              </svg>
             </span>
             <span className="brand-word">
               persnapse<span className="brand-dot">.</span>
@@ -374,7 +376,7 @@ export default function ContactGraphApp({ mode = "server" }) {
             )}
           </button>
         </div>
-        <div className="workspace-label">워크스페이스</div>
+        <div className="workspace-label">내 워크스페이스</div>
         <nav aria-label="주요 메뉴">
           {navigation.map(([key, label, Icon]) => (
             <button
@@ -397,6 +399,11 @@ export default function ContactGraphApp({ mode = "server" }) {
             </button>
           ))}
         </nav>
+        <div
+          className="graph-sidebar-slot"
+          hidden={page !== "map"}
+          ref={setGraphSidebar}
+        />
         <div className="sidebar-bottom">
           <div className="workspace-card">
             <span className="workspace-icon">
@@ -406,9 +413,11 @@ export default function ContactGraphApp({ mode = "server" }) {
               {mode === "demo" ? "가볍게 둘러보세요" : "팀 공유 워크스페이스"}
             </strong>
             <p>
-              {mode === "demo"
-                ? "가상 인맥으로 새로운 관계 관리 방식을 경험해보세요."
-                : "같은 인맥과 기록을 팀원이 함께 보고 수정하는 공간입니다."}
+              {session.capabilities.preview
+                ? "합성 데이터로 화면을 둘러보는 공간입니다. 입력한 내용은 저장되지 않아요."
+                : mode === "demo"
+                  ? "가상 인맥으로 새로운 관계 관리 방식을 경험해보세요."
+                  : "같은 인맥과 기록을 팀원이 함께 보고 수정하는 공간입니다."}
             </p>
             <button onClick={() => store.reload()}>
               {mode === "demo" ? "내 인맥으로 시작하기" : "최신 기록 불러오기"}
@@ -436,9 +445,17 @@ export default function ContactGraphApp({ mode = "server" }) {
           <div className="sidebar-profile">
             <span className="avatar self">나</span>
             <div>
-              <strong>팀 워크스페이스</strong>
+              <strong>
+                {session.capabilities.preview
+                  ? "테스트 워크스페이스"
+                  : "팀 워크스페이스"}
+              </strong>
               <small>
-                {mode === "demo" ? "샘플 체험" : "서버 저장 · 공유 공간"}
+                {session.capabilities.preview
+                  ? "합성 데이터 · 저장 안 함"
+                  : mode === "demo"
+                    ? "샘플 체험"
+                    : "서버 저장 · 공유 공간"}
               </small>
             </div>
           </div>
@@ -447,6 +464,7 @@ export default function ContactGraphApp({ mode = "server" }) {
       <main className="main-shell">
         <header className="topbar">
           <div className="breadcrumb">
+            <Network size={15} className="breadcrumb-icon" />
             워크스페이스
             <ChevronRight size={13} />
             <strong>{titles[page][0]}</strong>
@@ -459,6 +477,7 @@ export default function ContactGraphApp({ mode = "server" }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
+                if (e.nativeEvent.isComposing) return;
                 if (e.key === "Escape") setQuery("");
                 if (e.key === "Enter" && matches.length === 1) {
                   select(matches[0].id);
@@ -477,20 +496,42 @@ export default function ContactGraphApp({ mode = "server" }) {
             )}
             {query.trim() && (
               <div className="search-results cg-scroll">
+                <div className="search-results-heading">
+                  <span>인물 검색</span>
+                  <small>{matches.length}개 일치</small>
+                </div>
                 {matches.length ? (
                   matches.slice(0, 8).map((p) => (
-                    <PersonLine
+                    <button
+                      className="search-result-person"
                       key={p.id}
-                      person={p}
                       onClick={() => {
                         select(p.id);
                         setQuery("");
                       }}
-                    />
+                    >
+                      <span
+                        className="graph-avatar"
+                        data-tone={identityTone(p.id)}
+                      >
+                        {p.name.slice(-2)}
+                      </span>
+                      <span>
+                        <strong>{p.name}</strong>
+                        <small>
+                          {[p.company, p.job].filter(Boolean).join(" · ") ||
+                            "추가 정보 없음"}
+                        </small>
+                      </span>
+                      <ArrowUpRight size={15} />
+                    </button>
                   ))
                 ) : (
                   <p>검색 결과가 없습니다.</p>
                 )}
+                <div className="search-results-foot">
+                  이름 · 소속 · 이메일 · 연락처로 찾기
+                </div>
               </div>
             )}
           </div>
@@ -509,7 +550,11 @@ export default function ContactGraphApp({ mode = "server" }) {
                 : session.status}
             </span>
             <span className="mode-badge">
-              {mode === "demo" ? "DEMO" : "팀 공유"}
+              {session.capabilities.preview
+                ? "합성 미리보기"
+                : mode === "demo"
+                  ? "DEMO"
+                  : "팀 공유"}
             </span>
             <button
               className="persona-trigger"
@@ -526,6 +571,91 @@ export default function ContactGraphApp({ mode = "server" }) {
               </span>
             </button>
           </div>
+          {page === "map" && (
+            <div className="graph-add-entry">
+              <button
+                className="primary-button"
+                aria-expanded={addOpen}
+                onClick={() => setAddOpen(!addOpen)}
+              >
+                <Plus size={16} />
+                <span>기록 추가</span>
+              </button>
+              {addOpen && (
+                <div
+                  className="graph-add-options"
+                  role="group"
+                  aria-label="기록 추가 방식"
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setAddOpen(false);
+                      e.currentTarget.parentElement
+                        .querySelector("button")
+                        .focus();
+                    }
+                  }}
+                >
+                  <div className="graph-add-heading">새로운 기억 남기기</div>
+                  <button
+                    onClick={() => {
+                      setAddOpen(false);
+                      setPage("cards");
+                    }}
+                  >
+                    <ContactRound size={16} />
+                    <span>
+                      명함 등록<small>명함에서 인맥 가져오기</small>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAddOpen(false);
+                      setEditor({ type: "meeting" });
+                    }}
+                  >
+                    <Coffee size={16} />
+                    <span>
+                      만남 기록<small>함께한 시간과 이야기</small>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAddOpen(false);
+                      setEditor({ type: "person" });
+                    }}
+                  >
+                    <Users size={16} />
+                    <span>
+                      인맥 추가<small>새로운 사람 직접 등록</small>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAddOpen(false);
+                      setPage("recordings");
+                    }}
+                  >
+                    <Mic size={16} />
+                    <span>
+                      음성 녹음<small>대화를 음성으로 남기기</small>
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAddOpen(false);
+                      setPage("todos");
+                      setAssistantFocus((v) => v + 1);
+                    }}
+                  >
+                    <Pencil size={16} />
+                    <span>
+                      텍스트로 기록<small>어시스턴트에게 이야기하기</small>
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </header>
         {recordingBusy && page !== "recordings" && (
           <div className="active-recording-bar" aria-label="진행 중인 녹음">
@@ -570,7 +700,7 @@ export default function ContactGraphApp({ mode = "server" }) {
           </div>
         )}
         <div className="page-content" hidden={!session.ready}>
-          <div className="page-heading">
+          <div className="page-heading" aria-hidden={page === "map"} inert={page === "map"}>
             <div>
               <h1>
                 {titles[page][0]}
@@ -622,36 +752,35 @@ export default function ContactGraphApp({ mode = "server" }) {
               </div>
             )}
           </div>
-          {page === "map" && (
-            <RelationshipView
-              live={live}
-              graph={graph}
-              filters={{ status, importance, place, year, month }}
-              filtersOpen={filtersOpen}
-              onFiltersOpen={() => setFiltersOpen((v) => !v)}
-              onFilter={(patch) => {
-                if (patch.status !== undefined) setStatus(patch.status);
-                if (patch.importance !== undefined)
-                  setImportance(patch.importance);
-                if (patch.place !== undefined) setPlace(patch.place);
-                if (patch.year !== undefined) setYear(patch.year);
-                if (patch.month !== undefined) setMonth(patch.month);
-              }}
-              category={category}
-              onCategory={setCategory}
-              years={years}
-              selectedId={selectedId}
-              onSelect={select}
-              onMeeting={(id) =>
-                setEditor({
-                  type: "meeting",
-                  value: live.meetings.find((m) => m.id === id),
-                })
-              }
-              onAdd={() => setEditor({ type: "person" })}
-              onOpenPeople={() => setPage("people")}
-              mode={mode}
-            />
+          {session.ready && graphNav.initialized && (
+            <div
+              hidden={page !== "map"}
+              inert={page !== "map"}
+              className="graph-host"
+            >
+              <GraphWorkspace
+                state={state}
+                preview={!!session.capabilities.preview}
+                nav={graphNav}
+                dispatch={graphDispatch}
+                sidebarHost={graphSidebar}
+                onAdd={() => setEditor({ type: "person" })}
+                onFullPerson={(id) => {
+                  setSelectedId(id);
+                  setProfileTab("activity");
+                  setFullProfile(true);
+                }}
+                onMeeting={(id) =>
+                  setEditor({
+                    type: "meeting",
+                    value: live.meetings.find((m) => m.id === id),
+                  })
+                }
+                onTasks={(id) => {
+                  select(id, "tasks");
+                }}
+              />
+            </div>
           )}
           {page === "people" && (
             <PeopleManagement
@@ -711,9 +840,11 @@ export default function ContactGraphApp({ mode = "server" }) {
             <span>persnapse · every connection matters.</span>
             <span>
               <ShieldCheck size={13} />
-              {mode === "demo"
-                ? "샘플과 개인 데이터는 분리되어 있어요"
-                : "기록은 서버에 저장됩니다 · 녹음은 이 브라우저에 보관"}
+              {session.capabilities.preview
+                ? "합성 데이터 · 실제로 저장되지 않습니다"
+                : mode === "demo"
+                  ? "샘플과 개인 데이터는 분리되어 있어요"
+                  : "기록은 서버에 저장됩니다 · 녹음은 이 브라우저에 보관"}
             </span>
           </footer>
         </div>
@@ -733,7 +864,7 @@ export default function ContactGraphApp({ mode = "server" }) {
               onClick={() => setPage(k)}
             >
               <Icon size={20} />
-              <span>{l}</span>
+              <span>{k === "todos" ? "업무 · 일정" : l}</span>
             </button>
           ))}
           <button
@@ -828,19 +959,19 @@ export default function ContactGraphApp({ mode = "server" }) {
         notify={notify}
         onCard={openCard}
       />
-      {person && (
+      {person && (page !== "map" || fullProfile) && (
         <Profile
           key={person.id}
           person={person}
           state={state}
           store={store}
-          hiddenReason={
-            page === "map" ? graph.hiddenReasons[person.id] : undefined
-          }
           people={live.people}
           onNavigate={select}
           initialTab={profileTab}
-          onClose={() => setSelectedId(null)}
+          onClose={() => {
+            setSelectedId(null);
+            setFullProfile(false);
+          }}
           onTodo={editTodoFor}
           onMail={(id) => {
             setSelectedId(null);

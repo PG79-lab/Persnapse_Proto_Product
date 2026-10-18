@@ -1,0 +1,115 @@
+{
+  "phase": "final",
+  "date": "2026-10-17",
+  "errors": [],
+  "states": [
+    {
+      "file": "final-network-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "final-person-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "final-sidebar-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "final-inspector-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "final-source-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "final-all-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "final-add-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "final-network-1280.png",
+      "width": 1280,
+      "height": 800,
+      "overflow": false
+    },
+    {
+      "file": "final-person-1280.png",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "final-network-1024.png",
+      "width": 1024,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "file": "final-person-1024.png",
+      "width": 1024,
+      "height": 768,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "final-network-768.png",
+      "width": 768,
+      "height": 1024,
+      "overflow": false
+    },
+    {
+      "file": "final-person-768.png",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "final-network-390.png",
+      "width": 390,
+      "height": 844,
+      "overflow": false
+    },
+    {
+      "file": "final-person-390.png",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "final-network-360.png",
+      "width": 360,
+      "height": 780,
+      "overflow": false
+    },
+    {
+      "file": "final-person-360.png",
+      "width": 360,
+      "height": 780,
+      "overflow": false,
+      "coordinatesStable": true
+    }
+  ]
+}

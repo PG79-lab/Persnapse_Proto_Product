@@ -1,0 +1,34 @@
+/* Visual Design §5. Legacy aliases keep existing capture/editing flows consistent. */
+.integrated-workspace {
+  --bg-app: #f7f7f8;
+  --bg-canvas: #fff;
+  --bg-panel: #fff;
+  --bg-hover: #f0f0f3;
+  --bg-selected: #f1edfc;
+  --ink-strong: #202126;
+  --ink-default: #42434b;
+  --ink-muted: #73757e;
+  --border-subtle: #e9e9ed;
+  --border-control: #b6b8c1;
+  --brand-primary: #7656c9;
+  --brand-hover: #6242b2;
+  --graph-edge: #b8b9c6;
+  --status-success: #176b45;
+  --status-review: #936214;
+  --status-danger: #b3263a;
+  --background: var(--bg-app);
+  --surface-subtle: var(--bg-app);
+  --surface: var(--bg-panel);
+  --text: var(--ink-strong);
+  --foreground: var(--ink-strong);
+  --secondary: var(--ink-muted);
+  --muted: var(--ink-muted);
+  --line: var(--border-subtle);
+  --border: var(--border-subtle);
+  --border-strong: var(--border-control);
+  --accent: var(--brand-primary);
+  --primary: var(--brand-primary);
+  --accent-hover: var(--brand-hover);
+  --soft: var(--bg-selected);
+  --accent-soft: var(--bg-selected);
+}

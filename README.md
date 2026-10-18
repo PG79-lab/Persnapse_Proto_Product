@@ -1,5 +1,7 @@
 # Persnapse MVP
 
+> **2026-10-18 통합 기준:** [채택 프론트엔드/Graph + 최신 핵심 기능 통합](docs/operations/frontend-core-integration-2026-10-18.md). 기본 진입은 관계 지도이며, 디자인 기준은 [frontend_docs](docs/plans/frontend_docs/03-frontend-graph-visual-design-2026-10-14.md)입니다. 아래의 이전 날짜 기록과 구분합니다.
+
 > **처음 읽기:** [제품·시스템 핵심 요약](docs/PROJECT_BRIEF.md) — 현재 범위, 기술 인프라, 검증 경계와 다음 작업.
 
 > 현재 작업: [명함 인식 고도화·프론트 대상 통일 검증](docs/operations/card-recognition-local-validation-2026-10-11.md), [구현 결정](docs/decisions/0019-business-card-recognition-v2.md). 이전 [사용자 과업 루프 UX 개선·검증](docs/operations/ux-task-loop-sprint-2026-10-10.md)과 [프론트·백엔드 결합 현황](docs/operations/workspace-integration-2026-10-08.md)은 당시의 기록으로 보존합니다.

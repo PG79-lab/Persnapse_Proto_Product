@@ -1,0 +1,115 @@
+{
+  "phase": "iteration-03",
+  "date": "2026-10-17",
+  "errors": [],
+  "states": [
+    {
+      "file": "iteration-03-network-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-person-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "iteration-03-sidebar-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-inspector-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-source-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-all-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-add-1440.png",
+      "width": 1440,
+      "height": 900,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-network-1280.png",
+      "width": 1280,
+      "height": 800,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-person-1280.png",
+      "width": 1280,
+      "height": 800,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "iteration-03-network-1024.png",
+      "width": 1024,
+      "height": 768,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-person-1024.png",
+      "width": 1024,
+      "height": 768,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "iteration-03-network-768.png",
+      "width": 768,
+      "height": 1024,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-person-768.png",
+      "width": 768,
+      "height": 1024,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "iteration-03-network-390.png",
+      "width": 390,
+      "height": 844,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-person-390.png",
+      "width": 390,
+      "height": 844,
+      "overflow": false,
+      "coordinatesStable": true
+    },
+    {
+      "file": "iteration-03-network-360.png",
+      "width": 360,
+      "height": 780,
+      "overflow": false
+    },
+    {
+      "file": "iteration-03-person-360.png",
+      "width": 360,
+      "height": 780,
+      "overflow": false,
+      "coordinatesStable": true
+    }
+  ]
+}

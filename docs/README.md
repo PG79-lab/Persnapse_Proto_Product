@@ -1,5 +1,7 @@
 # Documentation
 
+> **최신 통합 — 2026-10-18:** [프론트/Graph + 명함·STT·AI 통합 검증과 실행 링크](operations/frontend-core-integration-2026-10-18.md), [통합 결정](decisions/0027-integrate-adopted-frontend-with-core.md), [채택된 디자인 지침](plans/frontend_docs/03-frontend-graph-visual-design-2026-10-14.md). 이후 문서는 각 작성일 기준의 이력입니다.
+
 > 처음 읽기: [제품·시스템 핵심 요약](PROJECT_BRIEF.md). 현재 구현 상태와 검증 경계를 한 페이지에서 확인합니다.
 
 > 명함 외곽·2D 복원 작업 설계 — 2026-10-12: [작업 설계와 단계별 통과 조건](plans/card-boundary-rectification-design-2026-10-12.md), [정량 벤치마크 명세](plans/card-boundary-rectification-benchmark-2026-10-12.md), [설계 제안 ADR](decisions/0021-card-boundary-rectification.md). 구현 전 설계안이며 T8을 주 검증 후보로 두고 LC100·DocQuadNet을 비교합니다. 품질·성능·안정성·표본 충족을 별도 판정합니다.

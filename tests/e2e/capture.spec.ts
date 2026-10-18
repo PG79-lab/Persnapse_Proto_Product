@@ -526,6 +526,19 @@ test("registers a card in the integrated UI, restores it, and opens its profile 
     "02-333-4444",
   );
   await profile.getByRole("button", { name: "닫기", exact: true }).click();
+  await navigation
+    .getByRole("button", { name: "관계 지도", exact: true })
+    .click();
+  await page
+    .getByRole("textbox", { name: "지도 목록 검색" })
+    .fill("김하늘 수정");
+  await page.locator(".graph-archive-row").click();
+  await expect(
+    page.getByRole("complementary", { name: "선택 기록 상세" }),
+  ).toContainText("김하늘 수정");
+  await navigation
+    .getByRole("button", { name: "명함 등록", exact: true })
+    .click();
   await page.getByRole("button", { name: "방금 저장한 기억 찾아보기" }).click();
   await expect(page).toHaveURL(/#todos$/);
   await expect(page.getByLabel("AI에게 질문")).toHaveValue(recallQuery);
