@@ -78,9 +78,11 @@ export function docalignerCorners(
         0,
         cv.INTER_LINEAR,
       );
+      // OpenCV getters create typed-array views; acquire once, not per pixel.
+      const values = resized.data32F;
+      const pixels = mask.data;
       for (let i = 0; i < width * height; i++)
-        mask.data[i] =
-          resized.data32F[i] < 0.3 ? 0 : Math.trunc(resized.data32F[i] * 255);
+        pixels[i] = values[i] < 0.3 ? 0 : Math.trunc(values[i] * 255);
       cv.threshold(mask, binary, 0, 255, cv.THRESH_BINARY | cv.THRESH_OTSU);
       cv.findContours(
         binary,

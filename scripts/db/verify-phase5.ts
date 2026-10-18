@@ -2,11 +2,14 @@ import assert from "node:assert/strict";
 
 import {
   createAndExtractBusinessCard,
+  confirmBusinessCardFields,
   commitReviewedBusinessCard,
   deleteBusinessCardOriginal,
   prepareBusinessCardReview,
 } from "../../src/server/application/business-card-service";
 import { getDatabase, closeDatabase } from "../../src/server/db/client";
+import { findBusinessCardIdentityCandidates } from "../../src/server/db/business-card-repository";
+import { loadWorkspace } from "../../src/server/db/workspace-repository";
 import {
   downloadBusinessCardAsset,
   removeBusinessCardAssets,
@@ -120,16 +123,45 @@ try {
       extractedDraft?.identity.organizationName,
   );
 
+  const confirmedDraft = {
+    ...extractedDraft,
+    identity: {
+      ...extractedDraft.identity,
+      organizationName: verificationOrganizationName,
+      ...(!liveOcr
+        ? {
+            contactNumbers: [
+              { type: "phone" as const, value: "02-111-2222", rawLabel: "Tel" },
+              {
+                type: "mobile" as const,
+                value: "010-5555-6666",
+                rawLabel: "HP",
+              },
+              { type: "fax" as const, value: "010-3333-4444", rawLabel: "Fax" },
+            ],
+          }
+        : {}),
+    },
+  };
+  const confirmed = await confirmBusinessCardFields({
+    workspaceId,
+    captureId,
+    draft: confirmedDraft,
+  });
+  assert.equal(confirmed.stage, "card_result");
+  assert(confirmed.fieldsConfirmedAt);
+  assert.deepEqual(
+    confirmed.draft?.identity.contactNumbers,
+    confirmedDraft.identity.contactNumbers,
+  );
+  if (!liveOcr) {
+    assert(!confirmed.draft?.identity.phones.includes("010-3333-4444"));
+  }
+
   const reviewed = await prepareBusinessCardReview({
     workspaceId,
     captureId,
-    cardDraft: {
-      ...extractedDraft,
-      identity: {
-        ...extractedDraft.identity,
-        organizationName: verificationOrganizationName,
-      },
-    },
+    cardDraft: confirmed.draft!,
     contextNote:
       "2026-09-15 AI Agent 제품 밋업에서 만나 관계형 메모리 파일럿과 다음 주 소개 자료 전달을 논의했다.",
     referenceTime: new Date().toISOString(),
@@ -159,6 +191,54 @@ try {
   organizationId = result.organizationId;
   topicIds = result.topicIds;
   assert(result.personAttributeIds.length >= 2);
+
+  const snapshot = await loadWorkspace(workspaceId);
+  const savedCard = snapshot.people
+    .find((person) => person.id === personId)
+    ?.businessCards?.find((card) => card.id === result.businessCardId);
+  assert(
+    savedCard,
+    "Committed business card is missing from the workspace projection.",
+  );
+  assert.equal(
+    typeof savedCard.identity,
+    "object",
+    "Business card identity must be decoded in the workspace projection.",
+  );
+  assert.deepEqual(
+    savedCard?.identity?.contactNumbers,
+    reviewedDraft.identity.contactNumbers,
+  );
+  if (!liveOcr) {
+    const attributes = await sql<Array<{ value: string }>>`
+      select value from public.person_attributes
+      where workspace_id = ${workspaceId} and person_id = ${personId} and kind = 'phone'
+    `;
+    assert.deepEqual(
+      attributes.map((row) => row.value).sort(),
+      ["02-111-2222", "010-5555-6666"].sort(),
+    );
+    // The fax digits deliberately equal a saved voice number: a typed fax must not match it.
+    const faxOnlyCandidates = await findBusinessCardIdentityCandidates(
+      workspaceId,
+      {
+        ...reviewedDraft,
+        identity: {
+          ...reviewedDraft.identity,
+          displayName: null,
+          organizationName: null,
+          emails: [],
+          phones: ["02-111-2222"],
+          contactNumbers: [
+            { type: "fax", value: "02-111-2222", rawLabel: "Fax" },
+          ],
+        },
+      },
+    );
+    assert(
+      !faxOnlyCandidates.some((candidate) => candidate.personId === personId),
+    );
+  }
 
   const downloaded = await downloadBusinessCardAsset(
     (
@@ -216,6 +296,10 @@ try {
         explicitIdentity: true,
         atomicCommit: true,
         contactAttributes: result.personAttributeIds.length,
+        typedNumbersPersisted: true,
+        workspaceCardNumberTypes: true,
+        faxExcludedFromVoicePhones: !liveOcr,
+        faxExcludedFromIdentityMatching: !liveOcr,
         originalDeletion: true,
         displayCardRetained: true,
       },

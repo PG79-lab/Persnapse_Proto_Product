@@ -2,10 +2,14 @@ import { expect, test } from "@playwright/test";
 import { parseRecallQuery } from "../../src/domain/recall/query-parser";
 import { buildRecallResponse } from "../../src/domain/recall/ranker";
 import type { RecallCorpusPerson } from "../../src/domain/recall/types";
+import { emptyWorkspace } from "../../src/features/workspace/store";
+import { mockWorkspace } from "./workspace-fixture";
 
-// UI regressions use a bounded synthetic corpus; do not write query logs to the
-// shared workspace or spend provider calls as a side effect of npm test:e2e.
+const personId = "20000000-0000-4000-8000-000000000001";
+let recallCalls = 0;
+
 test.beforeEach(async ({ page }) => {
+  recallCalls = 0;
   const corpus: RecallCorpusPerson[] = [
     "부산 파일럿 제안서를 보내기로 했다",
     "서울 디자인 프로젝트를 논의했다",
@@ -19,7 +23,7 @@ test.beforeEach(async ({ page }) => {
     documentContent: text,
     evidence: [
       {
-        id: `40000000-0000-4000-8000-00000000000${index + 1}`,
+        id: `memory-${index}`,
         type: "memory_statement",
         text,
         occurredAt: "2026-09-03T00:00:00Z",
@@ -42,7 +46,36 @@ test.beforeEach(async ({ page }) => {
           },
         ],
   }));
+  const state = emptyWorkspace();
+  state.people = corpus.map((person) => ({
+    id: person.id,
+    version: 1,
+    deletedAt: null,
+    name: person.displayName,
+    company: person.organizations[0],
+    job: person.headline,
+    email: null,
+    phone: null,
+    status: "unclassified",
+    importance: 3,
+    relationshipCategories: [],
+    createdAt: "2026-09-03T00:00:00Z",
+    history: [
+      {
+        id: `note-${person.id}`,
+        version: 1,
+        deletedAt: null,
+        date: "2026-09-03",
+        text: person.documentContent,
+      },
+    ],
+    businessCards: [
+      { id: "card-test", displayAssetId: "asset-test", originalRetained: true },
+    ],
+  }));
+  await mockWorkspace(page, state);
   await page.route("**/api/recall", (route) => {
+    recallCalls++;
     const { query } = route.request().postDataJSON();
     return route.fulfill({
       json: buildRecallResponse(
@@ -53,13 +86,18 @@ test.beforeEach(async ({ page }) => {
       ),
     });
   });
+  await page.route("**/api/source-assets/asset-test", (route) =>
+    route.fulfill({
+      contentType: "image/svg+xml",
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400"><rect width="640" height="400" fill="white"/><text x="40" y="150" font-size="40">Synthetic card</text></svg>',
+    }),
+  );
 });
 
 test("shows the integrated workspace and all six task menus", async ({
   page,
 }) => {
   await page.goto("/");
-
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "일정/업무관리",
   );
@@ -72,86 +110,105 @@ test("shows the integrated workspace and all six task menus", async ({
     "녹음",
   ])
     await expect(
-      page.getByRole("button", { name, exact: true }).first(),
+      page
+        .getByRole("navigation", { name: "주요 메뉴" })
+        .getByRole("button", { name, exact: true }),
     ).toBeVisible();
 });
 
-test("opens a seeded person memory with timeline and evidence", async ({
+for (const [oldPath, destination, heading] of [
+  ["/capture", "/#cards", "명함 등록"],
+  ["/people", "/#people", "인맥 관리"],
+] as const) {
+  test(`${oldPath} redirects to the integrated ${heading} page`, async ({
+    page,
+    request,
+  }) => {
+    const response = await request.get(oldPath, { maxRedirects: 0 });
+    expect(response.status()).toBe(307);
+    expect(response.headers().location).toBe(destination);
+    await page.goto(oldPath);
+    await expect(page).toHaveURL(destination);
+    await expect(
+      page.getByRole("heading", { level: 1, name: heading }),
+    ).toBeVisible();
+    await expect(page.locator(".integrated-workspace")).toHaveCount(1);
+  });
+}
+
+test("old person links open the integrated profile and its card viewer", async ({
   page,
 }) => {
-  await page.goto("/people");
-
+  await page.goto(`/people/${personId}`);
+  await expect(page).toHaveURL(`/?person=${personId}#people`);
+  const profile = page.getByRole("dialog", {
+    name: "인맥 프로필",
+    exact: true,
+  });
   await expect(
-    page.getByRole("heading", { level: 1, name: "만난 사람과 맥락" }),
+    profile.getByRole("heading", { name: "김민준", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByText("저장된 관계 기억", { exact: true }),
+    profile.getByText("부산 파일럿 제안서를 보내기로 했다"),
   ).toBeVisible();
-
-  await page
-    .locator('a[href="/people/20000000-0000-4000-8000-000000000001"]')
-    .click();
-
-  await expect(
-    page.getByRole("heading", { level: 1, name: "김민준" }),
-  ).toBeVisible();
-  await expect(page.getByText("동명이인 · 소속과 맥락으로 구분")).toBeVisible();
-  await expect(page.getByText("부산 파일럿 제안서 전달")).toBeVisible();
-  await expect(page.getByText("2026년 9월 3일")).toBeVisible();
-  await expect(page.getByText(/확인됨 · 메모/).first()).toBeVisible();
+  await profile.getByRole("button", { name: "정보", exact: true }).click();
+  const card = profile.getByRole("region", { name: "등록한 명함" });
+  await expect(card.getByRole("img", { name: "표시 중인 명함" })).toBeVisible();
+  await card.getByRole("button", { name: "확대", exact: true }).click();
+  await expect(card.getByText("125%", { exact: true })).toBeVisible();
+  await card
+    .getByLabel("명함 이미지. 드래그하거나 방향키로 이동할 수 있습니다.")
+    .press("ArrowRight");
+  await expect(card.getByRole("img")).toHaveCSS(
+    "transform",
+    "matrix(1.25, 0, 0, 1.25, 24, 0)",
+  );
 });
 
-test("recalls a person from context with evidence and safe actions", async ({
+test("old recall links preserve the query without automatically searching", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(
-    "/recall?q=%EB%B6%80%EC%82%B0%20%ED%8C%8C%EC%9D%BC%EB%9F%BF%20%EC%A0%9C%EC%95%88%EC%84%9C%EB%A5%BC%20%EB%B3%B4%EB%82%B4%EA%B8%B0%EB%A1%9C%20%ED%95%9C%20%EC%82%AC%EB%9E%8C",
+    `/recall?q=${encodeURIComponent("부산 파일럿 제안서를 보내기로 한 사람")}`,
   );
-
-  await expect(
-    page.getByRole("heading", { level: 1, name: "기억을 찾고, 다음 행동으로" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await expect(page).toHaveURL(/#todos$/);
+  await expect(page.getByLabel("AI에게 질문")).toHaveValue(
+    "부산 파일럿 제안서를 보내기로 한 사람",
+  );
+  expect(recallCalls).toBe(0);
+  await page.getByRole("button", { name: "질문 보내기" }).click();
   await expect(
     page.getByText(/가장 관련 있는 사람은 김민준님입니다/),
   ).toBeVisible();
-  await page
-    .getByText(/^확인된 근거 \d/)
-    .first()
-    .click();
-  await expect(page.getByText(/확인된 근거 ·/).first()).toBeVisible();
-  await expect(
-    page.getByRole("heading", { level: 3, name: "저장된 다음 행동" }).first(),
-  ).toBeVisible();
-  await expect(page.getByText("실행하지 않음").first()).toBeVisible();
-  await expect(
-    page.getByRole("heading", { level: 3, name: "후속 연락 안내" }).first(),
-  ).toBeVisible();
-  await expect(page.getByText(/자동 실행하지 않습니다/).first()).toBeVisible();
-});
-
-test("keeps duplicate names ambiguous until context is added", async ({
-  page,
-}) => {
-  await page.goto("/recall?q=%EA%B9%80%EB%AF%BC%EC%A4%80");
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
-
-  await expect(page.getByText("구분 필요", { exact: true })).toBeVisible();
-  await expect(page.getByText(/여러 사람이 있습니다/)).toBeVisible();
-  await expect(
-    page.locator('a[href^="/people/"]').filter({ hasText: "김민준" }),
-  ).toHaveCount(2);
-});
-
-test("shows an explicit no-result state without invented evidence", async ({
-  page,
-}) => {
-  await page.goto(
-    "/recall?q=%EA%B3%A0%EB%8C%80%20%EC%95%85%EA%B8%B0%20%EB%B3%B5%EC%9B%90%20%EC%97%B0%EC%A3%BC%20%EC%A0%84%EB%AC%B8%EA%B0%80",
+  await expect(page.locator(".answer-evidence")).toContainText(
+    "부산 파일럿 제안서를 보내기로 했다",
   );
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await expect(page.locator(".stored-action")).toContainText(
+    "부산 파일럿 제안서 전달",
+  );
+  expect(recallCalls).toBe(1);
+});
 
-  await expect(page.getByText("결과 없음")).toBeVisible();
+test("keeps duplicate names ambiguous in the integrated assistant", async ({
+  page,
+}) => {
+  await page.goto(`/?assistant=1&q=${encodeURIComponent("김민준")}#todos`);
+  await page.getByRole("button", { name: "질문 보내기" }).click();
+  await expect(page.getByText("인물 확인 필요", { exact: true })).toBeVisible();
+  await expect(page.getByText(/여러 사람이 있습니다/)).toBeVisible();
+  await expect(page.locator(".answer-person")).toHaveCount(2);
+});
+
+test("shows no-result recovery without invented evidence", async ({ page }) => {
+  await page.goto(
+    `/?assistant=1&q=${encodeURIComponent("고대 악기 복원 연주 전문가")}#todos`,
+  );
+  await page.getByRole("button", { name: "질문 보내기" }).click();
+  await expect(page.getByText("관련 기록 없음", { exact: true })).toBeVisible();
   await expect(page.getByText(/찾지 못했습니다/)).toBeVisible();
-  await expect(page.locator('a[href^="/people/"]')).toHaveCount(0);
+  await expect(page.locator(".answer-person")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "질문 수정하기" }),
+  ).toBeVisible();
 });

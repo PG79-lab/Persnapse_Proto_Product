@@ -37,7 +37,7 @@ export function SearchPreparation({ onPrepared }: { onPrepared: () => void }) {
         setStatus(preparation);
         setNotice(
           preparation.ready
-            ? "검색 준비가 완료되었습니다. 기억 찾기를 다시 눌러 주세요."
+            ? "검색 준비가 완료되었습니다. 질문을 다시 보내 주세요."
             : "",
         );
         if (preparation.ready) onPrepared();
@@ -91,7 +91,7 @@ export function SearchPreparation({ onPrepared }: { onPrepared: () => void }) {
       const progress = payload as SearchPreparationResult;
       setStatus(progress.status);
       if (progress.status.ready) {
-        setNotice("검색 준비가 완료됐습니다. 기억 찾기를 다시 눌러 주세요.");
+        setNotice("검색 준비가 완료됐습니다. 질문을 다시 보내 주세요.");
         onPrepared();
       } else if (progress.failureCount) {
         setError(

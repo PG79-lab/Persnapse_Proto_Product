@@ -1,11 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
 import type { SearchPreparationStatus } from "../../src/domain/recall/search-preparation";
+import { mockWorkspace } from "./workspace-fixture";
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/**", (route) => route.abort());
+  await mockWorkspace(page);
+});
 test("explicit search, evidence, feedback and retry preserve user input", async ({
   page,
 }) => {
   let calls = 0;
-  await page.route("**/api/**", (route) => route.abort());
-  await page.route("**/people/**", (route) => route.abort());
   await page.route("**/api/recall", async (route) => {
     calls++;
     if (calls === 2)
@@ -55,22 +59,22 @@ test("explicit search, evidence, feedback and retry preserve user input", async 
   await page.route("**/api/feedback", (route) =>
     route.fulfill({ json: { saved: true } }),
   );
-  await page.goto("/recall?q=대전에서%20논의한%20사람");
+  await page.goto("/?assistant=1&q=대전에서%20논의한%20사람#todos");
   await expect(
-    page.getByRole("button", { name: "기억 찾기", exact: true }),
+    page.getByRole("button", { name: "질문 보내기", exact: true }),
   ).toBeVisible();
   expect(calls).toBe(0);
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await page.getByRole("button", { name: "질문 보내기", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "김가람님과 논의했습니다." }),
+    page.getByText("김가람님과 논의했습니다.", { exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText("대전에서 양자컴퓨팅을 논의했다.", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator(".answer-evidence")).toContainText(
+    "대전에서 양자컴퓨팅을 논의했다.",
+  );
   await page
     .getByRole("button", { name: "도움이 됐어요", exact: true })
     .click();
-  await expect(page.getByText("평가를 남겼습니다. 감사합니다.")).toBeVisible();
+  await expect(page.getByText("피드백이 저장되었습니다.")).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({
     path: "test-results/assistant-desktop.png",
@@ -79,7 +83,7 @@ test("explicit search, evidence, feedback and retry preserve user input", async 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.evaluate(() => window.scrollTo(0, 0));
   await expect(
-    page.getByRole("navigation", { name: "주요 탐색" }),
+    page.getByRole("navigation", { name: "모바일 메뉴" }),
   ).toBeVisible();
   expect(
     await page.evaluate(
@@ -90,26 +94,32 @@ test("explicit search, evidence, feedback and retry preserve user input", async 
     path: "test-results/assistant-mobile.png",
     fullPage: true,
   });
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await page.getByLabel("AI에게 질문").fill("대전에서 논의한 사람");
+  await page.getByRole("button", { name: "질문 보내기", exact: true }).click();
   await expect(
     page.getByRole("alert").filter({ hasText: "검색 준비가 필요합니다." }),
   ).toBeVisible();
-  await expect(page.getByLabel("관계 기억 검색")).toHaveValue(
+  await expect(page.getByLabel("AI에게 질문")).toHaveValue(
     "대전에서 논의한 사람",
   );
 });
 
-test("switching input modes preserves an unfinished text note", async ({
+test("returning from the card page preserves an unfinished assistant question", async ({
   page,
 }) => {
-  await page.route("**/api/**", (route) => route.abort());
-  await page.route("**/people/**", (route) => route.abort());
-  await page.goto("/capture");
-  await page.getByRole("button", { name: "텍스트 메모", exact: true }).click();
-  const note = page.locator("textarea:visible").first();
+  await page.goto("/#todos");
+  const note = page.getByLabel("AI에게 질문");
   await note.fill("어제 대전에서 양자컴퓨팅에 관해 이야기했다.");
-  await page.getByRole("button", { name: "명함 촬영", exact: true }).click();
-  await page.getByRole("button", { name: "텍스트 메모", exact: true }).click();
+  await page
+    .locator(".connected-composer")
+    .getByRole("button", { name: "명함 등록", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#cards$/);
+  await expect(page.locator(".connected-capture")).toHaveCount(1);
+  await page
+    .getByRole("navigation", { name: "주요 메뉴" })
+    .getByRole("button", { name: "일정/업무관리", exact: true })
+    .click();
   await expect(note).toHaveValue("어제 대전에서 양자컴퓨팅에 관해 이야기했다.");
 });
 
@@ -125,8 +135,6 @@ const incompletePreparation: SearchPreparationStatus = {
 
 async function interceptUnpreparedSearch(page: Page) {
   const queries: string[] = [];
-  await page.route("**/api/**", (route) => route.abort());
-  await page.route("**/people/**", (route) => route.abort());
   await page.route("**/api/recall", async (route) => {
     queries.push(route.request().postDataJSON().query);
     await route.fulfill({
@@ -177,10 +185,10 @@ test("search recovery requires explicit batches, blocks duplicate submissions an
       },
     });
   });
-  await page.goto("/recall?q=행사에서%20만난%20사람");
+  await page.goto("/?assistant=1&q=행사에서%20만난%20사람#todos");
   expect(queries).toHaveLength(0);
   expect(reads).toBe(0);
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await page.getByRole("button", { name: "질문 보내기", exact: true }).click();
   const recovery = page.getByRole("region", { name: "검색 준비 복구" });
   await expect(recovery.getByText("검색 준비 0/3명")).toBeVisible();
   expect(submissions).toBe(0);
@@ -201,11 +209,12 @@ test("search recovery requires explicit batches, blocks duplicate submissions an
   await recovery
     .getByRole("button", { name: "검색 준비 다시 시도", exact: true })
     .click();
-  await expect(recovery.getByText("검색 준비 3/3명")).toBeVisible();
-  await expect(recovery.getByRole("status")).toContainText("기억 찾기를 다시");
-  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
+  await expect(recovery).toHaveCount(0);
+  await expect(page.locator(".assistant-error")).toContainText(
+    "검색 준비가 완료됐습니다",
+  );
   expect(queries).toHaveLength(1);
-  await expect(page.getByLabel("관계 기억 검색")).toHaveValue(
+  await expect(page.getByLabel("AI에게 질문")).toHaveValue(
     "행사에서 만난 사람",
   );
   await page.setViewportSize({ width: 390, height: 844 });
@@ -218,7 +227,7 @@ test("search recovery requires explicit batches, blocks duplicate submissions an
     path: "test-results/search-recovery-mobile.png",
     fullPage: true,
   });
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await page.getByRole("button", { name: "질문 보내기", exact: true }).click();
   await expect.poll(() => queries.length).toBe(2);
   expect(queries).toEqual(["행사에서 만난 사람", "행사에서 만난 사람"]);
 });
@@ -229,10 +238,11 @@ test("a failed status read preserves the query and can recover without paid prep
   const queries = await interceptUnpreparedSearch(page);
   let reads = 0;
   let submissions = 0;
+  let statusReadFails = true;
   await page.route("**/api/recall/preparation", async (route) => {
     if (route.request().method() === "POST") submissions++;
     reads++;
-    if (reads === 1)
+    if (statusReadFails)
       return route.fulfill({
         status: 503,
         json: { error: "저장소 연결을 확인한 뒤 다시 시도해 주세요." },
@@ -247,14 +257,18 @@ test("a failed status read preserves the query and can recover without paid prep
       },
     });
   });
-  await page.goto("/recall?q=어제%20만난%20사람");
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await page.goto("/?assistant=1&q=어제%20만난%20사람#todos");
+  await page.getByRole("button", { name: "질문 보내기", exact: true }).click();
   const recovery = page.getByRole("region", { name: "검색 준비 복구" });
   await expect(recovery.getByRole("alert")).toContainText("저장소 연결");
+  statusReadFails = false;
   await recovery.getByRole("button", { name: "준비 상태 다시 확인" }).click();
-  await expect(recovery.getByRole("status")).toContainText("검색 준비가 완료");
-  await expect(page.getByRole("main").getByRole("alert")).toHaveCount(0);
-  await expect(page.getByLabel("관계 기억 검색")).toHaveValue("어제 만난 사람");
+  await expect(recovery).toHaveCount(0);
+  await expect(page.locator(".assistant-error")).toContainText(
+    "검색 준비가 완료됐습니다",
+  );
+  await expect(page.getByLabel("AI에게 질문")).toHaveValue("어제 만난 사람");
+  expect(reads).toBeGreaterThan(1);
   expect(submissions).toBe(0);
   expect(queries).toHaveLength(1);
 });
@@ -283,8 +297,8 @@ test("a rate limit preserves progress and requires a later explicit retry", asyn
       },
     });
   });
-  await page.goto("/recall?q=제안서를%20보낼%20사람");
-  await page.getByRole("button", { name: "기억 찾기", exact: true }).click();
+  await page.goto("/?assistant=1&q=제안서를%20보낼%20사람#todos");
+  await page.getByRole("button", { name: "질문 보내기", exact: true }).click();
   const recovery = page.getByRole("region", { name: "검색 준비 복구" });
   await recovery.getByRole("button", { name: "검색 준비 다시 시도" }).click();
   await expect(recovery.getByText("검색 준비 1/3명")).toBeVisible();
@@ -297,7 +311,7 @@ test("a rate limit preserves progress and requires a later explicit retry", asyn
   ).toBeEnabled();
   expect(submissions).toBe(1);
   expect(queries).toHaveLength(1);
-  await expect(page.getByLabel("관계 기억 검색")).toHaveValue(
+  await expect(page.getByLabel("AI에게 질문")).toHaveValue(
     "제안서를 보낼 사람",
   );
 });

@@ -2,6 +2,12 @@
 
 > 처음 읽기: [제품·시스템 핵심 요약](PROJECT_BRIEF.md). 현재 구현 상태와 검증 경계를 한 페이지에서 확인합니다.
 
+> 명함 외곽·2D 복원 작업 설계 — 2026-10-12: [작업 설계와 단계별 통과 조건](plans/card-boundary-rectification-design-2026-10-12.md), [정량 벤치마크 명세](plans/card-boundary-rectification-benchmark-2026-10-12.md), [설계 제안 ADR](decisions/0021-card-boundary-rectification.md). 구현 전 설계안이며 T8을 주 검증 후보로 두고 LC100·DocQuadNet을 비교합니다. 품질·성능·안정성·표본 충족을 별도 판정합니다.
+
+> 명함 외곽·2D 복원 집중 조사 — 2026-10-12: [경량 모델 후보·현재 한계·개선 구조·검증 설계](research/card-boundary-rectification-2026-10-12.md). 사용자와 확정한 범위는 단일 명함의 외곽·네 모서리 감지와 평면 복원입니다. 현재는 조사·설계 결과이며 모델 적용 성능을 측정한 결과가 아닙니다. 연락처 번호 분류의 구현·검증은 [별도 기록](decisions/0020-business-card-contact-number-types.md)을 참고합니다.
+
+> 현재 프론트 기준 — 2026-10-12: `/`의 통합 워크스페이스 하나에서 작업한다. 명함은 `/#cards`, 검색·텍스트 기록은 `/#todos`의 어시스턴트다. 독립 페이지는 삭제했고 옛 주소는 호환 리다이렉트다. [결정](decisions/0019-business-card-recognition-v2.md), [현재 검증·이전 이력의 구분](operations/card-recognition-local-validation-2026-10-11.md)을 참고한다.
+
 > 최신 UX 스프린트: [사용자 과업 루프 개선 결정](decisions/0018-user-task-loop-frontend-sprint.md), [구현·검증 기록](operations/ux-task-loop-sprint-2026-10-10.md). 사용자 평가 결과는 아직 수집 전입니다.
 
 > 최신 작업: [사용자·VC 관점 UI/UX 개선과 검증](operations/experience-review-2026-10-08.md), [제품 판단과 개선 결정](decisions/0017-relationship-memory-experience.md). 작업 경로는 `D:\Persnapse\persnapse-mvp`입니다.

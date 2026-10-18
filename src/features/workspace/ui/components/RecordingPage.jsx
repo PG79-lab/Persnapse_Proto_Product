@@ -188,6 +188,13 @@ export default function RecordingPage({
   };
   useEffect(() => {
     let mounted = true;
+    const loadingTimeout = setTimeout(() => {
+      if (!mounted) return;
+      setLibraryStatus("unavailable");
+      setLibraryError(
+        "녹음 보관함 응답이 지연되고 있어요. 새 녹음은 가능하지만 음성 파일을 내려받아 보관해주세요.",
+      );
+    }, 8000);
     loadLocalRecordings()
       .then((saved) => {
         if (!mounted) return;
@@ -210,9 +217,11 @@ export default function RecordingPage({
         setLibraryError(
           "이 브라우저에 음성을 보관할 수 없어요. 녹음 후 파일을 내려받아 주세요.",
         );
-      });
+      })
+      .finally(() => clearTimeout(loadingTimeout));
     return () => {
       mounted = false;
+      clearTimeout(loadingTimeout);
     };
   }, []);
   function persistDetails(clip) {
@@ -818,7 +827,7 @@ export default function RecordingPage({
             }
           />
           <label>
-            관련 인맥 <small>선택</small>
+            관련 인맥 <small>메모 저장 시 필수</small>
             <select
               aria-label="녹음 관련 인맥"
               value={value.personId}

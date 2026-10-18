@@ -249,9 +249,21 @@ try {
     analysis: response.analysis,
     suggestion: response.results[0].suggestion,
   };
-  const profile = request(`/people/${commitResult.personId}`).text;
-  assert.ok(profile.includes("만남 날짜 미상"));
-  report.profileUnknownDate = true;
+  const workspace = request("/api/workspace").json().state;
+  assert.ok(
+    workspace.people.some((person) => person.id === commitResult.personId),
+  );
+  const meetingIds = new Set(
+    workspace.edges
+      .filter((edge) => edge.personId === commitResult.personId)
+      .map((edge) => edge.meetingId),
+  );
+  assert.ok(
+    workspace.meetings.some(
+      (meeting) => meetingIds.has(meeting.id) && meeting.occurredAt === null,
+    ),
+  );
+  report.workspaceUnknownDate = true;
   const feedback = request("/api/feedback", {
     queryId,
     kind: "helpful",

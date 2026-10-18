@@ -2,11 +2,15 @@
 
 > **처음 읽기:** [제품·시스템 핵심 요약](docs/PROJECT_BRIEF.md) — 현재 범위, 기술 인프라, 검증 경계와 다음 작업.
 
-> 최신 작업: [사용자 과업 루프 UX 개선·검증](docs/operations/ux-task-loop-sprint-2026-10-10.md). [프론트·백엔드 결합 현황](docs/operations/workspace-integration-2026-10-08.md)은 통합 당시의 기록으로 보존합니다.
+> 현재 작업: [명함 인식 고도화·프론트 대상 통일 검증](docs/operations/card-recognition-local-validation-2026-10-11.md), [구현 결정](docs/decisions/0019-business-card-recognition-v2.md). 이전 [사용자 과업 루프 UX 개선·검증](docs/operations/ux-task-loop-sprint-2026-10-10.md)과 [프론트·백엔드 결합 현황](docs/operations/workspace-integration-2026-10-08.md)은 당시의 기록으로 보존합니다.
 
 기존 koin-contact-map 프론트와 Persnapse Canonical 백엔드를 결합한 작업공간입니다.
 
 메인 화면은 일정/업무, 관계 지도, 인맥, 만남, 명함, 녹음의 6개 메뉴입니다. 실제 서버 저장과 검토형 Capture·OCR·Recall·업무 브리핑을 연결했습니다.
+
+**현재 프론트 작업 대상은 `/`의 통합 워크스페이스 하나입니다.** 명함 등록·복원은 `/#cards`, 인맥은 `/#people`, 검색·텍스트 기록은 `/#todos`의 AI 어시스턴트에서 실행합니다. 기존 독립 페이지의 화면 코드는 제거했으며 `/capture`, `/recall`, `/people`, `/people/:personId`는 통합 UI로 이동하는 호환 주소입니다. 검색어와 인물 ID는 이동 후에도 전달합니다.
+
+명함 기능은 `features/workspace/ui/components/CardImport.jsx` → `features/capture/business-card-workspace.tsx` → `card_recognition/`과 `/api/business-cards`로 연결됩니다. `card_recognition`은 평면 복원·보기 전용 뷰어 모듈이며, OCR 호출과 DB·이미지 저장은 기존 서버 코드를 사용합니다.
 
 통합 전 이력은 [2026-10-08 검색·프론트 연결 전 점검](docs/operations/recall-and-integration-readiness-2026-10-08.md)을 확인합니다. 검색 준비 16/16개, 실제 AI 구조화·수정·저장·Recall·피드백 흐름을 검증했습니다. 행동 종류·호출 제한·JSON 로그 저장 오류를 수정했으며, 당시 남았던 프론트 DTO/CRUD는 통합 작업으로 연결했습니다. 엄격 Golden 근거 ID 불일치 2건은 후속 평가 대상으로 남아 있습니다. 이전 [기록·명함 저장 검증](docs/operations/capture-storage-verification-2026-10-08.md)과 [연결 복구 이력](docs/handoff/2026-10-07-backend-readiness.md)도 보존합니다.
 
