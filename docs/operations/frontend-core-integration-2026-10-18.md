@@ -46,3 +46,11 @@ Graph `http://localhost:3510/#map`, 명함 `/#cards`, 녹음 `/#recordings`, AI 
 검증 로그는 ignored `output/frontend-integration/`의 `unit-*.log`, `core-e2e-final.log`, `graph-ordered-entry.log`, `build-ordered-entry.log`, `lint-final.log`에 보존한다. 브라우저 핵심 흐름은 합성 API 응답을 사용하며 실제 유료 OCR/STT/LLM 품질 평가를 이번에 새로 수행했다는 의미가 아니다. 실제 연결 확인은 공유 데이터 읽기이며, 테스트로 실제 공유 인물을 생성하지 않았다.
 
 원본 4316 worktree의 반입 파일은 종료 전 SHA-256 비교에서 시작 시점과 동일함을 확인했다. main에 있던 기존 계획 assets도 반입 자료와 같은 내용인지 확인하고 별도 보존한다. 외부 push/deploy는 수행하지 않는다.
+
+## 인계 상태
+
+- 기능 통합 커밋 `e0acf52`를 로컬 main에 fast-forward 반영했다.
+- 실행 위치는 `D:/Persnapse/worktrees/persnapse-frontend-core`. 이전 core-integration의 3510 서버와 worker를 종료하고 이 worktree의 production 서버와 worker로 교체했다. 원본 4316 서버는 유지했다.
+- 실제 3510 브라우저에서 명함→녹음→AI 업무→Graph 이동, workspace 200/live 모드, 채택 폰트 적용, pageerror 0을 확인했다. 증거: ignored `output/frontend-integration/live-smoke.json`.
+- main의 기존 미추적 assets 원본은 `D:/Persnapse/persnapse-mvp/output/frontend-integration/preexisting-plan-assets`에 보존했다. 같은 내용이 버전 관리되는 assets로 반영됐다. 기존 루트 계획 문서 3개는 미추적 상태 그대로 유지했다.
+- `npm run lint` 최종 재실행도 오류 0, 기존 경고 5. 라이선스 원문의 trailing whitespace는 원문 보존을 위해 변경하지 않았다.
