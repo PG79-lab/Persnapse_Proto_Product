@@ -46,6 +46,8 @@ Persnapse는 외부 사람을 자주 만나는 사용자를 위한 **관계 기�
 
 코드 진입점: `src/features/workspace/`(6개 화면), `src/features/capture/`(명함·기록), `src/app/api/`(HTTP), `src/server/`(서비스·DB·AI), `supabase/migrations/`(스키마).
 
+2026-10-12 프론트 변경: 작업 대상은 `/`의 통합 UI 하나로 통일했다. 명함 등록은 `/#cards`, 인맥은 `/#people`, 검색·텍스트 기록은 `/#todos`의 어시스턴트에서 진행한다. 기존 독립 화면 코드는 삭제했고 옛 URL은 호환 리다이렉트로 남긴다. 명함 평면 복원·뷰어는 `card_recognition/`을 사용하며 프로필에도 같은 뷰어를 연결한다. 이 변경은 현재 작업 트리의 내용이며 상단 커밋과 Preview 링크는 이전 기준점이다.
+
 상세 근거: [MVP 정의](product/mvp-definition-v0.1.md) · [통합 구현·검증](operations/workspace-integration-2026-10-08.md) · [OCR 검증](operations/business-card-recognition-validation-2026-10-08.md) · [최신 UX 스프린트](operations/ux-task-loop-sprint-2026-10-10.md) · [사용자 테스트 기준](decisions/0018-user-task-loop-frontend-sprint.md).
 
 로컬 기본 확인: `npm run lint`, `npm run typecheck`, `npm test -- --maxWorkers=2`, `npm run build`. 실제 DB 쓰기·유료 모델 검증은 각 전용 스크립트의 명시적 옵션을 확인한 후 실행한다.

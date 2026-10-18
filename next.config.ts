@@ -4,7 +4,20 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   async redirects() {
-    return [{ source: "/capture", destination: "/#cards", permanent: false }];
+    return [
+      { source: "/capture", destination: "/#cards", permanent: false },
+      {
+        source: "/recall",
+        destination: "/?assistant=1#todos",
+        permanent: false,
+      },
+      { source: "/people", destination: "/#people", permanent: false },
+      {
+        source: "/people/:personId",
+        destination: "/?person=:personId#people",
+        permanent: false,
+      },
+    ];
   },
 };
 

@@ -5,24 +5,30 @@ import { mockCardApi } from "./mock-card-api";
 
 const port = Number(process.env.CARD_TEST_PORT ?? 3100),
   backendPort = Number(process.env.CARD_TEST_BACKEND_PORT ?? 3101);
+const backendMode = process.env.CARD_TEST_BACKEND_MODE ?? "start";
+if (backendMode !== "start" && backendMode !== "external")
+  throw new Error("Invalid card test backend mode");
 if (
   !Number.isInteger(port) ||
   !Number.isInteger(backendPort) ||
   port === backendPort
 )
   throw new Error("Invalid local test ports");
-const backend = spawn(
-  process.execPath,
-  [
-    "node_modules/next/dist/bin/next",
-    "start",
-    "--hostname",
-    "127.0.0.1",
-    "--port",
-    String(backendPort),
-  ],
-  { stdio: "inherit", windowsHide: true },
-);
+const backend =
+  backendMode === "external"
+    ? null
+    : spawn(
+        process.execPath,
+        [
+          "node_modules/next/dist/bin/next",
+          "start",
+          "--hostname",
+          "127.0.0.1",
+          "--port",
+          String(backendPort),
+        ],
+        { stdio: "inherit", windowsHide: true },
+      );
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://localhost");
   res.setHeader("Cache-Control", "no-store");
@@ -76,19 +82,19 @@ const server = createServer(async (req, res) => {
 });
 server.listen(port, "127.0.0.1", () =>
   console.log(
-    `CARD TEST: http://127.0.0.1:${port}/?cardTest=1#cards (local processing; API writes disabled)`,
+    `CARD TEST: http://127.0.0.1:${port}/#cards (real LC100/rectification, mock OCR, no DB writes)`,
   ),
 );
 function close() {
   server.close();
-  backend.kill();
+  backend?.kill();
 }
 server.on("error", (error) => {
   console.error(error);
   close();
   process.exitCode = 1;
 });
-backend.on("exit", (code) => {
+backend?.on("exit", (code) => {
   server.close();
   if (code) process.exitCode = code;
 });

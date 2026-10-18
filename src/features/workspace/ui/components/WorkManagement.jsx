@@ -241,7 +241,7 @@ export default function WorkManagement({
   const [period, setPeriod] = useState("all");
   const [status, setStatus] = useState("open");
   const [mobileSelection, setMobileSelection] = useState({
-    view: "work",
+    view: focusSignal ? "ai" : "work",
     signal: focusSignal,
   });
   const mobileView =

@@ -22,6 +22,10 @@ import type { CardCorners } from "../../../card_recognition/geometry";
 import { RestorationJobs } from "../../../card_recognition/restoration-jobs";
 import { rectifyCard } from "../../../card_recognition/rectify-card";
 import {
+  rotateCardImage,
+  type CardRotation,
+} from "../../../card_recognition/rotate-card";
+import {
   restoreBusinessCardImage,
   type CardRestoration,
 } from "../../../card_recognition/restore-image";
@@ -43,6 +47,9 @@ type QueueStatus =
   | "error";
 
 interface QueueItem {
+  rotationBase?: Extract<CardRestoration, { kind: "restored" }>;
+  rotation?: CardRotation;
+  rotationBusy?: boolean;
   boundaryCorners?: CardCorners;
   pipelineTimings?: Record<string, number>;
   pipelineRecipe?: "docaligner-lc100-card-v1" | "manual-card-v1";
@@ -137,6 +144,7 @@ export function BusinessCardWorkspace({
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const ocrInFlightRef = useRef(new Set<string>());
+  const rotationInFlightRef = useRef(new Set<string>());
   const restorationJobsRef = useRef(new RestorationJobs());
   const ownedUrlsRef = useRef(new Set<string>());
   const [items, setItems] = useState<QueueItem[]>([]);
@@ -239,6 +247,54 @@ export function BusinessCardWorkspace({
     );
   }
 
+  async function rotateItem(item: QueueItem) {
+    if (!item.pendingRestoration || rotationInFlightRef.current.has(item.id))
+      return;
+    rotationInFlightRef.current.add(item.id);
+    const job = restorationJobsRef.current.begin(item.id);
+    const active = () => restorationJobsRef.current.owns(item.id, job.revision);
+    const base = item.rotationBase ?? item.pendingRestoration;
+    const rotation = (((item.rotation ?? 0) + 90) % 360) as CardRotation;
+    updateItem(item.id, (current) => ({
+      ...current,
+      rotationBusy: true,
+      restorationMessage: "명함 방향을 바꾸고 있습니다.",
+    }));
+    try {
+      const image = await rotateCardImage(base.file, rotation, job.signal);
+      if (!active()) return;
+      const url = ownedUrl(image.file);
+      updateItem(item.id, (current) => {
+        if (!active()) {
+          releaseUrl(url);
+          return current;
+        }
+        if (current.restoredUrl) releaseUrl(current.restoredUrl);
+        return {
+          ...current,
+          rotationBase: base,
+          rotation,
+          rotationBusy: false,
+          restoredUrl: url,
+          pendingRestoration: { ...base, ...image },
+          restorationMessage: `${rotation}도 회전했습니다. 글자가 바른 방향인지 확인한 뒤 OCR을 실행하세요.`,
+        };
+      });
+    } catch (error) {
+      if (active())
+        updateItem(item.id, (current) => ({
+          ...current,
+          rotationBusy: false,
+          restorationMessage:
+            error instanceof Error
+              ? error.message
+              : "명함 회전에 실패했습니다.",
+        }));
+    } finally {
+      rotationInFlightRef.current.delete(item.id);
+    }
+  }
+
   async function uploadItem(
     itemId: string,
     sourceFile: File,
@@ -249,7 +305,11 @@ export function BusinessCardWorkspace({
       recipe?: QueueItem["pipelineRecipe"];
     } = {},
   ) {
-    if (ocrInFlightRef.current.has(itemId)) return;
+    if (
+      ocrInFlightRef.current.has(itemId) ||
+      rotationInFlightRef.current.has(itemId)
+    )
+      return;
     ocrInFlightRef.current.add(itemId);
     const job = restorationJobsRef.current.begin(itemId);
     const active = () => restorationJobsRef.current.owns(itemId, job.revision);
@@ -298,6 +358,9 @@ export function BusinessCardWorkspace({
               operation: null,
               restoredUrl: url,
               pendingRestoration: result.restored,
+              rotationBase: result.restored,
+              rotation: 0,
+              rotationBusy: false,
               boundaryCorners: result.corners,
               pipelineRecipe: result.recipe,
               pipelineTimings: result.timings,
@@ -317,6 +380,9 @@ export function BusinessCardWorkspace({
               operation: null,
               restoredUrl: null,
               pendingRestoration: null,
+              rotationBase: undefined,
+              rotation: 0,
+              rotationBusy: false,
               restorationState: "fallback",
               slow: false,
               restorationMessage:
@@ -382,6 +448,7 @@ export function BusinessCardWorkspace({
         operation: null,
         pendingRestoration: null,
         restorationState: "restored",
+        rotationBase: undefined,
         restorationMessage: "2D 명함 이미지로 OCR 처리를 완료했습니다.",
         pipelineTimings: {
           ...item.pipelineTimings,
@@ -1058,6 +1125,7 @@ export function BusinessCardWorkspace({
             <BoundaryReview
               key={activeItem.id}
               item={activeItem}
+              onRotate={() => void rotateItem(activeItem)}
               onManual={(corners) =>
                 void uploadItem(
                   activeItem.id,
@@ -1148,11 +1216,13 @@ export function BusinessCardWorkspace({
 
 function BoundaryReview({
   item,
+  onRotate,
   onManual,
   onAccept,
   onRemove,
 }: {
   item: QueueItem;
+  onRotate: () => void;
   onManual: (corners: CardCorners) => void;
   onAccept: () => void;
   onRemove: () => void;
@@ -1217,6 +1287,18 @@ function BoundaryReview({
               >
                 2D 명함 JPEG 다운로드
               </a>
+              <button
+                type="button"
+                disabled={item.rotationBusy}
+                onClick={onRotate}
+                className="ml-3 rounded-xl border px-3 py-2 text-sm disabled:opacity-40"
+              >
+                오른쪽으로 90도 회전
+              </button>
+              <p className="mt-2 text-xs text-[var(--muted)]">
+                글자가 옆으로 있거나 뒤집혔다면 회전하세요. 회전한 이미지로
+                OCR을 실행합니다.
+              </p>
             </>
           ) : (
             <p className="my-4 text-sm">
@@ -1237,13 +1319,14 @@ function BoundaryReview({
       )}
       <div className="my-4 flex flex-wrap gap-3">
         <button
-          disabled={!item.pendingRestoration}
+          disabled={!item.pendingRestoration || item.rotationBusy}
           onClick={onAccept}
           className="rounded-xl bg-[var(--foreground)] px-4 py-3 text-white disabled:opacity-40"
         >
           이 2D 이미지로 OCR 실행
         </button>
         <button
+          disabled={item.rotationBusy}
           onClick={() => setEditing(true)}
           className="rounded-xl border px-4 py-3"
         >
@@ -1257,7 +1340,7 @@ function BoundaryReview({
         <CardCornerEditor
           imageUrl={item.sourcePreviewUrl!}
           seedCorners={item.boundaryCorners}
-          busy={false}
+          busy={Boolean(item.rotationBusy)}
           onApply={onManual}
           onCancel={() => setEditing(false)}
         />

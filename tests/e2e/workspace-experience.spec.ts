@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { emptyWorkspace } from "../../src/features/workspace/store";
 import type { WorkspaceState } from "../../src/domain/workspace/contracts";
+import { mockWorkspace as mockWorkspaceSession } from "./workspace-fixture";
 
 function fixture(): WorkspaceState {
   const state = emptyWorkspace();
@@ -62,17 +63,7 @@ function fixture(): WorkspaceState {
   return state;
 }
 async function mockWorkspace(page: Page, state = fixture()) {
-  await page.route("**/api/workspace", (route) => {
-    if (route.request().method() !== "GET")
-      throw new Error("UX tests must not mutate shared data");
-    return route.fulfill({
-      json: {
-        state,
-        loadedAt: new Date().toISOString(),
-        capabilities: { storage: "server", aiMode: "mock", ocrMode: "live" },
-      },
-    });
-  });
+  await mockWorkspaceSession(page, state);
 }
 test("summary filters pending work and restores the full list", async ({
   page,

@@ -2,7 +2,7 @@ import { createServer, request } from "node:http";
 import { spawn } from "node:child_process";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, relative, isAbsolute } from "node:path";
-import { emptyWorkspace } from "../../src/features/workspace/store";
+import { mutationSchema } from "../../src/domain/workspace/contracts";
 
 // Use the isolated production build, leaving the card session's .next untouched.
 const root = process.cwd();
@@ -36,7 +36,7 @@ const backend = spawn(
   ],
   { cwd: buildDir, stdio: "inherit", windowsHide: true },
 );
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", "http://127.0.0.1:3200");
   const json = (status: number, data: unknown) => {
     res.writeHead(status, {
@@ -45,23 +45,49 @@ const server = createServer((req, res) => {
     });
     res.end(JSON.stringify(data));
   };
-  if (url.pathname === "/api/workspace" && req.method === "GET")
-    return json(200, {
-      state: emptyWorkspace(),
-      loadedAt: new Date().toISOString(),
-      capabilities: { storage: "server", aiMode: "mock", ocrMode: "mock" },
-    });
   if (url.pathname === "/api/business-cards" && req.method === "GET")
     return json(200, []);
   if (
     url.pathname.startsWith("/api/") &&
+    !(
+      url.pathname === "/api/workspace" &&
+      ["GET", "POST"].includes(req.method ?? "")
+    ) &&
     url.pathname !== "/api/stt/transcribe" &&
     url.pathname !== "/api/stt/realtime-session"
   )
     return json(405, {
       error:
-        "STT 연결 테스트에서는 기록 저장과 다른 AI 호출을 실행하지 않습니다.",
+        "STT 테스트에서는 인맥 메모 저장과 음성 전사 API만 사용할 수 있습니다.",
     });
+  let workspaceBody: Buffer | undefined;
+  if (url.pathname === "/api/workspace" && req.method === "POST") {
+    try {
+      const chunks: Buffer[] = [];
+      let bytes = 0;
+      for await (const chunk of req) {
+        bytes += chunk.length;
+        if (bytes > 1_000_000)
+          return json(413, { error: "메모 요청이 너무 큽니다." });
+        chunks.push(Buffer.from(chunk));
+      }
+      workspaceBody = Buffer.concat(chunks);
+      const mutation = mutationSchema.safeParse(
+        JSON.parse(workspaceBody.toString("utf8")),
+      );
+      if (
+        !mutation.success ||
+        mutation.data.operations.some(
+          (operation) => operation.type !== "note.add",
+        )
+      )
+        return json(405, {
+          error: "이 테스트 환경에서는 인맥 메모 추가만 저장할 수 있습니다.",
+        });
+    } catch {
+      return json(400, { error: "메모 요청을 읽지 못했습니다." });
+    }
+  }
   // Preserve the browser Host/Origin so the STT endpoint's same-origin check works.
   const proxy = request(
     {
@@ -84,7 +110,8 @@ const server = createServer((req, res) => {
     else res.end();
   });
   req.on("aborted", () => proxy.destroy());
-  req.pipe(proxy);
+  if (workspaceBody) proxy.end(workspaceBody);
+  else req.pipe(proxy);
 });
 function close() {
   server.close();
@@ -108,6 +135,6 @@ process.on("SIGINT", close);
 process.on("SIGTERM", close);
 server.listen(port, "127.0.0.1", () =>
   console.log(
-    "STT TEST: http://127.0.0.1:3200/#todos → 기록 남기기 (STT live; DB writes blocked)",
+    "STT TEST: http://127.0.0.1:3200/#recordings (STT live; workspace persistence enabled)",
   ),
 );

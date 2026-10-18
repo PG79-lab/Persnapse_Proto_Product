@@ -1,5 +1,98 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockWorkspace } from "./workspace-fixture";
+import { emptyWorkspace } from "../../src/features/workspace/store";
+
+test("saving a recording note persists it and shows saved confirmation", async ({
+  page,
+}) => {
+  const state = emptyWorkspace();
+  state.people.push({
+    id: "20000000-0000-4000-8000-000000000001",
+    name: "테스트 인맥",
+    version: 1,
+    deletedAt: null,
+    createdAt: "2026-10-14T00:00:00Z",
+    company: null,
+    job: null,
+    email: null,
+    phone: null,
+    status: "unclassified",
+    importance: 3,
+    relationshipCategories: [],
+    history: [],
+  });
+  let writes = 0;
+  await page.route("**/api/workspace", async (route) => {
+    if (route.request().method() === "POST") {
+      const mutation = route.request().postDataJSON();
+      expect(mutation.operations).toHaveLength(1);
+      expect(mutation.operations[0].type).toBe("note.add");
+      const note = mutation.operations[0];
+      state.people[0].history.push({
+        id: note.id,
+        text: note.text,
+        date: null,
+        version: 1,
+        deletedAt: null,
+      });
+      writes++;
+    }
+    await route.fulfill({
+      json: {
+        state,
+        loadedAt: new Date().toISOString(),
+        capabilities: { storage: "server", aiMode: "mock", ocrMode: "mock" },
+      },
+    });
+  });
+  await page.goto("/#recordings");
+  await page.getByLabel("녹음 메모", { exact: true }).fill("저장할 전사 메모");
+  await page.getByLabel("녹음 관련 인맥").selectOption(state.people[0].id);
+  await page
+    .getByRole("button", { name: "인맥에 메모 저장", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "인맥에 메모 저장됨", exact: true }),
+  ).toBeVisible();
+  expect(writes).toBe(1);
+  await page.reload();
+  expect((await page.request.get("/api/workspace")).status()).toBe(200);
+  expect(state.people[0].history[0].text).toBe("저장할 전사 메모");
+});
+
+test("recording becomes available when the browser recording database never responds", async ({
+  page,
+}) => {
+  await mockWorkspace(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "indexedDB", { value: { open: () => ({}) } });
+  });
+  await page.goto("/#recordings");
+  const start = page.getByRole("button", { name: "녹음 시작", exact: true });
+  await expect(start).toBeEnabled({ timeout: 12000 });
+  await expect(
+    page.getByText("녹음 보관함 응답이 지연되고 있어요.", { exact: false }),
+  ).toBeVisible();
+});
+
+test("existing people load through the STT gateway and enable note save after selection", async ({
+  page,
+}) => {
+  await page.goto("/#recordings");
+  const people = page.getByLabel("녹음 관련 인맥");
+  await expect(people.locator("option")).not.toHaveCount(1);
+  await page
+    .getByLabel("녹음 메모", { exact: true })
+    .fill("버튼 활성화 검증 — 저장하지 않음");
+  const save = page.getByRole("button", {
+    name: "인맥에 메모 저장",
+    exact: true,
+  });
+  await expect(save).toBeDisabled();
+  const id = await people.locator("option").nth(1).getAttribute("value");
+  await people.selectOption(id!);
+  await expect(save).toBeEnabled();
+});
 
 async function setup(page: Page, fail = false) {
   await page.route("**/api/**", (route) => route.abort());
