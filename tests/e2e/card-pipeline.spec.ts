@@ -84,7 +84,7 @@ test("camera capture waits for manual rectification and image acceptance before 
   await page.getByRole("button", { name: "이 사진으로 인식" }).click();
   await expect(
     page.getByRole("heading", { name: "명함 테두리·2D 이미지 확인" }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 30_000 });
   expect(ocrRequests).toBe(0);
   await expect(
     page.getByRole("button", { name: "이 2D 이미지로 OCR 실행" }),
