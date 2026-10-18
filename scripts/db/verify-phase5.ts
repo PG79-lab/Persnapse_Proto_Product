@@ -24,6 +24,7 @@ if (liveOcr && !process.argv.includes("--confirm-live")) {
   process.exit(2);
 }
 process.env.BUSINESS_CARD_OCR_MODE = liveOcr ? "live" : "mock";
+if (!liveOcr) process.env.AI_ROUTING_MODE = "mock";
 
 const workspaceId = process.env.APP_DEFAULT_WORKSPACE_ID;
 assert(workspaceId, "APP_DEFAULT_WORKSPACE_ID is required.");
