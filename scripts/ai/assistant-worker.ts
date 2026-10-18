@@ -24,13 +24,11 @@ try {
       stopping = true;
     });
     do {
-      console.log(
-        JSON.stringify(
-          await runAssistantIndexBatch(env.APP_DEFAULT_WORKSPACE_ID),
-        ),
-      );
+      const batch = await runAssistantIndexBatch(env.APP_DEFAULT_WORKSPACE_ID);
+      console.log(JSON.stringify(batch));
       if (!process.argv.includes("--watch") || stopping) break;
-      await new Promise((resolve) => setTimeout(resolve, 10000));
+      const delay = "failed" in batch && batch.failed > 0 ? 60_000 : 10_000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
     } while (!stopping);
   }
 } finally {

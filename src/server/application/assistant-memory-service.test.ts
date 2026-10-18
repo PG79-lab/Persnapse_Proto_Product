@@ -132,6 +132,27 @@ beforeEach(() => {
   ]);
 });
 describe("assistant memory orchestration", () => {
+  it("keeps the selected identity authoritative in a pronoun follow-up", async () => {
+    mocks.people.mockResolvedValue([
+      { id: p, name: "민수" },
+      { id: "20000000-0000-4000-8000-000000000002", name: "민수" },
+    ]);
+    mocks.structured
+      .mockReset()
+      .mockResolvedValueOnce({
+        ...plan,
+        clarification: "동명이인이 있습니다. 어느 사람인가요?",
+      })
+      .mockResolvedValueOnce(raw);
+    const result = await executeAssistantMemory({
+      workspaceId: "w",
+      query: "그 사람 진행 상황 정리",
+      context: { ...emptyContext(), personIds: [p] },
+      selection: { personIds: [p] },
+    });
+    expect(result.response.status).toBe("resolved");
+    expect(result.plan.personIds).toEqual([p]);
+  });
   it("honors an explicit identity when the planner asks which same-name record to retrieve", async () => {
     mocks.people.mockResolvedValue([
       { id: p, name: "민수" },
@@ -159,12 +180,10 @@ describe("assistant memory orchestration", () => {
       { id: p, name: "민수" },
       { id: "20000000-0000-4000-8000-000000000002", name: "민수" },
     ]);
-    mocks.structured
-      .mockReset()
-      .mockResolvedValueOnce({
-        ...plan,
-        clarification: "어느 만남을 기준으로 할까요?",
-      });
+    mocks.structured.mockReset().mockResolvedValueOnce({
+      ...plan,
+      clarification: "어느 만남을 기준으로 할까요?",
+    });
     const result = await executeAssistantMemory({
       workspaceId: "w",
       query: "민수 기록 정리",

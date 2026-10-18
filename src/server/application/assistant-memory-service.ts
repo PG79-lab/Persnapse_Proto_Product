@@ -247,13 +247,6 @@ export async function executeAssistantMemory(input: {
     input.selection.personIds.every((id) => named.some((p) => p.id === id))
   ) {
     plan.personIds = input.selection.personIds;
-    if (
-      plan.clarification &&
-      /동명이인|같은 이름|이름.*(두|여러|같)|어느.*(인물|사람)|인물.*선택/.test(
-        plan.clarification,
-      )
-    )
-      plan.clarification = null;
   }
   const compatibleSelection =
     !named.length ||
@@ -261,6 +254,15 @@ export async function executeAssistantMemory(input: {
     named.some((p) => input.selection?.personIds?.includes(p.id));
   if (input.selection?.personIds && !named.length)
     plan.personIds = input.selection.personIds;
+  if (
+    input.selection?.personIds?.length &&
+    compatibleSelection &&
+    plan.clarification &&
+    /동명이인|같은 이름|이름.*(두|여러|같)|어느.*(인물|사람)|인물.*선택/.test(
+      plan.clarification,
+    )
+  )
+    plan.clarification = null;
   if (input.selection?.interactionId !== undefined && compatibleSelection)
     plan.interactionId = input.selection.interactionId;
   if (!compatibleSelection) plan.interactionId = null;
