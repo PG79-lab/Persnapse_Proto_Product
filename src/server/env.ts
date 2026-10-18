@@ -18,6 +18,9 @@ export const serverEnvSchema = z.object({
   SUPABASE_SECRET_KEY: optionalSecret,
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   AI_ROUTING_MODE: z.enum(["mock", "live"]).default("mock"),
+  ASSISTANT_CONTEXT_ENABLED: z.enum(["off", "on"]).default("off"),
+  ASSISTANT_INDEX_WORKER_ENABLED: z.enum(["off", "on"]).default("off"),
+  ASSISTANT_WORKER_SECRET: optionalSecret,
   BUSINESS_CARD_OCR_MODE: z.enum(["mock", "live"]).default("mock"),
   BUSINESS_CARD_OCR_PROVIDER: z
     .enum(["naver_clova", "openai"])

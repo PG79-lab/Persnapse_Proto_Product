@@ -17,6 +17,7 @@ export const maxDuration = 60;
 function capabilities() {
   const env = getServerEnv();
   return {
+    assistantContext: env.ASSISTANT_CONTEXT_ENABLED === "on",
     aiMode: env.AI_ROUTING_MODE,
     ocrMode: env.BUSINESS_CARD_OCR_MODE,
     storage: "server",

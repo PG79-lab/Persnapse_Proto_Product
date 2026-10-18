@@ -44,7 +44,8 @@ function scoreEvidence(
   query: ParsedRecallQuery,
 ): ScoredEvidence | null {
   const dateValue =
-    query.intents.includes("action") && evidence.type === "action_item"
+    query.intents.includes("action") &&
+    (evidence.type === "action_item" || evidence.type === "workspace_task")
       ? (evidence.dueAt ?? null)
       : evidence.occurredAt;
   if (!inDateRange(dateValue, query)) {
@@ -77,7 +78,7 @@ function scoreEvidence(
     if (
       query.intents.includes("action") &&
       !substantiveTerms.length &&
-      evidence.type === "action_item" &&
+      (evidence.type === "action_item" || evidence.type === "workspace_task") &&
       evidence.actionStatus === "pending"
     )
       score = 1;
@@ -86,7 +87,7 @@ function scoreEvidence(
 
   if (
     query.intents.includes("action") &&
-    evidence.type === "action_item" &&
+    (evidence.type === "action_item" || evidence.type === "workspace_task") &&
     evidence.actionStatus === "pending"
   ) {
     score += 28;
@@ -124,6 +125,7 @@ function reasonFor(item: ScoredEvidence | undefined): string {
 
   const labels: Record<RecallCorpusEvidence["type"], string> = {
     action_item: "후속 행동",
+    workspace_task: "사용자 업무",
     affiliation: "소속",
     event: "행사",
     interaction: "상호작용",

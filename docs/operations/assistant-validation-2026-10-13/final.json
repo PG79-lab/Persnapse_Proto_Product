@@ -1,0 +1,159 @@
+{
+  "providerCalls": 2,
+  "remoteDatabaseConnections": 0,
+  "models": {
+    "structure": "gpt-5.6-luna",
+    "answer": "gpt-5.6-terra",
+    "embedding": "voyage-4"
+  },
+  "usage": [
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "memory_answer"
+    }
+  ],
+  "results": [
+    {
+      "case": 1,
+      "message": "이번 주 누구에게 먼저 연락하면 좋을까?",
+      "latencyMs": 10619,
+      "purpose": "prioritize",
+      "status": "resolved",
+      "coverage": {
+        "status": "limited",
+        "paths": ["structured", "keyword"],
+        "reasons": [
+          "의미 검색은 준비된 기록에 한해 사용했습니다. 최신 기록은 이름·조건·키워드로 확인했습니다."
+        ],
+        "prepared": 0,
+        "total": 6,
+        "asOf": "2026-10-13T11:39:47.996Z"
+      },
+      "context": {
+        "personIds": ["20000000-0000-4000-8000-000000000001"],
+        "interactionId": null,
+        "meetingRange": null,
+        "dueRange": {
+          "from": "2026-10-12",
+          "toExclusive": "2026-10-19"
+        },
+        "purpose": "prioritize",
+        "goal": "이번 주 연락 우선순위 정하기",
+        "choices": []
+      },
+      "answer": "이번 주에는 민수님에게 먼저 연락하는 것이 좋습니다. 10월 16일(금) 마감인 ‘소개서 보내기’ 미완료 약속이 확인됩니다.",
+      "sections": [
+        {
+          "type": "fact",
+          "title": "확인된 미완료 약속",
+          "text": "민수님 관련 ‘소개서 보내기’ 약속이 미완료 상태이며, 마감은 2026년 10월 16일(금) 09:00입니다.",
+          "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+        },
+        {
+          "type": "interpretation",
+          "title": "우선순위 판단",
+          "text": "이번 주 내 마감되는 미완료 약속을 우선 기준으로 보면 민수님이 먼저 연락할 대상입니다. 다만 검색 범위가 제한적이어서 전체 연락처 중 최우선이라고 단정할 수는 없습니다.",
+          "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+        },
+        {
+          "type": "suggestion",
+          "title": "연락 준비",
+          "text": "소개서 발송 가능 시점과 전달 방식, 필요한 최신 수신 정보를 확인하는 메시지를 준비해 보세요.",
+          "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+        }
+      ],
+      "people": ["20000000-0000-4000-8000-000000000001"],
+      "metrics": [
+        {
+          "stage": "query_understanding",
+          "latencyMs": 4058,
+          "totalTokens": 926
+        },
+        {
+          "stage": "memory_answer",
+          "latencyMs": 6001,
+          "totalTokens": 1581
+        }
+      ]
+    }
+  ],
+  "rawOutputs": [
+    {
+      "stage": "query_understanding",
+      "data": {
+        "intent": "analysis",
+        "personName": null,
+        "conditions": [],
+        "sameInteraction": false,
+        "timeTarget": "action_due",
+        "actionKind": null,
+        "period": "range",
+        "fromDate": "2026-10-12",
+        "toDateExclusive": "2026-10-19",
+        "clarification": null,
+        "purpose": "prioritize",
+        "personIds": [
+          "20000000-0000-4000-8000-000000000001",
+          "20000000-0000-4000-8000-000000000002"
+        ],
+        "interactionId": null,
+        "meetingRange": null,
+        "dueRange": {
+          "from": "2026-10-12",
+          "toExclusive": "2026-10-19"
+        },
+        "goal": "이번 주 연락 우선순위 정하기"
+      }
+    },
+    {
+      "stage": "memory_answer",
+      "data": {
+        "status": "resolved",
+        "answer": "이번 주에는 민수님에게 먼저 연락하는 것이 좋습니다. 10월 16일(금) 마감인 ‘소개서 보내기’ 미완료 약속이 확인됩니다.",
+        "analysis": "제공된 제한적 기록에서 이번 주(10월 12일~19일) 내 마감되는 미완료 commitment를 기준으로 우선순위를 정했습니다. 확인된 대상은 민수님 1명뿐이므로, 전체 연락처 기준의 포괄적 순위는 아닙니다.",
+        "clarification": null,
+        "people": [
+          {
+            "personId": "20000000-0000-4000-8000-000000000001",
+            "reason": "10월 16일(금)까지 ‘소개서 보내기’라는 미완료 약속이 있어, 이번 주 연락 우선순위가 높습니다.",
+            "evidenceKeys": [
+              "action_item:50000000-0000-4000-8000-000000000001"
+            ],
+            "conditionEvidence": [],
+            "suggestion": {
+              "title": "민수님에게 소개서 발송 여부 확인",
+              "rationale": "다가오는 마감 전 약속을 이행하거나 일정·수신 정보를 확인하는 연락을 준비할 수 있습니다.",
+              "evidenceKeys": [
+                "action_item:50000000-0000-4000-8000-000000000001"
+              ]
+            }
+          }
+        ],
+        "sections": [
+          {
+            "type": "fact",
+            "title": "확인된 미완료 약속",
+            "text": "민수님 관련 ‘소개서 보내기’ 약속이 미완료 상태이며, 마감은 2026년 10월 16일(금) 09:00입니다.",
+            "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+          },
+          {
+            "type": "interpretation",
+            "title": "우선순위 판단",
+            "text": "이번 주 내 마감되는 미완료 약속을 우선 기준으로 보면 민수님이 먼저 연락할 대상입니다. 다만 검색 범위가 제한적이어서 전체 연락처 중 최우선이라고 단정할 수는 없습니다.",
+            "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+          },
+          {
+            "type": "suggestion",
+            "title": "연락 준비",
+            "text": "소개서 발송 가능 시점과 전달 방식, 필요한 최신 수신 정보를 확인하는 메시지를 준비해 보세요.",
+            "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+          }
+        ]
+      }
+    }
+  ]
+}

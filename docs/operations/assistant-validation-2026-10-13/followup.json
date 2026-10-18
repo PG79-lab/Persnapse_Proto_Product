@@ -1,0 +1,209 @@
+{
+  "providerCalls": 8,
+  "remoteDatabaseConnections": 0,
+  "models": {
+    "structure": "gpt-5.6-luna",
+    "answer": "gpt-5.6-terra",
+    "embedding": "voyage-4"
+  },
+  "usage": [
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "memory_answer"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "memory_answer"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "memory_answer"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "memory_answer"
+    }
+  ],
+  "results": [
+    {
+      "case": 1,
+      "message": "민수와 다음 만남을 준비해줘",
+      "latencyMs": 11379,
+      "purpose": "prepare",
+      "status": "resolved",
+      "coverage": {
+        "status": "limited",
+        "paths": ["structured", "keyword"],
+        "reasons": [
+          "의미 검색은 준비된 기록에 한해 사용했습니다. 최신 기록은 이름·조건·키워드로 확인했습니다."
+        ],
+        "prepared": 0,
+        "total": 6,
+        "asOf": "2026-10-13T11:36:49.804Z"
+      },
+      "context": {
+        "personIds": ["20000000-0000-4000-8000-000000000001"],
+        "interactionId": null,
+        "meetingRange": null,
+        "dueRange": null,
+        "purpose": "prepare",
+        "goal": "민수와의 다음 만남을 준비",
+        "choices": []
+      },
+      "answer": "민수와의 다음 만남은 AI 도입 파일럿 제안 검토를 중심으로 준비하세요. 그 전에 2026년 10월 16일 09:00(+09:00) 마감인 소개서 발송 약속이 미완료 상태입니다.",
+      "sections": [
+        {
+          "type": "fact",
+          "title": "확인된 최근 논의",
+          "text": "민수는 2026년 10월 12일 온라인에서 AI 도입 파일럿 제안을 검토하기로 했습니다. 10월 9일에는 서울 전시회에서 AI 도입을 논의했고, 양자컴퓨팅과 AI 도입에 관심이 있는 것으로 기록되어 있습니다.",
+          "evidenceKeys": [
+            "interaction:30000000-0000-4000-8000-000000000002",
+            "interaction:30000000-0000-4000-8000-000000000001",
+            "memory_statement:40000000-0000-4000-8000-000000000001"
+          ]
+        },
+        {
+          "type": "fact",
+          "title": "먼저 확인할 미완료 약속",
+          "text": "소개서 보내기는 미완료인 약속이며, 마감은 2026년 10월 16일 09:00(+09:00)입니다.",
+          "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+        },
+        {
+          "type": "interpretation",
+          "title": "만남의 우선 의제",
+          "text": "기록상 파일럿 제안 검토와 소개서 발송이 현재 진행 중인 연결 과제이므로, 다음 만남에서는 파일럿의 검토 상태·필요 자료·다음 의사결정 시점을 확인하는 것이 우선적일 수 있습니다.",
+          "evidenceKeys": [
+            "interaction:30000000-0000-4000-8000-000000000002",
+            "action_item:50000000-0000-4000-8000-000000000001"
+          ]
+        },
+        {
+          "type": "suggestion",
+          "title": "준비 체크리스트",
+          "text": "1) 소개서 발송 내용을 점검하고 마감 전 전달 준비하기\n2) AI 도입 파일럿 제안의 핵심 내용과 검토가 필요한 항목 정리하기\n3) 질문 준비: 현재 검토 단계는 어디인지, 추가로 필요한 자료는 무엇인지, 다음 결정 또는 후속 논의 시점은 언제인지\n4) 관심사로 기록된 AI 도입 및 양자컴퓨팅 관련 논의 주제 한두 가지 준비하기",
+          "evidenceKeys": [
+            "action_item:50000000-0000-4000-8000-000000000001",
+            "interaction:30000000-0000-4000-8000-000000000002",
+            "memory_statement:40000000-0000-4000-8000-000000000001"
+          ]
+        },
+        {
+          "type": "draft",
+          "title": "만남 제안 메시지 초안",
+          "text": "민수님, 지난번 말씀드린 AI 도입 파일럿 제안 관련해 검토 상황과 필요한 자료를 짧게 확인드리고 싶습니다. 소개서도 함께 전달드리겠습니다. 편하신 시간에 잠시 이야기 가능하실까요?",
+          "evidenceKeys": [
+            "interaction:30000000-0000-4000-8000-000000000002",
+            "action_item:50000000-0000-4000-8000-000000000001"
+          ]
+        }
+      ],
+      "people": ["20000000-0000-4000-8000-000000000001"],
+      "metrics": [
+        {
+          "stage": "query_understanding",
+          "latencyMs": 2367,
+          "totalTokens": 878
+        },
+        {
+          "stage": "memory_answer",
+          "latencyMs": 8901,
+          "totalTokens": 2634
+        }
+      ]
+    },
+    {
+      "case": 2,
+      "message": "확인할 질문 세 개로 줄여줘",
+      "error": "답변의 조건과 근거 연결을 확인하지 못했습니다.",
+      "code": "AI_EVIDENCE_INVALID"
+    },
+    {
+      "case": 3,
+      "message": "민수의 이전 AI 관심사와 이번 파일럿 제안이 어떻게 연결돼?",
+      "latencyMs": 8932,
+      "purpose": "connect",
+      "status": "resolved",
+      "coverage": {
+        "status": "limited",
+        "paths": ["structured", "keyword"],
+        "reasons": [
+          "의미 검색은 준비된 기록에 한해 사용했습니다. 최신 기록은 이름·조건·키워드로 확인했습니다."
+        ],
+        "prepared": 0,
+        "total": 6,
+        "asOf": "2026-10-13T11:37:08.848Z"
+      },
+      "context": {
+        "personIds": ["20000000-0000-4000-8000-000000000001"],
+        "interactionId": "30000000-0000-4000-8000-000000000002",
+        "meetingRange": null,
+        "dueRange": null,
+        "purpose": "connect",
+        "goal": "민수의 이전 AI 관심사와 이번 파일럿 제안의 연결 관계를 파악",
+        "choices": []
+      },
+      "answer": "민수는 2026년 10월 9일 AI 도입에 관심을 보였고, 10월 12일에는 AI 도입 파일럿 제안을 검토하기로 했습니다. 따라서 이번 파일럿은 기존의 AI 도입 관심이 구체적인 검토 단계로 이어진 것으로 해석할 수 있습니다. 다만 제공된 기록만으로는 파일럿의 범위나 관심사와의 직접적인 세부 연계까지는 확인되지 않습니다.",
+      "sections": [
+        {
+          "type": "fact",
+          "title": "확인된 흐름",
+          "text": "민수는 2026년 10월 9일 AI 도입에 관심을 보였고, 10월 12일 온라인 상호작용에서 AI 도입 파일럿 제안을 검토하기로 했습니다.",
+          "evidenceKeys": [
+            "memory_statement:40000000-0000-4000-8000-000000000001",
+            "interaction:30000000-0000-4000-8000-000000000002"
+          ]
+        },
+        {
+          "type": "interpretation",
+          "title": "연결 관계",
+          "text": "기존의 AI 도입 관심이 파일럿 제안 검토라는 보다 구체적인 다음 단계로 이어진 것으로 해석할 수 있습니다. 다만 두 기록은 별도 상호작용이므로, 파일럿의 범위·우선순위가 이전 관심사에서 직접 도출됐다는 점은 기록만으로 확인되지 않습니다.",
+          "evidenceKeys": [
+            "memory_statement:40000000-0000-4000-8000-000000000001",
+            "interaction:30000000-0000-4000-8000-000000000002"
+          ]
+        },
+        {
+          "type": "fact",
+          "title": "관련 미결 약속",
+          "text": "10월 9일 상호작용에 연결된 ‘소개서 보내기’ 약속은 2026년 10월 16일 09:00(+09:00) 마감으로 현재 미완료 상태입니다.",
+          "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+        }
+      ],
+      "people": ["20000000-0000-4000-8000-000000000001"],
+      "metrics": [
+        {
+          "stage": "query_understanding",
+          "latencyMs": 2427,
+          "totalTokens": 1221
+        },
+        {
+          "stage": "memory_answer",
+          "latencyMs": 6447,
+          "totalTokens": 2342
+        }
+      ]
+    },
+    {
+      "case": 4,
+      "message": "이번 주 누구에게 먼저 연락하면 좋을까?",
+      "error": "답변의 조건과 근거 연결을 확인하지 못했습니다.",
+      "code": "AI_EVIDENCE_INVALID"
+    }
+  ]
+}

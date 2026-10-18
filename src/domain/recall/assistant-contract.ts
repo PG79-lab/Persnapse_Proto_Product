@@ -109,13 +109,14 @@ export function validateAssistantAnswer(
   model: string,
 ): RecallResponse {
   const dateRange = planDateRange(plan, reference);
-  const fail = (): never => {
-    throw new Error("UNSUPPORTED_ASSISTANT_EVIDENCE");
+  const fail = (reason = "SOURCE_LINK_INVALID"): never => {
+    throw new Error("UNSUPPORTED_ASSISTANT_EVIDENCE:" + reason);
   };
   if (new Set(raw.people.map((p) => p.personId)).size !== raw.people.length)
     fail();
   if (raw.status === "no_result" && raw.people.length) fail();
-  if (raw.status === "resolved" && !raw.people.length) fail();
+  if (raw.status === "resolved" && !raw.people.length)
+    fail("RESOLVED_WITHOUT_PERSON");
   if (raw.status === "ambiguous" && !raw.clarification) fail();
   if (
     plan.personName &&
@@ -138,11 +139,14 @@ export function validateAssistantAnswer(
     if (
       plan.actionKind &&
       !selected.some(
-        (e) => e.type === "action_item" && e.actionKind === plan.actionKind,
+        (e) =>
+          (e.type === "action_item" || e.type === "workspace_task") &&
+          e.actionKind === plan.actionKind,
       )
     )
       fail();
-    if (result.conditionEvidence.length !== plan.conditions.length) fail();
+    if (result.conditionEvidence.length !== plan.conditions.length)
+      fail("CONDITION_COUNT_MISMATCH");
     const witnesses: RecallCorpusEvidence[][] = [];
     for (let index = 0; index < plan.conditions.length; index++) {
       const support = result.conditionEvidence.filter(
@@ -154,19 +158,19 @@ export function validateAssistantAnswer(
           (key) => !result.evidenceKeys.includes(key),
         )
       )
-        fail();
+        fail("CONDITION_WITNESS_INVALID");
       if (plan.conditions[index].scope === "interaction") {
         witnesses.push(support[0].evidenceKeys.map((key) => byKey.get(key)!));
       }
     }
     const dated = selected.filter((e) =>
       plan.timeTarget === "action_due"
-        ? e.type === "action_item" &&
+        ? (e.type === "action_item" || e.type === "workspace_task") &&
           e.actionStatus === "pending" &&
           withinRange(e.dueAt ?? null, dateRange)
         : withinRange(e.occurredAt, dateRange),
     );
-    if (dateRange && !dated.length) fail();
+    if (dateRange && !dated.length) fail("DATE_WITNESS_MISSING");
     if (plan.sameInteraction && witnesses.length) {
       const groups = witnesses.map(
         (group) =>
@@ -184,7 +188,7 @@ export function validateAssistantAnswer(
             (e) => e.interactionId && common.includes(e.interactionId),
           ))
       )
-        fail();
+        fail("SAME_MEETING_WITNESS_MISSING");
     }
     if (
       result.suggestion?.evidenceKeys.some(
@@ -208,12 +212,16 @@ export function validateAssistantAnswer(
         score: 0,
         memoryStatementId: e.memoryStatementId,
         memoryDocumentId: e.memoryDocumentId,
+        provenance: e.provenance,
+        interactionId: e.interactionId,
       })),
       storedActions: person.actions
         .filter(
           (a) =>
             a.status === "pending" &&
-            result.evidenceKeys.includes("action_item:" + a.id) &&
+            result.evidenceKeys.includes(
+              (a.sourceType ?? "action_item") + ":" + a.id,
+            ) &&
             (!plan.actionKind || a.kind === plan.actionKind) &&
             (plan.timeTarget !== "action_due" ||
               withinRange(a.dueAt, dateRange)),

@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useMemo,
   type FormEvent,
 } from "react";
 import { createPortal } from "react-dom";
@@ -24,6 +25,11 @@ import { SearchPreparation } from "../recall/search-preparation";
 import type { RecallResponse } from "../../domain/recall/types";
 import type { WorkspaceStore } from "./store";
 import { Modal } from "./ui/components/ui.jsx";
+import { useAssistantSession } from "./use-assistant-session";
+import { AssistantResultSections } from "./assistant-result-sections";
+import { AssistantContextControls } from "./assistant-context-controls";
+import type { AssistantResponse } from "../../domain/assistant/contracts";
+import "./assistant-context.css";
 
 type Session = ReturnType<WorkspaceStore["getSnapshot"]> & {
   store: WorkspaceStore;
@@ -34,6 +40,7 @@ type Entry = {
   response: RecallResponse;
   elapsedMs: number;
   feedback?: string;
+  assistant?: AssistantResponse;
 };
 export default function Assistant({
   open,
@@ -59,13 +66,30 @@ export default function Assistant({
   onCard: () => void;
 }) {
   const [query, setQuery] = useState("");
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [legacyEntries, setEntries] = useState<Entry[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [preparation, setPreparation] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordText, setRecordText] = useState("");
   const [feedbackBusy, setFeedbackBusy] = useState<string | null>(null);
+  const contextEnabled = session.capabilities.assistantContext === true;
+  const conversation = useAssistantSession(contextEnabled);
+  const entries = useMemo<Entry[]>(
+    () =>
+      contextEnabled
+        ? conversation.history.map((turn) => ({
+            id: turn.id,
+            question: turn.message,
+            response: turn.response.recall,
+            assistant: turn.response,
+            elapsedMs: turn.response.recall.latencyMs,
+            feedback: feedbacks[turn.id],
+          }))
+        : legacyEntries,
+    [contextEnabled, conversation.history, feedbacks, legacyEntries],
+  );
   const input = useRef<HTMLTextAreaElement>(null);
   const controller = useRef<AbortController | null>(null);
   const thread = useRef<HTMLDivElement>(null);
@@ -93,7 +117,7 @@ export default function Assistant({
   }, [entries, busy]);
   async function search(event: FormEvent) {
     event.preventDefault();
-    if (busy || query.trim().length < 2) return;
+    if (busy || conversation.loading || query.trim().length < 2) return;
     const question = query.trim();
     const started = performance.now();
     const abort = new AbortController();
@@ -102,6 +126,14 @@ export default function Assistant({
     setError("");
     setPreparation(false);
     try {
+      if (contextEnabled) {
+        await conversation.send(
+          question,
+          AbortSignal.any([abort.signal, AbortSignal.timeout(70000)]),
+        );
+        setQuery("");
+        return;
+      }
       const response = await fetch("/api/recall", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,6 +201,8 @@ export default function Assistant({
       });
       if (!response.ok)
         throw new Error("피드백을 저장하지 못했습니다. 다시 시도해 주세요.");
+      if (contextEnabled)
+        setFeedbacks((current) => ({ ...current, [entry.id]: kind }));
       setEntries((current) =>
         current.map((item) =>
           item.id === entry.id ? { ...item, feedback: kind } : item,
@@ -190,7 +224,9 @@ export default function Assistant({
           <h2>AI 어시스턴트</h2>
           <p>
             {session.capabilities.aiMode === "live"
-              ? "저장된 기억을 근거로 사람과 약속을 찾아요"
+              ? contextEnabled
+                ? "기억과 맥락을 연결해 정리와 준비를 도와요"
+                : "저장된 기억을 근거로 사람과 약속을 찾아요"
               : "기본 검색 모드 · 실제 AI 분석 미사용"}
           </p>
         </div>
@@ -203,6 +239,7 @@ export default function Assistant({
             disabled={busy}
             onClick={() => {
               setEntries([]);
+              if (contextEnabled) conversation.reset();
               setError("");
               input.current?.focus();
             }}
@@ -211,6 +248,18 @@ export default function Assistant({
           </button>
         )}
       </header>
+      {contextEnabled && (
+        <AssistantContextControls
+          context={conversation.context}
+          selection={conversation.selection}
+          onChange={conversation.setSelection}
+          state={session.state}
+          disabled={busy || conversation.loading}
+          notice={
+            conversation.loading ? "대화 불러오는 중…" : conversation.notice
+          }
+        />
+      )}
       <div
         className="connected-thread"
         ref={thread}
@@ -222,17 +271,34 @@ export default function Assistant({
             <span className="assistant-eyebrow">
               <Search size={15} /> 나의 관계 기억
             </span>
-            <h3>이름보다, 기억나는 이야기로.</h3>
+            <h3>
+              {contextEnabled
+                ? "기억을 연결해, 다음 행동까지."
+                : "이름보다, 기억나는 이야기로."}
+            </h3>
             <p>
-              이름이 기억나지 않아도 만난 장소, 나눈 이야기, 약속으로
-              찾아보세요.
+              {contextEnabled
+                ? "진행 중인 이야기를 정리하고, 연락 우선순위와 다음 만남을 준비해 보세요. 후속 질문도 이어갈 수 있어요."
+                : "이름이 기억나지 않아도 만난 장소, 나눈 이야기, 약속으로 찾아보세요."}
             </p>
             <div className="assistant-examples">
-              {[
-                ["만남 다시 찾기", "지난달 행사에서 만난 사람"],
-                ["약속 확인하기", "제안서를 보내기로 한 사람"],
-                ["대화 맥락 찾기", "AI 도입에 관해 이야기한 사람"],
-              ].map(([label, text]) => (
+              {(contextEnabled
+                ? [
+                    ["진행 상황 정리", "최근 만남과 미완료 업무를 정리해줘"],
+                    ["연락 우선순위", "이번 주 누구에게 먼저 연락하면 좋을까?"],
+                    [
+                      "다음 만남 준비",
+                      session.state.people[0]
+                        ? `${session.state.people[0].name}와 다음 만남을 준비해줘`
+                        : "다음 만남을 준비해줘",
+                    ],
+                  ]
+                : [
+                    ["만남 다시 찾기", "지난달 행사에서 만난 사람"],
+                    ["약속 확인하기", "제안서를 보내기로 한 사람"],
+                    ["대화 맥락 찾기", "AI 도입에 관해 이야기한 사람"],
+                  ]
+              ).map(([label, text]) => (
                 <button
                   key={text}
                   onClick={() => {
@@ -260,13 +326,52 @@ export default function Assistant({
             <p className="chat-question">{entry.question}</p>
             <div className="chat-answer">
               <span className="answer-label">
-                {entry.response.status === "ambiguous"
-                  ? "인물 확인 필요"
-                  : entry.response.status === "no_result"
-                    ? "관련 기록 없음"
-                    : "기억에서 찾았어요"}
+                {entry.assistant?.status === "insufficient_context"
+                  ? "맥락 추가 필요"
+                  : entry.response.status === "ambiguous"
+                    ? contextEnabled
+                      ? "대상·조건 확인 필요"
+                      : "인물 확인 필요"
+                    : entry.response.status === "no_result"
+                      ? entry.assistant?.coverage.status === "limited"
+                        ? "확인 범위에서 찾지 못했어요"
+                        : "관련 기록 없음"
+                      : "기억에서 찾았어요"}
               </span>
               <p>{entry.response.answer}</p>
+              {entry.assistant && (
+                <small>
+                  답변 기준:{" "}
+                  {new Date(entry.assistant.coverage.asOf).toLocaleString(
+                    "ko-KR",
+                    { timeZone: "Asia/Seoul" },
+                  )}{" "}
+                  · 이후 변경은 새 질문에서 확인합니다.
+                </small>
+              )}
+              {entry.assistant && (
+                <AssistantResultSections response={entry.assistant} />
+              )}
+              {entry.assistant &&
+                entry.response.status === "ambiguous" &&
+                entry.response.results.map((person) => (
+                  <button
+                    key={person.personId}
+                    className="answer-next-action"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      conversation.setSelection({
+                        personIds: [person.personId],
+                        interactionId: null,
+                      });
+                      setQuery(entry.question);
+                      input.current?.focus();
+                    }}
+                  >
+                    {person.displayName} 선택해 이어가기
+                  </button>
+                ))}
               {entry.response.status === "no_result" && (
                 <div className="recall-recovery">
                   <p>회사, 행사명, 나눈 이야기를 더해 다시 찾아보세요.</p>
@@ -438,7 +543,11 @@ export default function Assistant({
           onChange={(e) => setQuery(e.target.value)}
           maxLength={500}
           rows={2}
-          placeholder="찾고 싶은 사람이나 약속을 물어보세요"
+          placeholder={
+            contextEnabled
+              ? "진행 상황, 연락 우선순위, 다음 만남 준비를 물어보세요"
+              : "찾고 싶은 사람이나 약속을 물어보세요"
+          }
           aria-label="AI에게 질문"
           onKeyDown={(e) => {
             if (
@@ -472,14 +581,16 @@ export default function Assistant({
           <button
             className="primary-button send-question"
             aria-label="질문 보내기"
-            disabled={busy || query.trim().length < 2}
+            disabled={busy || conversation.loading || query.trim().length < 2}
           >
             {busy ? <Loader2 size={18} /> : <ArrowUp size={18} />}
           </button>
         </div>
       </form>
       <p className="assistant-footnote">
-        저장된 기록에서 찾고, 답변의 근거를 함께 보여드려요.
+        {contextEnabled
+          ? "확인된 사실과 AI 해석·제안을 구분하고, 근거를 함께 보여드려요."
+          : "저장된 기록에서 찾고, 답변의 근거를 함께 보여드려요."}
       </p>
     </section>
   );

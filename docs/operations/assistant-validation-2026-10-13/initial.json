@@ -1,0 +1,243 @@
+{
+  "providerCalls": 10,
+  "remoteDatabaseConnections": 0,
+  "models": {
+    "structure": "gpt-5.6-luna",
+    "answer": "gpt-5.6-terra",
+    "embedding": "voyage-4"
+  },
+  "usage": [
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.voyageai.com",
+      "stage": "rerank"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "memory_answer"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.voyageai.com",
+      "stage": "rerank"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "memory_answer"
+    },
+    {
+      "provider": "api.openai.com",
+      "stage": "query_understanding"
+    },
+    {
+      "provider": "api.voyageai.com",
+      "stage": "embedding"
+    }
+  ],
+  "results": [
+    {
+      "case": 1,
+      "message": "민수와 진행 중인 이야기를 정리해줘",
+      "latencyMs": 9380,
+      "purpose": "summarize",
+      "status": "resolved",
+      "coverage": {
+        "status": "limited",
+        "paths": ["structured", "keyword"],
+        "reasons": [
+          "의미 검색은 준비된 기록에 한해 사용했습니다. 최신 기록은 이름·조건·키워드로 확인했습니다."
+        ],
+        "prepared": 0,
+        "total": 6,
+        "asOf": "2026-10-13T11:34:06.867Z"
+      },
+      "context": {
+        "personIds": ["20000000-0000-4000-8000-000000000001"],
+        "interactionId": null,
+        "meetingRange": null,
+        "dueRange": null,
+        "purpose": "summarize",
+        "goal": "민수와 진행 중인 이야기 요약",
+        "choices": []
+      },
+      "answer": "민수와는 AI 도입, 특히 파일럿 제안을 중심으로 대화가 진행 중입니다. 현재 확인된 미완료 약속은 10월 16일(금)까지 소개서를 보내는 일입니다.",
+      "sections": [
+        {
+          "type": "fact",
+          "title": "논의 주제",
+          "text": "10월 9일 서울 전시회에서 AI 도입을 논의했고, 민수는 양자컴퓨팅과 AI 도입에 관심이 있는 것으로 기록되어 있습니다.",
+          "evidenceKeys": [
+            "interaction:30000000-0000-4000-8000-000000000001",
+            "memory_statement:40000000-0000-4000-8000-000000000001"
+          ]
+        },
+        {
+          "type": "fact",
+          "title": "최근 진행",
+          "text": "10월 12일 온라인에서 민수가 AI 도입 파일럿 제안을 검토하기로 했습니다.",
+          "evidenceKeys": ["interaction:30000000-0000-4000-8000-000000000002"]
+        },
+        {
+          "type": "fact",
+          "title": "미완료 약속",
+          "text": "소개서 보내기: 진행 상태는 미완료이며, 마감은 2026년 10월 16일 09:00(+09:00)입니다.",
+          "evidenceKeys": ["action_item:50000000-0000-4000-8000-000000000001"]
+        }
+      ],
+      "people": ["20000000-0000-4000-8000-000000000001"],
+      "metrics": [
+        {
+          "stage": "query_understanding",
+          "latencyMs": 3573,
+          "totalTokens": 815
+        },
+        {
+          "stage": "reranking",
+          "latencyMs": 539,
+          "totalTokens": 165
+        },
+        {
+          "stage": "memory_answer",
+          "latencyMs": 5083,
+          "totalTokens": 2158
+        }
+      ]
+    },
+    {
+      "case": 2,
+      "message": "그 사람과 다음 만남을 준비해줘",
+      "latencyMs": 2691,
+      "purpose": "prepare",
+      "status": "no_result",
+      "coverage": {
+        "status": "limited",
+        "paths": ["structured", "keyword"],
+        "reasons": [
+          "의미 검색은 준비된 기록에 한해 사용했습니다. 최신 기록은 이름·조건·키워드로 확인했습니다."
+        ],
+        "prepared": 0,
+        "total": 6,
+        "asOf": "2026-10-13T11:34:16.243Z"
+      },
+      "context": {
+        "personIds": [],
+        "interactionId": null,
+        "meetingRange": null,
+        "dueRange": null,
+        "purpose": "prepare",
+        "goal": "민수와의 다음 만남을 준비하고, 진행 중인 AI 도입 파일럿 논의와 미완료 약속을 바탕으로 대화 의제와 준비사항을 정리하기",
+        "choices": []
+      },
+      "answer": "확인 가능한 검색 범위에서 관련 근거를 찾지 못했습니다.",
+      "sections": [],
+      "people": [],
+      "metrics": [
+        {
+          "stage": "query_understanding",
+          "latencyMs": 2610,
+          "totalTokens": 1050
+        }
+      ]
+    },
+    {
+      "case": 3,
+      "message": "확인할 질문 세 개로 줄여줘",
+      "latencyMs": 2112,
+      "purpose": "prepare",
+      "status": "no_result",
+      "coverage": {
+        "status": "limited",
+        "paths": ["structured", "keyword"],
+        "reasons": [
+          "의미 검색은 준비된 기록에 한해 사용했습니다. 최신 기록은 이름·조건·키워드로 확인했습니다."
+        ],
+        "prepared": 0,
+        "total": 6,
+        "asOf": "2026-10-13T11:34:18.917Z"
+      },
+      "context": {
+        "personIds": [],
+        "interactionId": null,
+        "meetingRange": null,
+        "dueRange": null,
+        "purpose": "prepare",
+        "goal": "민수와의 다음 만남에서 확인할 질문을 세 개로 줄이기",
+        "choices": []
+      },
+      "answer": "확인 가능한 검색 범위에서 관련 근거를 찾지 못했습니다.",
+      "sections": [],
+      "people": [],
+      "metrics": [
+        {
+          "stage": "query_understanding",
+          "latencyMs": 2057,
+          "totalTokens": 1115
+        }
+      ]
+    },
+    {
+      "case": 4,
+      "message": "민수의 이전 AI 관심사와 이번 파일럿 제안이 어떻게 연결돼?",
+      "error": "답변과 현재 기록의 연결을 확인하지 못했습니다.",
+      "code": "AI_EVIDENCE_INVALID"
+    },
+    {
+      "case": 5,
+      "message": "이번 주 누구에게 먼저 연락하면 좋을까?",
+      "latencyMs": 3476,
+      "purpose": "prioritize",
+      "status": "no_result",
+      "coverage": {
+        "status": "limited",
+        "paths": ["structured", "keyword"],
+        "reasons": [
+          "의미 검색은 준비된 기록에 한해 사용했습니다. 최신 기록은 이름·조건·키워드로 확인했습니다."
+        ],
+        "prepared": 0,
+        "total": 6,
+        "asOf": "2026-10-13T11:34:32.887Z"
+      },
+      "context": {
+        "personIds": [],
+        "interactionId": null,
+        "meetingRange": {
+          "from": "2026-10-12",
+          "toExclusive": "2026-10-19"
+        },
+        "dueRange": null,
+        "purpose": "prioritize",
+        "goal": "이번 주 연락 우선순위를 정하기",
+        "choices": []
+      },
+      "answer": "확인 가능한 검색 범위에서 관련 근거를 찾지 못했습니다.",
+      "sections": [],
+      "people": [],
+      "metrics": [
+        {
+          "stage": "query_understanding",
+          "latencyMs": 3443,
+          "totalTokens": 1061
+        }
+      ]
+    },
+    {
+      "case": "document_embedding",
+      "completed": true,
+      "dimensions": 1024
+    }
+  ]
+}

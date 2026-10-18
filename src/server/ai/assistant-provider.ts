@@ -14,6 +14,7 @@ export class AssistantProvider {
     private readonly env: ServerEnv,
     private readonly reserve: (task: string) => Promise<void>,
     private readonly onAttempt?: (event: AiAttemptEvent) => Promise<void>,
+    private readonly options: { deadline?: number; rerankLimit?: number } = {},
   ) {}
 
   private async request(
@@ -22,6 +23,16 @@ export class AssistantProvider {
     key: string | undefined,
     body: unknown,
   ): Promise<unknown> {
+    const remaining =
+      this.options.deadline === undefined
+        ? 15000
+        : this.options.deadline - Date.now();
+    if (remaining < 1000)
+      throw new AiTaskExecutionError(
+        "응답 시간이 초과됐습니다. 범위를 좁혀 다시 시도해 주세요.",
+        "AI_DEADLINE_EXCEEDED",
+        false,
+      );
     if (!key)
       throw new AiTaskExecutionError(
         "AI 연결 설정이 필요합니다.",
@@ -75,7 +86,7 @@ export class AssistantProvider {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(Math.min(15000, remaining)),
       });
       if (response.status === 429) {
         const header = response.headers.get("retry-after");
@@ -241,7 +252,7 @@ export class AssistantProvider {
         model: this.env.VOYAGE_RERANK_MODEL,
         query,
         documents,
-        top_k: Math.min(8, documents.length),
+        top_k: Math.min(this.options.rerankLimit ?? 8, documents.length),
         return_documents: false,
         truncation: false,
       },
@@ -255,7 +266,7 @@ export class AssistantProvider {
               relevance_score: z.number().finite(),
             }),
           )
-          .max(8),
+          .max(this.options.rerankLimit ?? 8),
       })
       .parse(payload).data;
     if (
