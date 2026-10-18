@@ -54,3 +54,17 @@ Graph `http://localhost:3510/#map`, 명함 `/#cards`, 녹음 `/#recordings`, AI 
 - 실제 3510 브라우저에서 명함→녹음→AI 업무→Graph 이동, workspace 200/live 모드, 채택 폰트 적용, pageerror 0을 확인했다. 증거: ignored `output/frontend-integration/live-smoke.json`.
 - main의 기존 미추적 assets 원본은 `D:/Persnapse/persnapse-mvp/output/frontend-integration/preexisting-plan-assets`에 보존했다. 같은 내용이 버전 관리되는 assets로 반영됐다. 기존 루트 계획 문서 3개는 미추적 상태 그대로 유지했다.
 - `npm run lint` 최종 재실행도 오류 0, 기존 경고 5. 라이선스 원문의 trailing whitespace는 원문 보존을 위해 변경하지 않았다.
+
+## 2026-10-18 팀 공유 배포
+
+- 사용자 요청: 전체 회귀 검증을 최소화하고 팀 테스트/시연 링크를 우선 제공.
+- 배포: https://persnapse-3ghto67wx-choeseyong180-8216.vercel.app/#map
+- Deployment: `dpl_24afZfvuc3mHav3MrwjGceV53yMB` (READY, Preview).
+- 소스: main `3558692` + 배포 패키징 수정 `d44cf36`. CLI 업로드 후 패키징 변경을 커밋했으므로 Vercel Git 메타데이터와 커밋 시점은 다를 수 있다.
+- 포함: 채택된 프론트/Graph, LC100 명함 복원/OCR, 녹음/STT, AI 어시스턴트.
+- 배포 보완: 검증된 public 모델 파일을 클라우드 빌드 입력으로 재사용하고 SHA/크기를 재검증. prebuild 스크립트 업로드 허용, 테스트/로컬 사진 제외, webpack 빌드 사용.
+- 첫 배포는 테스트 setup 제외에 따른 테스트 파일 타입 오류로 중단. 테스트 파일도 배포에서 제외한 두 번째 빌드는 컴파일/TypeScript 통과.
+- 기존 ADR0016에 따라 프로젝트 보호 all을 유지하고 이 배포에만 공개 접속 예외 적용(최초 API 응답 200).
+- 최소 확인: 인증 없는 /, /api/workspace, /api/recall/preparation 및 LC100/T8 모델 URL 모두 HTTP 200. 실제 서버 저장, live AI/OCR, assistantContext=true 확인.
+- 이번 배포에서 실물 명함/마이크/유료 AI 호출과 전체 E2E는 재실행하지 않음. 팀 테스트로 후속 확인.
+- 로컬 증거: output/rapid-deploy.log, output/rapid-deploy-verification.json (비커밋).
