@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   vectors: vi.fn(),
   readiness: vi.fn(),
   corpus: vi.fn(),
+  people: vi.fn(),
   mode: "live",
 }));
 vi.mock("server-only", () => ({}));
@@ -35,9 +36,7 @@ vi.mock("../db/ai-run-repository", () => ({
   createAiAttemptRecorder: () => vi.fn(),
 }));
 vi.mock("../db/assistant-search-repository", () => ({
-  listAssistantPeople: async () => [
-    { id: "20000000-0000-4000-8000-000000000001", name: "민수" },
-  ],
+  listAssistantPeople: mocks.people,
   validateContextSelection: async () => true,
   retrieveCanonicalCandidates: mocks.canonical,
   retrieveUnitVectors: mocks.vectors,
@@ -91,6 +90,7 @@ const raw = {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.mode = "live";
+  mocks.people.mockResolvedValue([{ id: p, name: "민수" }]);
   mocks.structured.mockResolvedValueOnce(plan).mockResolvedValueOnce(raw);
   mocks.canonical.mockResolvedValue({
     candidates: [
@@ -132,6 +132,47 @@ beforeEach(() => {
   ]);
 });
 describe("assistant memory orchestration", () => {
+  it("honors an explicit identity when the planner asks which same-name record to retrieve", async () => {
+    mocks.people.mockResolvedValue([
+      { id: p, name: "민수" },
+      { id: "20000000-0000-4000-8000-000000000002", name: "민수" },
+    ]);
+    mocks.structured
+      .mockReset()
+      .mockResolvedValueOnce({
+        ...plan,
+        clarification:
+          "민수라는 이름의 사람이 두 명 있습니다. 어느 민수를 조회할까요?",
+      })
+      .mockResolvedValueOnce(raw);
+    const result = await executeAssistantMemory({
+      workspaceId: "w",
+      query: "민수 기록 정리",
+      selection: { personIds: [p] },
+    });
+    expect(result.response.status).toBe("resolved");
+    expect(result.plan.personIds).toEqual([p]);
+    expect(mocks.canonical).toHaveBeenCalled();
+  });
+  it("keeps a meeting clarification even when a same-name identity has been selected", async () => {
+    mocks.people.mockResolvedValue([
+      { id: p, name: "민수" },
+      { id: "20000000-0000-4000-8000-000000000002", name: "민수" },
+    ]);
+    mocks.structured
+      .mockReset()
+      .mockResolvedValueOnce({
+        ...plan,
+        clarification: "어느 만남을 기준으로 할까요?",
+      });
+    const result = await executeAssistantMemory({
+      workspaceId: "w",
+      query: "민수 기록 정리",
+      selection: { personIds: [p] },
+    });
+    expect(result.response.status).toBe("ambiguous");
+    expect(mocks.canonical).not.toHaveBeenCalled();
+  });
   it("answers from current records even when every vector is pending", async () => {
     const result = await executeAssistantMemory({
       workspaceId: "w",

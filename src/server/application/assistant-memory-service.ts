@@ -249,7 +249,9 @@ export async function executeAssistantMemory(input: {
     plan.personIds = input.selection.personIds;
     if (
       plan.clarification &&
-      /동명이인|어느.*(인물|사람)|인물.*선택/.test(plan.clarification)
+      /동명이인|같은 이름|이름.*(두|여러|같)|어느.*(인물|사람)|인물.*선택/.test(
+        plan.clarification,
+      )
     )
       plan.clarification = null;
   }
