@@ -47,12 +47,13 @@ for (const model of manifest.models) {
       resolve("output/card-rectification/models", model.localFile),
     );
   } catch (error) {
-    if (
-      error.code === "ENOENT" &&
-      process.env.NEXT_PUBLIC_CARD_RECTIFICATION_MODE !== "learned"
-    )
-      continue;
-    throw error;
+    if (error.code !== "ENOENT") throw error;
+    try {
+      bytes = await readFile(resolve("public/models", model.id, model.sha256, "model.onnx"));
+    } catch (packagedError) {
+      if (packagedError.code === "ENOENT" && process.env.NEXT_PUBLIC_CARD_RECTIFICATION_MODE !== "learned") continue;
+      throw packagedError;
+    }
   }
   if (
     bytes.length !== model.bytes ||

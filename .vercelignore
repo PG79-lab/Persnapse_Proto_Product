@@ -6,7 +6,10 @@
 docs
 node_modules
 playwright-report
-scripts
+scripts/*
+!scripts/copy-opencv.mjs
+!scripts/copy-card-runtime.mjs
+!scripts/copy-card-test.mjs
 supabase
 test-results
 tests
@@ -16,3 +19,11 @@ playwright.config.ts
 tsconfig.tsbuildinfo
 vitest.config.ts
 output
+public/card-test
+card_test_image
+coverage
+*.log
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+playwright.graph.config.ts
