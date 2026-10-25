@@ -9,3 +9,9 @@ package-lock.json
 tmp
 output
 public/vendor
+public/models
+releases
+# Generated from the document source; verified by docs:verify.
+docs/system-explorer-refined/index.html
+docs/system-explorer-refined/report-manifest.json
+docs/system-explorer-refined/figures

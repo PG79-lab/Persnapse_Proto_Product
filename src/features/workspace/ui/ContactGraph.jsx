@@ -700,7 +700,11 @@ export default function ContactGraphApp({ mode = "server" }) {
           </div>
         )}
         <div className="page-content" hidden={!session.ready}>
-          <div className="page-heading" aria-hidden={page === "map"} inert={page === "map"}>
+          <div
+            className="page-heading"
+            aria-hidden={page === "map"}
+            inert={page === "map"}
+          >
             <div>
               <h1>
                 {titles[page][0]}

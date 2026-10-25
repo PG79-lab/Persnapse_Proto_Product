@@ -1,0 +1,28 @@
+// Loopback-only, synthetic configuration for browser tests and documentation.
+// These values override .env.local when Next starts; no production credentials.
+export const isolatedEnvironment = {
+  DATABASE_URL: "postgresql://disabled:disabled@127.0.0.1:1/disabled",
+  NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:1",
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "synthetic-validation-only",
+  SUPABASE_SECRET_KEY: "",
+  AI_ROUTING_MODE: "mock",
+  BUSINESS_CARD_OCR_MODE: "mock",
+  ASSISTANT_CONTEXT_ENABLED: "on",
+  ASSISTANT_INDEX_WORKER_ENABLED: "off",
+  ASSISTANT_WORKER_SECRET: "",
+  APP_REMOTE_PROTOTYPE_ACCESS: "off",
+  APP_DEFAULT_WORKSPACE_ID: "00000000-0000-4000-8000-000000000001",
+  OPENAI_API_KEY: "validation-only-not-a-provider-key",
+  OPENAI_TRANSCRIPTION_MODEL: "disabled-for-validation",
+  VOYAGE_API_KEY: "",
+  CLOVA_OCR_SECRET: "",
+  CLOVA_OCR_INVOKE_URL: "",
+  GOOGLE_GENERATIVE_AI_API_KEY: "",
+  GOOGLE_CLOUD_VISION_API_KEY: "",
+  ANTHROPIC_API_KEY: "",
+  MISTRAL_API_KEY: "",
+  TOGETHER_API_KEY: "",
+  FIREWORKS_API_KEY: "",
+  PERSNAPSE_GRAPH_PREVIEW: "0",
+  NEXT_TELEMETRY_DISABLED: "1",
+};

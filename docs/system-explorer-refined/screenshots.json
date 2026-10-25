@@ -1,0 +1,111 @@
+{
+  "deployment": "https://persnapse-3ghto67wx-choeseyong180-8216.vercel.app/",
+  "capturedOn": "2026-10-25",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "groups": [
+    {
+      "after": "제품이 해결하려는 문제는 연락처 보관 자체보다 **“누구를 어디에서 만났고, 어떤 이야기를 했으며, 무엇을 약속했는가”를 나중에 다시 찾는 것**입니다.",
+      "images": [
+        {
+          "id": "map",
+          "title": "관계 지도",
+          "file": "map.png",
+          "route": "#map",
+          "caption": "인물과 만남을 연결해 참석·소개 관계와 관련 기록을 탐색합니다."
+        }
+      ]
+    },
+    {
+      "after": "과거 `/capture`, `/recall`, `/people`, `/people/:personId`는 통합 화면으로 보내는 호환 리다이렉트입니다. 새 기능도 `/`의 통합 화면에 연결합니다.",
+      "images": [
+        {
+          "id": "people",
+          "title": "인맥 관리",
+          "file": "people.png",
+          "route": "#people",
+          "caption": "인맥 목록에서 관계 상태·최근 만남·다음 할 일을 함께 확인합니다."
+        },
+        {
+          "id": "meetings",
+          "title": "만남 기록",
+          "file": "meetings.png",
+          "route": "#meetings",
+          "caption": "월별 만남 기록과 참석 인물을 확인합니다."
+        },
+        {
+          "id": "todos",
+          "title": "일정·업무 관리",
+          "file": "todos.png",
+          "route": "#todos",
+          "caption": "기한별 업무 목록과 캘린더, AI 어시스턴트를 한 화면에서 사용합니다."
+        },
+        {
+          "id": "mail",
+          "title": "맞춤형 메일 초안",
+          "file": "mail.png",
+          "route": "#people",
+          "caption": "메일 목적과 만남 기록을 참고해 초안을 작성하는 화면입니다. 실제 AI 생성·발송은 미연결입니다.",
+          "entry": "인맥 관리 → 인물 선택 → ‘맞춤형 메일 초안’",
+          "linkLabel": "인맥 관리에서 열기 ↗",
+          "captureArea": "메일 초안 대화상자"
+        }
+      ]
+    },
+    {
+      "after": "AI 구조화는 입력 문장을 인물·만남·약속 등의 항목으로 나누는 과정입니다. schema 검증은 그 결과가 정해진 필수 항목과 값의 형식에 맞는지 확인합니다. 주요 연결점은 [capture-service.ts](D:/Persnapse/persnapse-mvp/src/server/application/capture-service.ts)와 [capture-repository.ts](D:/Persnapse/persnapse-mvp/src/server/db/capture-repository.ts)입니다.",
+      "images": [
+        {
+          "id": "text",
+          "title": "텍스트 기록",
+          "file": "text.png",
+          "route": "?assistant=1#todos",
+          "caption": "만남의 맥락을 입력한 뒤 구조화 결과를 검토하는 기능의 시작 화면입니다.",
+          "entry": "일정·업무 관리 → AI 어시스턴트의 ‘기록 남기기’",
+          "linkLabel": "어시스턴트에서 열기 ↗",
+          "captureArea": "AI로 기록하기 대화상자"
+        }
+      ]
+    },
+    {
+      "after": "명함은 브라우저에서 사진을 보정한 뒤 서버에서 OCR(이미지의 글자를 텍스트로 읽는 처리)을 실행합니다. 원근 보정은 비스듬히 찍힌 명함을 정면에 가까운 사각형으로 펴는 작업입니다.",
+      "images": [
+        {
+          "id": "cards",
+          "title": "명함 등록·검토",
+          "file": "cards.png",
+          "route": "#cards",
+          "caption": "진행 중인 명함의 이미지·추출 정보·만남 맥락을 확인하는 화면입니다."
+        }
+      ]
+    },
+    {
+      "after": "기존 `/api/recall`도 맥락 기능이 켜져 있으면 새 공통 검색 서비스를 사용합니다. 실제 실행 경로는 기능을 켜고 끄는 설정(feature flag)으로 판단합니다.",
+      "images": [
+        {
+          "id": "assistant",
+          "title": "AI 어시스턴트",
+          "file": "assistant.png",
+          "route": "?assistant=1#todos",
+          "caption": "대화 대상·만남·기간을 지정하고 저장된 기억에 대해 질문하는 패널입니다.",
+          "captureArea": "AI 어시스턴트 패널"
+        }
+      ]
+    },
+    {
+      "after": "전사(STT)는 음성을 글로 바꾸는 기능입니다. 녹음 파일 보관과 전사 요청은 다음처럼 나뉩니다.",
+      "images": [
+        {
+          "id": "recordings",
+          "title": "녹음·전사",
+          "file": "recordings.png",
+          "route": "#recordings",
+          "caption": "녹음 시작, 파일 불러오기, 전사 설정과 인맥에 연결할 메모를 관리합니다. 캡처 브라우저에는 저장된 녹음이 없는 상태입니다."
+        }
+      ]
+    }
+  ],
+  "dataMode": "synthetic"
+}

@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    maxWorkers: 4,
+    maxWorkers: 1,
     environment: "jsdom",
     include: [
       "card_recognition/**/*.test.{ts,tsx}",

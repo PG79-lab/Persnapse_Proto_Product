@@ -126,7 +126,8 @@ for (const [width, height] of [
     await start(page);
     // Production CSS must preserve the adopted font and reserved reading column.
     await expect(page.locator(".integrated-workspace")).toHaveCSS(
-      "font-family", /Persnapse Sans/,
+      "font-family",
+      /Persnapse Sans/,
     );
     if (width >= 960) {
       const canvas = await page.locator(".graph-canvas-layer").boundingBox();

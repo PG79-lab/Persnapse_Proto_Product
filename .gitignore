@@ -49,3 +49,6 @@ temp/
 /public/models/
 /public/card-test/
 /card_test_image/
+
+# Downloadable handoff files are attached to a Release, not committed.
+/releases/

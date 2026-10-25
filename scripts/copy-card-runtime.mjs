@@ -49,9 +49,15 @@ for (const model of manifest.models) {
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
     try {
-      bytes = await readFile(resolve("public/models", model.id, model.sha256, "model.onnx"));
+      bytes = await readFile(
+        resolve("public/models", model.id, model.sha256, "model.onnx"),
+      );
     } catch (packagedError) {
-      if (packagedError.code === "ENOENT" && process.env.NEXT_PUBLIC_CARD_RECTIFICATION_MODE !== "learned") continue;
+      if (
+        packagedError.code === "ENOENT" &&
+        process.env.NEXT_PUBLIC_CARD_RECTIFICATION_MODE !== "learned"
+      )
+        continue;
       throw packagedError;
     }
   }

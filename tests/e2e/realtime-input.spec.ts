@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mockWorkspace } from "./workspace-fixture";
 import { emptyWorkspace } from "../../src/features/workspace/store";
 
-test("saving a recording note persists it and shows saved confirmation", async ({
+test("@integration saving a recording note persists it and shows saved confirmation", async ({
   page,
 }) => {
   const state = emptyWorkspace();
@@ -75,7 +75,7 @@ test("recording becomes available when the browser recording database never resp
   ).toBeVisible();
 });
 
-test("existing people load through the STT gateway and enable note save after selection", async ({
+test("@integration existing people load through the STT gateway and enable note save after selection", async ({
   page,
 }) => {
   await page.goto("/#recordings");

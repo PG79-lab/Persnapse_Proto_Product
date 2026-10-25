@@ -33,15 +33,15 @@ Graph `http://localhost:3510/#map`, 명함 `/#cards`, 녹음 `/#recordings`, AI 
 
 ## 최종 검증 결과
 
-| 항목 | 결과 / 범위 |
-| --- | --- |
-| 단위 테스트 | 61개 파일, 334개 통과 |
-| 핵심 기능 E2E | 최종 CSS 적용 후 45개 통과, 실패·skip 없음 |
-| Graph E2E | 10개 통과. 선택/근거/확장/복귀/삭제, 합성 preview 쓰기 차단, 1440/1024/768/390px |
-| 화면 비교 | 10월 17일 채택 화면과 비교. 폰트, 헤더 높이, 캔버스/상세 열 경계 검사 추가. [최종 캡처](../plans/assets/graph-visual-reviews/2026-10-18-integration/VD01-default-1440.png) |
-| 실제 연결 | `/api/workspace` 200, preview header 없음, `assistantContext=true`, AI/OCR live, 인물 17명·만남 21건 읽기 확인 |
-| 빌드/타입 | 순서 고정 CSS 진입점 적용 후 webpack production build 및 빌드 내 TypeScript 통과 |
-| 런타임 | 실제 LC100/T8 WASM Worker 로딩·추론, 로컬 사진 JPEG 회전 검사 통과 |
+| 항목          | 결과 / 범위                                                                                                                                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 단위 테스트   | 61개 파일, 334개 통과                                                                                                                                                      |
+| 핵심 기능 E2E | 최종 CSS 적용 후 45개 통과, 실패·skip 없음                                                                                                                                 |
+| Graph E2E     | 10개 통과. 선택/근거/확장/복귀/삭제, 합성 preview 쓰기 차단, 1440/1024/768/390px                                                                                           |
+| 화면 비교     | 10월 17일 채택 화면과 비교. 폰트, 헤더 높이, 캔버스/상세 열 경계 검사 추가. [최종 캡처](../plans/assets/graph-visual-reviews/2026-10-18-integration/VD01-default-1440.png) |
+| 실제 연결     | `/api/workspace` 200, preview header 없음, `assistantContext=true`, AI/OCR live, 인물 17명·만남 21건 읽기 확인                                                             |
+| 빌드/타입     | 순서 고정 CSS 진입점 적용 후 webpack production build 및 빌드 내 TypeScript 통과                                                                                           |
+| 런타임        | 실제 LC100/T8 WASM Worker 로딩·추론, 로컬 사진 JPEG 회전 검사 통과                                                                                                         |
 
 검증 로그는 ignored `output/frontend-integration/`의 `unit-*.log`, `core-e2e-final.log`, `graph-ordered-entry.log`, `build-ordered-entry.log`, `lint-final.log`에 보존한다. 브라우저 핵심 흐름은 합성 API 응답을 사용하며 실제 유료 OCR/STT/LLM 품질 평가를 이번에 새로 수행했다는 의미가 아니다. 실제 연결 확인은 공유 데이터 읽기이며, 테스트로 실제 공유 인물을 생성하지 않았다.
 

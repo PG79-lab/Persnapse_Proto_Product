@@ -1,117 +1,52 @@
 # Persnapse MVP
 
-> **2026-10-18 통합 기준:** [채택 프론트엔드/Graph + 최신 핵심 기능 통합](docs/operations/frontend-core-integration-2026-10-18.md). 기본 진입은 관계 지도이며, 디자인 기준은 [frontend_docs](docs/plans/frontend_docs/03-frontend-graph-visual-design-2026-10-14.md)입니다. 아래의 이전 날짜 기록과 구분합니다.
+명함과 만남 기록을 **사용자 확인 후 저장**하고, 관계 지도와 근거 기반 AI 검색으로 다시 찾는 프로토타입이다. Next.js 통합 워크스페이스, PostgreSQL·Supabase Storage, 브라우저 명함 보정·녹음, 별도 검색 인덱싱 Worker로 구성된다.
 
-> **처음 읽기:** [제품·시스템 핵심 요약](docs/PROJECT_BRIEF.md) — 현재 범위, 기술 인프라, 검증 경계와 다음 작업.
+비공개 인계 저장소: [PG79-lab/Persnapse_Proto_Product](https://github.com/PG79-lab/Persnapse_Proto_Product) · 모델 ZIP과 독립 HTML: [인수인계 Release](https://github.com/PG79-lab/Persnapse_Proto_Product/releases/tag/handoff-2026-10-25). 저장소 접근 권한이 있는 GitHub 계정으로 로그인해 내려받는다.
 
-> 현재 작업: [명함 인식 고도화·프론트 대상 통일 검증](docs/operations/card-recognition-local-validation-2026-10-11.md), [구현 결정](docs/decisions/0019-business-card-recognition-v2.md). 이전 [사용자 과업 루프 UX 개선·검증](docs/operations/ux-task-loop-sprint-2026-10-10.md)과 [프론트·백엔드 결합 현황](docs/operations/workspace-integration-2026-10-08.md)은 당시의 기록으로 보존합니다.
+## 처음 인계받았다면
 
-기존 koin-contact-map 프론트와 Persnapse Canonical 백엔드를 결합한 작업공간입니다.
+1. [HTML 기술 문서](docs/system-explorer-refined/index.html)를 로컬 브라우저에서 연다. 시스템 구조, 기능별 파이프라인, 코드 위치와 화면 예시를 함께 볼 수 있다.
+2. [설치와 실행](docs/handoff/SETUP.md)에 따라 Node.js 24, 의존성, 모델, 환경변수와 개발 DB를 준비한다.
+3. [검증 안내](docs/handoff/TESTING.md)로 기본 검사와 실제 환경 검사를 구분해 실행한다.
+4. [인계 구성](docs/handoff/RELEASE.md)에서 모델 ZIP·계정·데이터 전달 범위를 확인한다.
+5. [GitHub에서 이어서 작업하기](docs/handoff/GITHUB.md)에서 복제·브랜치·PR 및 Release 기준을 확인한다.
 
-메인 화면은 일정/업무, 관계 지도, 인맥, 만남, 명함, 녹음의 6개 메뉴입니다. 실제 서버 저장과 검토형 Capture·OCR·Recall·업무 브리핑을 연결했습니다.
-
-**현재 프론트 작업 대상은 `/`의 통합 워크스페이스 하나입니다.** 명함 등록·복원은 `/#cards`, 인맥은 `/#people`, 검색·텍스트 기록은 `/#todos`의 AI 어시스턴트에서 실행합니다. 기존 독립 페이지의 화면 코드는 제거했으며 `/capture`, `/recall`, `/people`, `/people/:personId`는 통합 UI로 이동하는 호환 주소입니다. 검색어와 인물 ID는 이동 후에도 전달합니다.
-
-명함 기능은 `features/workspace/ui/components/CardImport.jsx` → `features/capture/business-card-workspace.tsx` → `card_recognition/`과 `/api/business-cards`로 연결됩니다. `card_recognition`은 평면 복원·보기 전용 뷰어 모듈이며, OCR 호출과 DB·이미지 저장은 기존 서버 코드를 사용합니다.
-
-통합 전 이력은 [2026-10-08 검색·프론트 연결 전 점검](docs/operations/recall-and-integration-readiness-2026-10-08.md)을 확인합니다. 검색 준비 16/16개, 실제 AI 구조화·수정·저장·Recall·피드백 흐름을 검증했습니다. 행동 종류·호출 제한·JSON 로그 저장 오류를 수정했으며, 당시 남았던 프론트 DTO/CRUD는 통합 작업으로 연결했습니다. 엄격 Golden 근거 ID 불일치 2건은 후속 평가 대상으로 남아 있습니다. 이전 [기록·명함 저장 검증](docs/operations/capture-storage-verification-2026-10-08.md)과 [연결 복구 이력](docs/handoff/2026-10-07-backend-readiness.md)도 보존합니다.
-
-## 시작하기
-
-요구 환경:
-
-- Node.js 24.x (`package.json` 기준)
-- npm 11 이상 권장
-
-```bash
-npm install
-cp .env.example .env.local
+```powershell
+npm ci
+npm run models:restore -- D:\Downloads\persnapse-models
+Copy-Item .env.example .env.local
+# 전용 개발 DB·Storage 연결 정보를 입력한 뒤
 npm run dev
 ```
 
-검증:
+모델 ZIP은 별도 전달물이다. 압축 해제 폴더를 `models:restore`에 지정한다. 기본 AI 모드는 `mock`이지만 앱의 DB·Storage 설정은 여전히 필요하다. 실제 키는 커밋하지 않는다.
 
-```bash
+## 화면과 코드
+
+| 영역                     | 진입 / 주요 코드                                                           |
+| ------------------------ | -------------------------------------------------------------------------- |
+| 관계 지도·인맥·만남·일정 | `/#map`, `/#people`, `/#meetings`, `/#todos` · `src/features/workspace/`   |
+| 명함 등록·검토           | `/#cards` · `card_recognition/`, `src/server/application/`                 |
+| 녹음·전사                | `/#recordings` · `src/features/`, `src/app/api/`                           |
+| API·업무 규칙·저장       | `src/app/api/`, `src/server/application/`, `src/domain/`, `src/server/db/` |
+| DB 변경 이력             | `supabase/migrations/`                                                     |
+| 검색 인덱싱 Worker       | `scripts/ai/assistant-worker.ts`                                           |
+| 설계 결정·운영 기록      | `docs/decisions/`, `docs/operations/`                                      |
+
+## 기본 검증
+
+```powershell
 npm run verify
-npm run eval:recall
-npm run db:verify:phase4
-```
-
-기존 환경의 연결·워크스페이스·schema를 먼저 읽기 전용으로 점검할 때는 다음 명령을 사용합니다. DB 쓰기·유료 모델 호출·seed는 실행하지 않으며, 실패 시 키 대신 오류 분류만 출력합니다.
-
-```bash
-npm run db:preflight
-```
-
-기록·명함의 실제 DB·private Storage 경로를 합성 데이터로 검증할 때는 다음 명령을 사용합니다. 실행 전용 테스트 워크스페이스를 생성·정리하며 AI/OCR은 프로세스에서만 mock입니다. 환경 파일·기존 데이터·schema를 변경하지 않고 유료 제공자를 호출하지 않습니다.
-
-```bash
-npm run db:verify:capture-storage
-```
-
-AI Provider key와 지정 모델 접근을 합성 데이터로 live 검증할 때만 아래 명령을 사용합니다. 이 명령은 실제 외부 API를 호출하므로 비용이 발생할 수 있으며 일반 검증에는 포함되지 않습니다.
-
-```bash
-npm run ai:verify:live
-```
-
-자세한 안전 경계와 단일 Provider 재검증 방법은 `docs/operations/live-api-verification.md`에 기록되어 있습니다.
-
-Phase 4의 실제 OpenAI 정보 구조화 adapter와 DB 수직 슬라이스를 합성 데이터로 live 검증할 때는 아래 명령을 명시적으로 사용합니다. 검증 데이터는 성공·실패와 관계없이 정리됩니다.
-
-```bash
-npm run db:verify:phase4 -- --live
-```
-
-Supabase 개발 프로젝트를 처음 구성할 때는 `.env.local`의 `DATABASE_URL`을 확인한 뒤 다음 명령을 실행합니다. Seed는 실제 개인정보가 없는 합성 데이터입니다.
-
-```bash
-npm run db:check
-npm run db:migrate:dry
-npm run db:setup
-npm run db:verify
-```
-
-Migration이 이미 최신인 상태에서 합성 데이터만 다시 맞추려면 `npm run db:seed`를 사용합니다.
-
-브라우저 E2E 테스트는 최초 한 번 Playwright 브라우저 설치가 필요합니다.
-
-```bash
 npm run test:e2e:install
 npm run test:e2e
+npm run docs:verify
 ```
 
-## 진행 단계
+`verify`는 모델·정적 검사·단위 테스트·격리 DB 검사·서식·빌드를 실행한다. 브라우저 검증과 실제 서비스 연결 검사는 별도다. 자세한 범위와 skip 조건은 [검증 안내](docs/handoff/TESTING.md)를 따른다.
 
-1. 작업공간 초기화
-2. 자료 수집과 맥락 통합
-3. 제품 정의
-4. 기술 기반 설계
-5. 설계 검토 및 승인
-6. MVP 구현
+## 인계 시 알아둘 점
 
-## 문서 구조
+현재는 공용 워크스페이스 프로토타입이다. 사용자별 인증·권한, 실제 메일 생성·발송은 완성된 기능으로 보지 않는다. 녹음은 브라우저 IndexedDB에 저장되고 검색 인덱싱은 별도 Worker 실행이 필요하다.
 
-- `docs/inputs`: 전달받은 원본 자료. 내용은 기본적으로 Git에 커밋하지 않습니다.
-- `docs/context`: 원본 자료에서 통합·정제한 맥락
-- `docs/product`: 제품 비전, 사용자 문제, 범위와 성공 기준
-- `docs/architecture`: 시스템, 데이터, API와 운영 기반 설계
-- `docs/decisions`: 중요한 제품·기술 의사결정 기록
-- `docs/plans`: 단계별 실행 계획과 작업 단위
-
-## 초기 구축 이력
-
-- 독립 Git 저장소 구성 완료
-- Canonical Context 및 MVP v0 분석 완료
-- Foundation 구축 완료
-- Phase 2 Memory Foundation과 Golden Dataset 구축 완료
-- 인물 목록과 시간순 Context·Evidence Profile 실행 가능
-- Phase 3 Seeded Recall Vertical Slice 구축 완료
-- `/recall`에서 장소·행사·주제·시간·소속·약속 맥락으로 사람 검색 가능
-- Phase 3.5 Capture·AI runtime·projection hardening 완료
-- 9개 Golden Query와 확인된 Evidence 기반 평가 9/9 통과
-- mock/live task router와 `vector(1024)` embedding 수명주기 준비
-- Phase 4 Text Capture to Memory 수직 슬라이스 완료
-- `/capture`에서 Text → Draft → Review → Identity → Commit → Profile/Recall 흐름 실행 가능
-- OpenAI `gpt-5.6-luna` production adapter와 원자적·멱등 Memory Commit live 검증 완료
-- 다음 단계: Business Card Capture
+기술 문서의 화면은 개인정보 없는 합성 예시다. 배포 화면 링크는 별도 실제 환경을 연다. 원본 조사 내용과 준비본 변경 사항은 [인계 구성](docs/handoff/RELEASE.md)에서 구분한다.
